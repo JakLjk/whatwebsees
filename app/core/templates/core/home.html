@@ -244,6 +244,58 @@
             font-weight: 750;
         }
 
+        .browser-card {
+            margin-top: 1.25rem;
+            padding: clamp(1.5rem, 5vw, 2.5rem);
+        }
+
+        .browser-heading {
+            max-width: 42rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .browser-heading h2 {
+            margin-bottom: 0.55rem;
+            font-size: clamp(1.45rem, 3vw, 2rem);
+        }
+
+        .browser-heading p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.94rem;
+        }
+
+        .browser-details {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.75rem;
+            margin: 0;
+        }
+
+        .browser-details > div {
+            min-width: 0;
+            padding: 1rem;
+            border: 1px solid var(--border);
+            border-radius: 0.9rem;
+            background: var(--surface-muted);
+        }
+
+        .browser-details .wide-value {
+            grid-column: 1 / -1;
+        }
+
+        .browser-value {
+            overflow-wrap: anywhere;
+            user-select: text;
+        }
+
+        .user-agent-value {
+            font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+            font-size: 0.88rem;
+            font-weight: 550;
+            line-height: 1.55;
+        }
+
         footer {
             padding-block: 0 2rem;
             color: var(--muted);
@@ -265,7 +317,8 @@
                 grid-template-columns: 1fr;
             }
 
-            .details {
+            .details,
+            .browser-details {
                 grid-template-columns: 1fr;
             }
 
@@ -325,10 +378,57 @@
                 <span class="privacy-tag">No tracking or analytics</span>
             </aside>
         </div>
+
+        <section class="card browser-card" aria-labelledby="browser-title">
+            <div class="browser-heading">
+                <p class="card-label">Visible in your browser</p>
+                <h2 id="browser-title">Browser &amp; device</h2>
+                <p>These are raw values reported by standard browser APIs. They describe this browsing context and are not used to infer a browser, operating system, or device model.</p>
+            </div>
+
+            <dl class="browser-details">
+                <div>
+                    <dt>Browser language</dt>
+                    <dd class="browser-value" id="browser-language">Loading…</dd>
+                </div>
+                <div>
+                    <dt>Preferred languages</dt>
+                    <dd class="browser-value" id="preferred-languages">Loading…</dd>
+                </div>
+                <div>
+                    <dt>Time zone</dt>
+                    <dd class="browser-value" id="time-zone">Loading…</dd>
+                </div>
+                <div>
+                    <dt>Screen resolution</dt>
+                    <dd class="browser-value" id="screen-resolution">Loading…</dd>
+                </div>
+                <div>
+                    <dt>Viewport size</dt>
+                    <dd class="browser-value" id="viewport-size">Loading…</dd>
+                </div>
+                <div>
+                    <dt>Device pixel ratio</dt>
+                    <dd class="browser-value" id="device-pixel-ratio">Loading…</dd>
+                </div>
+                <div>
+                    <dt>Color depth</dt>
+                    <dd class="browser-value" id="color-depth">Loading…</dd>
+                </div>
+                <div>
+                    <dt>Reported platform</dt>
+                    <dd class="browser-value" id="reported-platform">Loading…</dd>
+                </div>
+                <div class="wide-value">
+                    <dt>User-Agent</dt>
+                    <dd class="browser-value user-agent-value" id="user-agent">Loading…</dd>
+                </div>
+            </dl>
+        </section>
     </main>
 
     <footer class="page-shell">
-        Current connection details only. Broader browser diagnostics are not enabled.
+        This application does not track or store the displayed values.
     </footer>
 
     <script>
@@ -341,6 +441,7 @@
             const connectionVersion = document.getElementById("connection-version");
             const publicAddress = document.getElementById("public-address");
             const connectionNote = document.getElementById("connection-note");
+            const unavailable = "Unavailable";
 
             const showError = (message) => {
                 details.hidden = true;
@@ -365,6 +466,86 @@
                 && (data.version === 4 || data.version === 6)
                 && typeof data.is_public === "boolean"
             );
+
+            const formatBrowserValue = (value) => {
+                if (value === undefined || value === null) {
+                    return unavailable;
+                }
+
+                if (typeof value === "number" && !Number.isFinite(value)) {
+                    return unavailable;
+                }
+
+                const text = String(value).trim();
+                return text || unavailable;
+            };
+
+            const safelyRead = (readValue) => {
+                try {
+                    return formatBrowserValue(readValue());
+                } catch {
+                    return unavailable;
+                }
+            };
+
+            const formatDimensions = (width, height) => {
+                const formattedWidth = formatBrowserValue(width);
+                const formattedHeight = formatBrowserValue(height);
+
+                if (formattedWidth === unavailable || formattedHeight === unavailable) {
+                    return unavailable;
+                }
+
+                return `${formattedWidth} × ${formattedHeight}`;
+            };
+
+            const preferredLanguages = () => {
+                if (!Array.isArray(navigator.languages) || navigator.languages.length === 0) {
+                    return unavailable;
+                }
+
+                return navigator.languages.map(formatBrowserValue).join(", ");
+            };
+
+            const reportedPlatform = () => {
+                if (navigator.userAgentData) {
+                    const modernPlatform = formatBrowserValue(navigator.userAgentData.platform);
+
+                    if (modernPlatform !== unavailable) {
+                        return modernPlatform;
+                    }
+                }
+
+                return navigator.platform;
+            };
+
+            const setBrowserValue = (id, value) => {
+                document.getElementById(id).textContent = formatBrowserValue(value);
+            };
+
+            const loadBrowserInfo = () => {
+                setBrowserValue("browser-language", safelyRead(() => navigator.language));
+                setBrowserValue("preferred-languages", safelyRead(preferredLanguages));
+                setBrowserValue(
+                    "time-zone",
+                    safelyRead(() => Intl.DateTimeFormat().resolvedOptions().timeZone),
+                );
+                setBrowserValue(
+                    "screen-resolution",
+                    safelyRead(() => formatDimensions(screen.width, screen.height)),
+                );
+                setBrowserValue(
+                    "viewport-size",
+                    safelyRead(() => formatDimensions(window.innerWidth, window.innerHeight)),
+                );
+                setBrowserValue(
+                    "device-pixel-ratio",
+                    safelyRead(() => window.devicePixelRatio),
+                );
+                setBrowserValue("color-depth", safelyRead(() => screen.colorDepth));
+                setBrowserValue("reported-platform", safelyRead(reportedPlatform));
+                setBrowserValue("user-agent", safelyRead(() => navigator.userAgent));
+            };
 
             const loadIp = async () => {
                 let response;
@@ -402,6 +583,7 @@
                 showIp(data);
             };
 
+            loadBrowserInfo();
             loadIp();
         })();
     </script>

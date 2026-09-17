@@ -35,12 +35,63 @@ class HomeViewTests(SimpleTestCase):
 
         self.assertContains(response, "What Does the Web See?")
 
+    def test_home_contains_browser_and_device_section(self):
+        response = self.client.get(reverse("home"))
+
+        self.assertContains(response, "Browser &amp; device")
+
+    def test_home_contains_browser_info_display_elements(self):
+        response = self.client.get(reverse("home"))
+        element_ids = (
+            "browser-language",
+            "preferred-languages",
+            "time-zone",
+            "screen-resolution",
+            "viewport-size",
+            "device-pixel-ratio",
+            "color-depth",
+            "reported-platform",
+            "user-agent",
+        )
+
+        for element_id in element_ids:
+            with self.subTest(element_id=element_id):
+                self.assertContains(response, f'id="{element_id}"')
+
+    def test_home_references_browser_language_api(self):
+        response = self.client.get(reverse("home"))
+
+        self.assertContains(response, "navigator.language")
+
+    def test_home_references_timezone_api(self):
+        response = self.client.get(reverse("home"))
+
+        self.assertContains(response, "Intl.DateTimeFormat")
+
+    def test_home_references_user_agent_api(self):
+        response = self.client.get(reverse("home"))
+
+        self.assertContains(response, "navigator.userAgent")
+
     def test_home_does_not_embed_visitor_ip(self):
         visitor_ip = "198.51.100.42"
 
         response = self.client.get(reverse("home"), HTTP_X_REAL_IP=visitor_ip)
 
         self.assertNotContains(response, visitor_ip)
+
+    def test_home_does_not_embed_browser_request_headers(self):
+        user_agent = "server-side-user-agent-marker"
+        language = "server-side-language-marker"
+
+        response = self.client.get(
+            reverse("home"),
+            HTTP_USER_AGENT=user_agent,
+            HTTP_ACCEPT_LANGUAGE=language,
+        )
+
+        self.assertNotContains(response, user_agent)
+        self.assertNotContains(response, language)
 
 
 class HealthViewTests(SimpleTestCase):

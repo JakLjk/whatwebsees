@@ -40,6 +40,8 @@ The address is stripped and validated with Python's `ipaddress` module before be
 
 `GET /` is the user-facing homepage. It is a generic server-rendered page that fetches visitor-specific IP information from `/ip` in the browser. A reported version of 4 or 6 describes the protocol used by the current request; it does not determine the browser or network's complete IPv6 capability.
 
+The homepage also uses JavaScript to display browser-visible language, time zone, screen, viewport, pixel ratio, color depth, reported platform, and User-Agent values. These values remain in the browser: they are not sent back to this application or stored. Reported platform and User-Agent are raw browser-reported values; browser and operating-system inference is not implemented.
+
 ## Privacy principles
 
 - Do not persist visitor IP addresses unless technically necessary.
