@@ -30,6 +30,12 @@ Nginx also preserves Cloudflare's incoming `X-Forwarded-Proto` value, falling ba
 
 Client IP addresses are not logged or stored. Nginx and Gunicorn access logging remain disabled, and the application does not persist request or visitor data.
 
+## IP endpoint
+
+`GET /ip` returns the requester's canonical IP address, IP version, and standard-library public/global classification as JSON. Django reads only Nginx's normalized `X-Real-IP`: Nginx derives it from Cloudflare's `CF-Connecting-IP` and supplies its direct peer address when that header is absent. Arbitrary `X-Forwarded-For` values are not trusted for visitor identity.
+
+The address is stripped and validated with Python's `ipaddress` module before being returned. It is not logged or stored, and responses are marked `private` and `no-store` to prevent caching. A missing, empty, or invalid normalized address produces a `503` JSON response.
+
 ## Privacy principles
 
 - Do not persist visitor IP addresses unless technically necessary.
