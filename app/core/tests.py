@@ -45,6 +45,38 @@ class HomeViewTests(SimpleTestCase):
 
         self.assertContains(response, "Request headers")
 
+    def test_home_contains_privacy_signals_section(self):
+        response = self.client.get(reverse("home"))
+
+        self.assertContains(response, "Privacy signals")
+
+    def test_home_contains_privacy_signal_display_elements(self):
+        response = self.client.get(reverse("home"))
+        element_ids = (
+            "cookies-enabled",
+            "do-not-track",
+            "global-privacy-control",
+            "online-status",
+            "javascript-status",
+        )
+
+        for element_id in element_ids:
+            with self.subTest(element_id=element_id):
+                self.assertContains(response, f'id="{element_id}"')
+
+    def test_home_references_privacy_signal_apis(self):
+        response = self.client.get(reverse("home"))
+        api_references = (
+            "navigator.cookieEnabled",
+            "navigator.doNotTrack",
+            "navigator.globalPrivacyControl",
+            "navigator.onLine",
+        )
+
+        for api_reference in api_references:
+            with self.subTest(api_reference=api_reference):
+                self.assertContains(response, api_reference)
+
     def test_home_contains_browser_info_display_elements(self):
         response = self.client.get(reverse("home"))
         element_ids = (

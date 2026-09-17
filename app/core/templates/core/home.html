@@ -254,6 +254,11 @@
             padding: clamp(1.5rem, 5vw, 2.5rem);
         }
 
+        .signals-card {
+            margin-top: 1.25rem;
+            padding: clamp(1.5rem, 5vw, 2.5rem);
+        }
+
         .browser-heading {
             max-width: 42rem;
             margin-bottom: 1.5rem;
@@ -299,6 +304,26 @@
             font-size: 0.88rem;
             font-weight: 550;
             line-height: 1.55;
+        }
+
+        .signal-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+            gap: 0.75rem;
+            margin: 0;
+        }
+
+        .signal-details > div {
+            min-width: 0;
+            padding: 1rem;
+            border: 1px solid var(--border);
+            border-radius: 0.9rem;
+            background: var(--surface-muted);
+        }
+
+        .signal-value {
+            overflow-wrap: anywhere;
+            user-select: text;
         }
 
         .headers-list {
@@ -465,6 +490,37 @@
             </dl>
         </section>
 
+        <section class="card signals-card" aria-labelledby="signals-title">
+            <div class="browser-heading">
+                <p class="card-label">Browser-reported status</p>
+                <h2 id="signals-title">Privacy signals</h2>
+                <p>These values are exposed by browser APIs and may vary between browsers. They are read once in this page and are not stored or transmitted.</p>
+            </div>
+
+            <dl class="signal-details">
+                <div>
+                    <dt>Cookies enabled</dt>
+                    <dd class="signal-value" id="cookies-enabled">Unavailable</dd>
+                </div>
+                <div>
+                    <dt>Do Not Track</dt>
+                    <dd class="signal-value" id="do-not-track">Unavailable</dd>
+                </div>
+                <div>
+                    <dt>Global Privacy Control</dt>
+                    <dd class="signal-value" id="global-privacy-control">Unavailable</dd>
+                </div>
+                <div>
+                    <dt>Online status</dt>
+                    <dd class="signal-value" id="online-status">Unavailable</dd>
+                </div>
+                <div>
+                    <dt>JavaScript</dt>
+                    <dd class="signal-value" id="javascript-status">Unavailable</dd>
+                </div>
+            </dl>
+        </section>
+
         <section class="card headers-card" aria-labelledby="headers-title">
             <div class="browser-heading">
                 <p class="card-label">Visible at the origin</p>
@@ -599,6 +655,77 @@
                 setBrowserValue("user-agent", safelyRead(() => navigator.userAgent));
             };
 
+            const enabledStatus = (value) => {
+                if (value === true) {
+                    return "Enabled";
+                }
+
+                if (value === false) {
+                    return "Disabled";
+                }
+
+                return unavailable;
+            };
+
+            const doNotTrackStatus = (value) => {
+                if (value === "1") {
+                    return "Enabled";
+                }
+
+                if (value === "0") {
+                    return "Disabled";
+                }
+
+                return unavailable;
+            };
+
+            const onlineStatus = (value) => {
+                if (value === true) {
+                    return "Online";
+                }
+
+                if (value === false) {
+                    return "Offline";
+                }
+
+                return unavailable;
+            };
+
+            const safelyFormatSignal = (readValue, formatValue) => {
+                try {
+                    return formatValue(readValue());
+                } catch {
+                    return unavailable;
+                }
+            };
+
+            const setPrivacySignal = (id, value) => {
+                document.getElementById(id).textContent = value;
+            };
+
+            const loadPrivacySignals = () => {
+                setPrivacySignal(
+                    "cookies-enabled",
+                    safelyFormatSignal(() => navigator.cookieEnabled, enabledStatus),
+                );
+                setPrivacySignal(
+                    "do-not-track",
+                    safelyFormatSignal(() => navigator.doNotTrack, doNotTrackStatus),
+                );
+                setPrivacySignal(
+                    "global-privacy-control",
+                    safelyFormatSignal(
+                        () => navigator.globalPrivacyControl,
+                        enabledStatus,
+                    ),
+                );
+                setPrivacySignal(
+                    "online-status",
+                    safelyFormatSignal(() => navigator.onLine, onlineStatus),
+                );
+                setPrivacySignal("javascript-status", "Enabled");
+            };
+
             const showHeadersError = () => {
                 headersList.hidden = true;
                 headersStatus.className = "status is-error";
@@ -715,6 +842,7 @@
             };
 
             loadBrowserInfo();
+            loadPrivacySignals();
             loadIp();
             loadHeaders();
         })();

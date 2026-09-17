@@ -46,6 +46,8 @@ The address is stripped and validated with Python's `ipaddress` module before be
 
 The homepage also uses JavaScript to display browser-visible language, time zone, screen, viewport, pixel ratio, color depth, reported platform, and User-Agent values. These values remain in the browser: they are not sent back to this application or stored. Reported platform and User-Agent are raw browser-reported values; browser and operating-system inference is not implemented. A separate request to `/headers` displays the selected headers received by the origin.
 
+Browser-reported cookie availability, Do Not Track, Global Privacy Control, online status, and JavaScript status are also displayed locally. These privacy signals are read once in the browser and are not transmitted to the application or stored.
+
 ## Privacy principles
 
 - Do not persist visitor IP addresses unless technically necessary.
