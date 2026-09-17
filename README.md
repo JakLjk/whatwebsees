@@ -36,11 +36,15 @@ Client IP addresses are not logged or stored. Nginx and Gunicorn access logging 
 
 The address is stripped and validated with Python's `ipaddress` module before being returned. It is not logged or stored, and responses are marked `private` and `no-store` to prevent caching. A missing, empty, or invalid normalized address produces a `503` JSON response.
 
+## Headers endpoint
+
+`GET /headers` returns a private, non-cacheable JSON response containing an explicit allowlist of selected request headers received by the Django origin through Cloudflare, cloudflared, and Nginx. Headers outside that allowlist—including cookies, authorization, client IP, forwarding, and internal proxy headers—are never returned or stored. Cloudflare and the proxies may modify or add headers before they reach the origin.
+
 ## Homepage
 
 `GET /` is the user-facing homepage. It is a generic server-rendered page that fetches visitor-specific IP information from `/ip` in the browser. A reported version of 4 or 6 describes the protocol used by the current request; it does not determine the browser or network's complete IPv6 capability.
 
-The homepage also uses JavaScript to display browser-visible language, time zone, screen, viewport, pixel ratio, color depth, reported platform, and User-Agent values. These values remain in the browser: they are not sent back to this application or stored. Reported platform and User-Agent are raw browser-reported values; browser and operating-system inference is not implemented.
+The homepage also uses JavaScript to display browser-visible language, time zone, screen, viewport, pixel ratio, color depth, reported platform, and User-Agent values. These values remain in the browser: they are not sent back to this application or stored. Reported platform and User-Agent are raw browser-reported values; browser and operating-system inference is not implemented. A separate request to `/headers` displays the selected headers received by the origin.
 
 ## Privacy principles
 

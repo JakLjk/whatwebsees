@@ -6,6 +6,23 @@ from django.utils.cache import patch_cache_control
 from django.views.decorators.http import require_GET, require_safe
 
 
+REQUEST_HEADER_ALLOWLIST = (
+    "User-Agent",
+    "Accept",
+    "Accept-Language",
+    "Accept-Encoding",
+    "DNT",
+    "Sec-GPC",
+    "Sec-CH-UA",
+    "Sec-CH-UA-Mobile",
+    "Sec-CH-UA-Platform",
+    "Sec-Fetch-Site",
+    "Sec-Fetch-Mode",
+    "Sec-Fetch-Dest",
+    "Upgrade-Insecure-Requests",
+)
+
+
 @require_safe
 def home(request):
     return render(request, "core/home.html")
@@ -40,3 +57,13 @@ def client_ip(request):
             "is_public": address.is_global,
         }
     )
+
+
+@require_GET
+def request_headers(request):
+    headers = {
+        name: request.headers[name]
+        for name in REQUEST_HEADER_ALLOWLIST
+        if name in request.headers
+    }
+    return private_json_response({"headers": headers})
