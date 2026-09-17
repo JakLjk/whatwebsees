@@ -36,6 +36,10 @@ Client IP addresses are not logged or stored. Nginx and Gunicorn access logging 
 
 The address is stripped and validated with Python's `ipaddress` module before being returned. It is not logged or stored, and responses are marked `private` and `no-store` to prevent caching. A missing, empty, or invalid normalized address produces a `503` JSON response.
 
+## Homepage
+
+`GET /` is the user-facing homepage. It is a generic server-rendered page that fetches visitor-specific IP information from `/ip` in the browser. A reported version of 4 or 6 describes the protocol used by the current request; it does not determine the browser or network's complete IPv6 capability.
+
 ## Privacy principles
 
 - Do not persist visitor IP addresses unless technically necessary.

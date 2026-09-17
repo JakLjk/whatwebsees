@@ -2,6 +2,47 @@ from django.test import SimpleTestCase
 from django.urls import reverse
 
 
+class HomeViewTests(SimpleTestCase):
+    def test_home_returns_ok(self):
+        response = self.client.get(reverse("home"))
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_home_head_returns_ok(self):
+        response = self.client.head(reverse("home"))
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_home_returns_html(self):
+        response = self.client.get(reverse("home"))
+
+        self.assertEqual(
+            response.headers["Content-Type"].split(";")[0], "text/html"
+        )
+
+    def test_home_does_not_set_cookies(self):
+        response = self.client.get(reverse("home"))
+
+        self.assertFalse(response.cookies)
+
+    def test_home_rejects_post(self):
+        response = self.client.post(reverse("home"))
+
+        self.assertEqual(response.status_code, 405)
+
+    def test_home_contains_main_title(self):
+        response = self.client.get(reverse("home"))
+
+        self.assertContains(response, "What Does the Web See?")
+
+    def test_home_does_not_embed_visitor_ip(self):
+        visitor_ip = "198.51.100.42"
+
+        response = self.client.get(reverse("home"), HTTP_X_REAL_IP=visitor_ip)
+
+        self.assertNotContains(response, visitor_ip)
+
+
 class HealthViewTests(SimpleTestCase):
     def test_health_returns_ok_without_database_access(self):
         response = self.client.get(reverse("health"))

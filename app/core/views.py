@@ -1,8 +1,14 @@
 from ipaddress import ip_address
 
 from django.http import JsonResponse
+from django.shortcuts import render
 from django.utils.cache import patch_cache_control
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_safe
+
+
+@require_safe
+def home(request):
+    return render(request, "core/home.html")
 
 
 @require_GET

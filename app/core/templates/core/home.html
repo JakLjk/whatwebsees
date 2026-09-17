@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="See what information a website can observe about your connection and browser.">
+    <title>What Does the Web See?</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --background: #f4f7fb;
+            --surface: #ffffff;
+            --surface-muted: #f7f9fc;
+            --text: #182230;
+            --muted: #5d6b7c;
+            --border: #dbe3ed;
+            --accent: #2457d6;
+            --accent-soft: #eaf0ff;
+            --success: #17643a;
+            --error: #a42828;
+            --shadow: 0 22px 55px rgba(29, 47, 75, 0.11);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            background:
+                radial-gradient(circle at 15% 0%, rgba(36, 87, 214, 0.10), transparent 32rem),
+                var(--background);
+            color: var(--text);
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            line-height: 1.6;
+        }
+
+        .page-shell {
+            width: min(100% - 2rem, 70rem);
+            margin-inline: auto;
+        }
+
+        .site-header {
+            padding-block: 1.5rem;
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.65rem;
+            color: var(--text);
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+        }
+
+        .brand-mark {
+            display: grid;
+            width: 2rem;
+            height: 2rem;
+            place-items: center;
+            border-radius: 0.65rem;
+            background: var(--accent);
+            color: #ffffff;
+            font-size: 1rem;
+        }
+
+        main {
+            padding-block: clamp(2.25rem, 7vw, 6rem) 4rem;
+        }
+
+        .intro {
+            max-width: 46rem;
+            margin-bottom: clamp(2rem, 5vw, 3.5rem);
+        }
+
+        .eyebrow {
+            margin: 0 0 0.75rem;
+            color: var(--accent);
+            font-size: 0.78rem;
+            font-weight: 750;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        h1,
+        h2 {
+            margin-top: 0;
+            line-height: 1.12;
+            letter-spacing: -0.035em;
+        }
+
+        h1 {
+            max-width: 44rem;
+            margin-bottom: 1rem;
+            font-size: clamp(2.4rem, 7vw, 4.8rem);
+        }
+
+        .intro-text {
+            max-width: 40rem;
+            margin: 0;
+            color: var(--muted);
+            font-size: clamp(1rem, 2.2vw, 1.2rem);
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: minmax(0, 1.65fr) minmax(16rem, 0.85fr);
+            gap: 1.25rem;
+            align-items: stretch;
+        }
+
+        .card {
+            border: 1px solid var(--border);
+            border-radius: 1.4rem;
+            background: var(--surface);
+            box-shadow: var(--shadow);
+        }
+
+        .ip-card {
+            padding: clamp(1.5rem, 5vw, 2.5rem);
+        }
+
+        .card-label {
+            margin: 0 0 1.4rem;
+            color: var(--muted);
+            font-size: 0.84rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .status {
+            display: flex;
+            min-height: 2rem;
+            align-items: center;
+            gap: 0.65rem;
+            margin: 0;
+            color: var(--muted);
+        }
+
+        .status::before {
+            width: 0.7rem;
+            height: 0.7rem;
+            flex: 0 0 auto;
+            border: 2px solid #b7c2d0;
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            content: "";
+            animation: spin 0.85s linear infinite;
+        }
+
+        .status.is-ready::before {
+            border: 0;
+            background: var(--success);
+            animation: none;
+        }
+
+        .status.is-error {
+            color: var(--error);
+            font-weight: 650;
+        }
+
+        .status.is-error::before {
+            border: 0;
+            background: var(--error);
+            animation: none;
+        }
+
+        .ip-address {
+            display: block;
+            overflow-wrap: anywhere;
+            margin: 0.7rem 0 1.75rem;
+            color: var(--text);
+            font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+            font-size: clamp(1.65rem, 5vw, 3.2rem);
+            font-weight: 750;
+            letter-spacing: -0.045em;
+            line-height: 1.2;
+            user-select: all;
+        }
+
+        .details {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.75rem;
+            margin: 0;
+        }
+
+        .details > div {
+            padding: 1rem;
+            border-radius: 0.9rem;
+            background: var(--surface-muted);
+        }
+
+        dt {
+            margin-bottom: 0.2rem;
+            color: var(--muted);
+            font-size: 0.82rem;
+            font-weight: 650;
+        }
+
+        dd {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 750;
+        }
+
+        .connection-note {
+            margin: 1rem 0 0;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .privacy-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: clamp(1.4rem, 4vw, 2rem);
+            background: var(--accent-soft);
+            box-shadow: none;
+        }
+
+        .privacy-card h2 {
+            margin-bottom: 0.8rem;
+            font-size: 1.35rem;
+        }
+
+        .privacy-card p {
+            margin: 0;
+            color: #3f5068;
+            font-size: 0.94rem;
+        }
+
+        .privacy-tag {
+            align-self: flex-start;
+            margin-top: 2rem;
+            padding: 0.35rem 0.65rem;
+            border: 1px solid rgba(36, 87, 214, 0.2);
+            border-radius: 999px;
+            color: #214aa8;
+            font-size: 0.78rem;
+            font-weight: 750;
+        }
+
+        footer {
+            padding-block: 0 2rem;
+            color: var(--muted);
+            font-size: 0.82rem;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 46rem) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            .details {
+                grid-template-columns: 1fr;
+            }
+
+            main {
+                padding-top: 1.5rem;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .status::before {
+                animation: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header page-shell">
+        <div class="brand" aria-label="Web privacy inspector">
+            <span class="brand-mark" aria-hidden="true">W</span>
+            Web privacy inspector
+        </div>
+    </header>
+
+    <main class="page-shell">
+        <section class="intro" aria-labelledby="page-title">
+            <p class="eyebrow">Connection privacy</p>
+            <h1 id="page-title">What Does the Web See?</h1>
+            <p class="intro-text">See what information a website can observe about your connection and browser.</p>
+        </section>
+
+        <div class="dashboard">
+            <section class="card ip-card" aria-labelledby="ip-title">
+                <h2 class="card-label" id="ip-title">Your IP address</h2>
+                <p class="status" id="ip-status" role="status" aria-live="polite">Loading your connection information…</p>
+
+                <div id="ip-details" hidden>
+                    <output class="ip-address" id="ip-address" aria-label="Your current public IP address"></output>
+                    <dl class="details">
+                        <div>
+                            <dt>Current connection</dt>
+                            <dd id="connection-version"></dd>
+                        </div>
+                        <div>
+                            <dt>Public address</dt>
+                            <dd id="public-address"></dd>
+                        </div>
+                    </dl>
+                    <p class="connection-note" id="connection-note"></p>
+                </div>
+            </section>
+
+            <aside class="card privacy-card" aria-labelledby="privacy-title">
+                <div>
+                    <h2 id="privacy-title">A privacy-minded view</h2>
+                    <p>Your IP address is returned to you so this page can display it. This application does not store it, and application access logging is disabled.</p>
+                </div>
+                <span class="privacy-tag">No tracking or analytics</span>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="page-shell">
+        Current connection details only. Broader browser diagnostics are not enabled.
+    </footer>
+
+    <script>
+        (() => {
+            "use strict";
+
+            const status = document.getElementById("ip-status");
+            const details = document.getElementById("ip-details");
+            const ipAddress = document.getElementById("ip-address");
+            const connectionVersion = document.getElementById("connection-version");
+            const publicAddress = document.getElementById("public-address");
+            const connectionNote = document.getElementById("connection-note");
+
+            const showError = (message) => {
+                details.hidden = true;
+                status.className = "status is-error";
+                status.textContent = message;
+            };
+
+            const showIp = (data) => {
+                ipAddress.textContent = data.ip;
+                connectionVersion.textContent = `IPv${data.version}`;
+                publicAddress.textContent = data.is_public ? "Yes" : "No";
+                connectionNote.textContent = `This connection used IPv${data.version}. This does not determine your network's overall IPv6 capability.`;
+                details.hidden = false;
+                status.className = "status is-ready";
+                status.textContent = "Connection information loaded.";
+            };
+
+            const isValidPayload = (data) => (
+                data !== null
+                && typeof data === "object"
+                && typeof data.ip === "string"
+                && (data.version === 4 || data.version === 6)
+                && typeof data.is_public === "boolean"
+            );
+
+            const loadIp = async () => {
+                let response;
+
+                try {
+                    response = await fetch("/ip", {
+                        method: "GET",
+                        headers: {"Accept": "application/json"},
+                        cache: "no-store",
+                    });
+                } catch {
+                    showError("We could not connect to load your IP information. Check your connection and try again.");
+                    return;
+                }
+
+                if (!response.ok) {
+                    showError("Your IP information is temporarily unavailable. Please try again later.");
+                    return;
+                }
+
+                let data;
+
+                try {
+                    data = await response.json();
+                } catch {
+                    showError("Your IP information is temporarily unavailable. Please try again later.");
+                    return;
+                }
+
+                if (!isValidPayload(data)) {
+                    showError("Your IP information is temporarily unavailable. Please try again later.");
+                    return;
+                }
+
+                showIp(data);
+            };
+
+            loadIp();
+        })();
+    </script>
+</body>
+</html>
