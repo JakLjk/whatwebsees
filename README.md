@@ -58,7 +58,9 @@ Browser-reported cookie availability, Do Not Track, Global Privacy Control, onli
 - Do not build persistent browser fingerprints.
 - Avoid unnecessary tracking.
 - Keep secrets outside Git.
-- Review GDPR/ePrivacy implications before adding analytics or advertising.
+- Google Analytics is optional and loads only after the visitor grants analytics consent.
+- The analytics-consent preference is stored locally in the visitor's browser.
+- Review GDPR/ePrivacy and consent requirements again before adding advertising or AdSense.
 
 ## Status
 

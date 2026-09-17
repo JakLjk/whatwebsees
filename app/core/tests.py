@@ -55,6 +55,38 @@ class HomeViewTests(SimpleTestCase):
 
         self.assertContains(response, "Approximate location")
 
+    def test_home_contains_analytics_consent_controls(self):
+        response = self.client.get(reverse("home"))
+
+        for element_id in (
+            "analytics-consent",
+            "analytics-accept",
+            "analytics-reject",
+            "analytics-settings",
+        ):
+            with self.subTest(element_id=element_id):
+                self.assertContains(response, f'id="{element_id}"')
+
+    def test_home_contains_google_analytics_measurement_id(self):
+        response = self.client.get(reverse("home"))
+
+        self.assertContains(response, "G-GJ3PP8PF5J")
+
+    def test_home_uses_local_storage_only_for_analytics_consent(self):
+        response = self.client.get(reverse("home"))
+
+        self.assertContains(response, "window.localStorage.getItem")
+        self.assertContains(response, "window.localStorage.setItem")
+        self.assertContains(response, "web-privacy-analytics-consent")
+
+    def test_home_does_not_load_google_analytics_with_static_script_tag(self):
+        response = self.client.get(reverse("home"))
+
+        self.assertNotContains(
+            response,
+            '<script async src="https://www.googletagmanager.com/gtag/js',
+        )
+
     def test_home_contains_privacy_signal_display_elements(self):
         response = self.client.get(reverse("home"))
         element_ids = (

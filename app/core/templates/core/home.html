@@ -380,6 +380,90 @@
             user-select: text;
         }
 
+        .site-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .analytics-settings {
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: var(--accent);
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: underline;
+            text-underline-offset: 0.2rem;
+        }
+
+        .analytics-settings:hover {
+            text-decoration-thickness: 2px;
+        }
+
+        .consent-banner {
+            position: fixed;
+            z-index: 1000;
+            right: 1rem;
+            bottom: 1rem;
+            left: 1rem;
+            width: min(calc(100% - 2rem), 42rem);
+            margin-inline: auto;
+        }
+
+        .consent-panel {
+            padding: 1.35rem;
+            border: 1px solid var(--border);
+            border-radius: 1.2rem;
+            background: var(--surface);
+            box-shadow: 0 20px 60px rgba(29, 47, 75, 0.22);
+        }
+
+        .consent-panel h2 {
+            margin-bottom: 0.5rem;
+            font-size: 1.25rem;
+        }
+
+        .consent-panel p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+
+        .consent-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .consent-button {
+            padding: 0.7rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            background: var(--surface);
+            color: var(--text);
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .consent-button-primary {
+            border-color: var(--accent);
+            background: var(--accent);
+            color: #ffffff;
+        }
+
+        .consent-button:focus-visible,
+        .analytics-settings:focus-visible {
+            outline: 3px solid var(--accent-soft);
+            outline-offset: 3px;
+        }
+
         footer {
             padding-block: 0 2rem;
             color: var(--muted);
@@ -464,7 +548,7 @@
                     <h2 id="privacy-title">A privacy-minded view</h2>
                     <p>Your IP address is returned to you so this page can display it. This application does not store it, and application access logging is disabled.</p>
                 </div>
-                <span class="privacy-tag">No tracking or analytics</span>
+                <span class="privacy-tag">Analytics only with your consent</span>
             </aside>
         </div>
 
@@ -569,9 +653,30 @@
         </section>
     </main>
 
-    <footer class="page-shell">
-        This application does not track or store the displayed values.
+    <footer class="site-footer page-shell">
+        <span>Displayed diagnostic values are not stored by this application. Optional Google Analytics runs only after consent.</span>
+        <button class="analytics-settings" id="analytics-settings" type="button">Analytics settings</button>
     </footer>
+
+    <div class="consent-banner" id="analytics-consent" hidden>
+        <section
+            class="consent-panel"
+            role="dialog"
+            aria-labelledby="analytics-consent-title"
+            aria-describedby="analytics-consent-description"
+        >
+            <h2 id="analytics-consent-title">Optional analytics</h2>
+            <p id="analytics-consent-description">
+                Google Analytics helps us understand how the site is used. It loads only if you accept analytics.
+                Your choice is stored locally in this browser so we can remember it.
+            </p>
+
+            <div class="consent-actions">
+                <button class="consent-button" id="analytics-reject" type="button">Reject</button>
+                <button class="consent-button consent-button-primary" id="analytics-accept" type="button">Accept analytics</button>
+            </div>
+        </section>
+    </div>
 
     <script>
         (() => {
@@ -588,6 +693,129 @@
             const headersStatus = document.getElementById("headers-status");
             const headersList = document.getElementById("headers-list");
             const unavailable = "Unavailable";
+
+            const analyticsMeasurementId = "G-GJ3PP8PF5J";
+            const analyticsConsentKey = "web-privacy-analytics-consent";
+            const analyticsDisableKey = `ga-disable-${analyticsMeasurementId}`;
+
+            const analyticsConsent = document.getElementById("analytics-consent");
+            const analyticsAccept = document.getElementById("analytics-accept");
+            const analyticsReject = document.getElementById("analytics-reject");
+            const analyticsSettings = document.getElementById("analytics-settings");
+
+            const readAnalyticsConsent = () => {
+                try {
+                    const value = window.localStorage.getItem(analyticsConsentKey);
+
+                    if (value === "granted" || value === "denied") {
+                        return value;
+                    }
+                } catch {
+                    return null;
+                }
+
+                return null;
+            };
+
+            const saveAnalyticsConsent = (value) => {
+                try {
+                    window.localStorage.setItem(analyticsConsentKey, value);
+                } catch {
+                    // Consent still applies to the current page even if storage is unavailable.
+                }
+            };
+
+            const showAnalyticsConsent = () => {
+                analyticsConsent.hidden = false;
+            };
+
+            const hideAnalyticsConsent = () => {
+                analyticsConsent.hidden = true;
+            };
+
+            const updateGoogleConsent = (analyticsStorage) => {
+                if (typeof window.gtag !== "function") {
+                    return;
+                }
+
+                window.gtag("consent", "update", {
+                    analytics_storage: analyticsStorage,
+                    ad_storage: "denied",
+                    ad_user_data: "denied",
+                    ad_personalization: "denied",
+                });
+            };
+
+            const loadGoogleAnalytics = () => {
+                window[analyticsDisableKey] = false;
+
+                if (window.webPrivacyAnalyticsLoaded) {
+                    updateGoogleConsent("granted");
+                    return;
+                }
+
+                window.dataLayer = window.dataLayer || [];
+                window.gtag = function () {
+                    window.dataLayer.push(arguments);
+                };
+
+                window.gtag("consent", "default", {
+                    analytics_storage: "denied",
+                    ad_storage: "denied",
+                    ad_user_data: "denied",
+                    ad_personalization: "denied",
+                });
+
+                window.gtag("consent", "update", {
+                    analytics_storage: "granted",
+                    ad_storage: "denied",
+                    ad_user_data: "denied",
+                    ad_personalization: "denied",
+                });
+
+                window.gtag("js", new Date());
+                window.gtag("config", analyticsMeasurementId);
+
+                const analyticsScript = document.createElement("script");
+                analyticsScript.async = true;
+                analyticsScript.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(analyticsMeasurementId)}`;
+                analyticsScript.dataset.analytics = "google";
+
+                document.head.append(analyticsScript);
+                window.webPrivacyAnalyticsLoaded = true;
+            };
+
+            const acceptAnalytics = () => {
+                saveAnalyticsConsent("granted");
+                loadGoogleAnalytics();
+                hideAnalyticsConsent();
+            };
+
+            const rejectAnalytics = () => {
+                saveAnalyticsConsent("denied");
+                window[analyticsDisableKey] = true;
+                updateGoogleConsent("denied");
+                hideAnalyticsConsent();
+            };
+
+            const initializeAnalyticsConsent = () => {
+                analyticsAccept.addEventListener("click", acceptAnalytics);
+                analyticsReject.addEventListener("click", rejectAnalytics);
+                analyticsSettings.addEventListener("click", showAnalyticsConsent);
+
+                const consent = readAnalyticsConsent();
+
+                if (consent === "granted") {
+                    loadGoogleAnalytics();
+                    return;
+                }
+
+                window[analyticsDisableKey] = true;
+
+                if (consent !== "denied") {
+                    showAnalyticsConsent();
+                }
+            };
 
             const showError = (message) => {
                 details.hidden = true;
@@ -991,6 +1219,7 @@
                 showIp(data);
             };
 
+            initializeAnalyticsConsent();
             loadBrowserInfo();
             loadPrivacySignals();
             loadIp();
