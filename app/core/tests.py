@@ -55,6 +55,42 @@ class HomeViewTests(SimpleTestCase):
 
         self.assertContains(response, "Approximate location")
 
+    def test_home_contains_click_to_load_map_controls(self):
+        response = self.client.get(reverse("home"))
+
+        self.assertContains(response, 'id="load-approximate-map"')
+        self.assertContains(response, "Load approximate map")
+        self.assertContains(response, 'id="approximate-map-container"')
+        self.assertContains(response, "OpenStreetMap")
+
+    def test_home_creates_map_iframe_dynamically(self):
+        response = self.client.get(reverse("home"))
+
+        self.assertContains(response, 'document.createElement("iframe")')
+        self.assertContains(
+            response,
+            "https://www.openstreetmap.org/export/embed.html",
+        )
+        self.assertNotContains(response, "<iframe")
+
+    def test_home_does_not_use_browser_geolocation(self):
+        response = self.client.get(reverse("home"))
+
+        self.assertNotContains(response, "navigator.geolocation")
+
+    def test_home_does_not_load_third_party_map_libraries(self):
+        response = self.client.get(reverse("home"))
+
+        for library_reference in (
+            "leaflet",
+            "maplibre",
+            "maps.googleapis.com",
+            "api.mapbox.com",
+            "tile.openstreetmap.org",
+        ):
+            with self.subTest(library_reference=library_reference):
+                self.assertNotContains(response, library_reference)
+
     def test_home_contains_analytics_consent_controls(self):
         response = self.client.get(reverse("home"))
 

@@ -351,6 +351,60 @@
             user-select: text;
         }
 
+        .map-control {
+            margin-top: 1.5rem;
+            padding: 1.15rem;
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            background: var(--accent-soft);
+        }
+
+        .map-control p {
+            margin: 0;
+            color: #3f5068;
+            font-size: 0.92rem;
+        }
+
+        .map-load-button {
+            margin-top: 1rem;
+            padding: 0.7rem 1rem;
+            border: 1px solid var(--accent);
+            border-radius: 0.75rem;
+            background: var(--accent);
+            color: #ffffff;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .map-load-button:disabled {
+            cursor: default;
+            opacity: 0.7;
+        }
+
+        .map-frame-container {
+            margin-top: 1rem;
+        }
+
+        .approximate-map-frame {
+            display: block;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            border: 1px solid var(--border);
+            border-radius: 0.8rem;
+            background: var(--surface-muted);
+        }
+
+        .map-attribution {
+            margin-top: 0.75rem !important;
+            font-size: 0.8rem !important;
+        }
+
+        .map-attribution a {
+            color: var(--accent);
+            font-weight: 700;
+        }
+
         .headers-list {
             display: grid;
             gap: 0.65rem;
@@ -459,7 +513,8 @@
         }
 
         .consent-button:focus-visible,
-        .analytics-settings:focus-visible {
+        .analytics-settings:focus-visible,
+        .map-load-button:focus-visible {
             outline: 3px solid var(--accent-soft);
             outline-offset: 3px;
         }
@@ -561,6 +616,17 @@
 
             <p class="status" id="location-status" role="status" aria-live="polite">Loading approximate location…</p>
             <dl class="location-list" id="location-list" hidden></dl>
+
+            <div class="map-control" id="approximate-map-control" hidden>
+                <p>The marker represents approximate IP geolocation, not your GPS or precise physical location. IP geolocation can be inaccurate.</p>
+                <p>The map is loaded from OpenStreetMap only after you choose to load it. OpenStreetMap will receive a network request from your browser.</p>
+                <button class="map-load-button" id="load-approximate-map" type="button" disabled>Load approximate map</button>
+                <p id="approximate-map-status" role="status" aria-live="polite">The external map has not been loaded.</p>
+                <div class="map-frame-container" id="approximate-map-container"></div>
+                <p class="map-attribution">
+                    <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer external">© OpenStreetMap contributors</a>
+                </p>
+            </div>
         </section>
 
         <section class="card browser-card" aria-labelledby="browser-title">
@@ -690,9 +756,14 @@
             const connectionNote = document.getElementById("connection-note");
             const locationStatus = document.getElementById("location-status");
             const locationList = document.getElementById("location-list");
+            const mapControl = document.getElementById("approximate-map-control");
+            const mapLoadButton = document.getElementById("load-approximate-map");
+            const mapStatus = document.getElementById("approximate-map-status");
+            const mapContainer = document.getElementById("approximate-map-container");
             const headersStatus = document.getElementById("headers-status");
             const headersList = document.getElementById("headers-list");
             const unavailable = "Unavailable";
+            let approximateMapCoordinates = null;
 
             const analyticsMeasurementId = "G-GJ3PP8PF5J";
             const analyticsConsentKey = "web-privacy-analytics-consent";
@@ -1009,8 +1080,84 @@
                 locationList.append(row);
             };
 
+            const validatedCoordinates = (location) => {
+                if (
+                    !hasLocationValue(location.latitude)
+                    || !hasLocationValue(location.longitude)
+                ) {
+                    return null;
+                }
+
+                const latitude = Number(location.latitude);
+                const longitude = Number(location.longitude);
+
+                if (
+                    !Number.isFinite(latitude)
+                    || !Number.isFinite(longitude)
+                    || latitude < -90
+                    || latitude > 90
+                    || longitude < -180
+                    || longitude > 180
+                ) {
+                    return null;
+                }
+
+                return {latitude, longitude};
+            };
+
+            const configureApproximateMap = (location) => {
+                approximateMapCoordinates = validatedCoordinates(location);
+                mapControl.hidden = approximateMapCoordinates === null;
+                mapLoadButton.disabled = approximateMapCoordinates === null;
+            };
+
+            const roundedMapCoordinate = (value) => (
+                Math.round(value * 100000) / 100000
+            );
+
+            const approximateMapUrl = ({latitude, longitude}) => {
+                const extent = 0.08;
+                const west = roundedMapCoordinate(Math.max(-180, longitude - extent));
+                const south = roundedMapCoordinate(Math.max(-90, latitude - extent));
+                const east = roundedMapCoordinate(Math.min(180, longitude + extent));
+                const north = roundedMapCoordinate(Math.min(90, latitude + extent));
+                const mapUrl = new URL("https://www.openstreetmap.org/export/embed.html");
+
+                mapUrl.searchParams.set("bbox", `${west},${south},${east},${north}`);
+                mapUrl.searchParams.set("layer", "mapnik");
+                mapUrl.searchParams.set("marker", `${latitude},${longitude}`);
+                return mapUrl.toString();
+            };
+
+            const loadApproximateMap = () => {
+                if (
+                    approximateMapCoordinates === null
+                    || mapContainer.querySelector("iframe") !== null
+                ) {
+                    return;
+                }
+
+                const mapFrame = document.createElement("iframe");
+
+                mapFrame.className = "approximate-map-frame";
+                mapFrame.title = "Approximate IP location map";
+                mapFrame.loading = "lazy";
+                mapFrame.referrerPolicy = "no-referrer";
+                mapFrame.src = approximateMapUrl(approximateMapCoordinates);
+                mapFrame.addEventListener("load", () => {
+                    mapLoadButton.textContent = "Approximate map loaded";
+                    mapStatus.textContent = "Approximate map loaded from OpenStreetMap.";
+                }, {once: true});
+
+                mapLoadButton.disabled = true;
+                mapLoadButton.textContent = "Loading approximate map…";
+                mapStatus.textContent = "Loading the external map from OpenStreetMap.";
+                mapContainer.append(mapFrame);
+            };
+
             const showLocation = (location) => {
                 locationList.replaceChildren();
+                configureApproximateMap(location);
                 const fields = (
                     [
                         ["city", "City"],
@@ -1058,6 +1205,7 @@
 
             const showLocationError = () => {
                 locationList.hidden = true;
+                configureApproximateMap({});
                 locationStatus.className = "status is-error";
                 locationStatus.textContent = "Location information is temporarily unavailable.";
             };
@@ -1220,6 +1368,7 @@
             };
 
             initializeAnalyticsConsent();
+            mapLoadButton.addEventListener("click", loadApproximateMap);
             loadBrowserInfo();
             loadPrivacySignals();
             loadIp();

@@ -44,6 +44,8 @@ The address is stripped and validated with Python's `ipaddress` module before be
 
 `GET /location` returns an explicit subset of Cloudflare visitor-location headers as private, non-cacheable JSON. This is approximate IP geolocation supplied by Cloudflare, not a precise physical location, and the application does not store it.
 
+When valid approximate coordinates are available, the homepage offers an optional OpenStreetMap view. The map is click-to-load: the browser contacts OpenStreetMap only after the visitor explicitly chooses to load it. The coordinates and other location values are not persisted by the application.
+
 ## Homepage
 
 `GET /` is the user-facing homepage. It is a generic server-rendered page that fetches visitor-specific IP information from `/ip` in the browser. A reported version of 4 or 6 describes the protocol used by the current request; it does not determine the browser or network's complete IPv6 capability.
