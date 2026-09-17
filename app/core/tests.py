@@ -50,6 +50,11 @@ class HomeViewTests(SimpleTestCase):
 
         self.assertContains(response, "Privacy signals")
 
+    def test_home_contains_approximate_location_section(self):
+        response = self.client.get(reverse("home"))
+
+        self.assertContains(response, "Approximate location")
+
     def test_home_contains_privacy_signal_display_elements(self):
         response = self.client.get(reverse("home"))
         element_ids = (
@@ -212,6 +217,79 @@ class RequestHeadersViewTests(SimpleTestCase):
         response = self.client.get(reverse("headers"))
 
         self.assertFalse(response.cookies)
+
+
+class LocationViewTests(SimpleTestCase):
+    def test_get_maps_cloudflare_location_headers(self):
+        supplied_headers = {
+            "HTTP_CF_IPCITY": ("city", "Warsaw"),
+            "HTTP_CF_IPCOUNTRY": ("country_code", "PL"),
+            "HTTP_CF_IPCONTINENT": ("continent_code", "EU"),
+            "HTTP_CF_IPLONGITUDE": ("longitude", "21.0122"),
+            "HTTP_CF_IPLATITUDE": ("latitude", "52.2297"),
+            "HTTP_CF_REGION": ("region", "Mazovia"),
+            "HTTP_CF_REGION_CODE": ("region_code", "14"),
+            "HTTP_CF_METRO_CODE": ("metro_code", "0"),
+            "HTTP_CF_POSTAL_CODE": ("postal_code", "00-001"),
+            "HTTP_CF_TIMEZONE": ("timezone", "Europe/Warsaw"),
+        }
+        request_meta = {
+            header: value for header, (_, value) in supplied_headers.items()
+        }
+
+        response = self.client.get(reverse("location"), **request_meta)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "location": {
+                    key: value for key, value in supplied_headers.values()
+                }
+            },
+        )
+
+    def test_post_is_rejected(self):
+        response = self.client.post(reverse("location"))
+
+        self.assertEqual(response.status_code, 405)
+
+    def test_unrelated_and_sensitive_headers_are_excluded(self):
+        response = self.client.get(
+            reverse("location"),
+            HTTP_CF_RAY="internal-marker",
+            HTTP_X_ARBITRARY="arbitrary-marker",
+            HTTP_X_REAL_IP="198.51.100.1",
+            HTTP_X_FORWARDED_FOR="198.51.100.2",
+            HTTP_COOKIE="session=secret",
+            HTTP_AUTHORIZATION="Bearer secret",
+        )
+
+        self.assertEqual(response.json(), {"location": {}})
+
+    def test_cf_connecting_ip_is_excluded(self):
+        response = self.client.get(
+            reverse("location"), HTTP_CF_CONNECTING_IP="198.51.100.3"
+        )
+
+        self.assertEqual(response.json(), {"location": {}})
+
+    def test_response_is_private_and_not_cacheable(self):
+        response = self.client.get(reverse("location"))
+
+        self.assertIn("private", response.headers["Cache-Control"])
+        self.assertIn("no-store", response.headers["Cache-Control"])
+
+    def test_response_does_not_set_cookies(self):
+        response = self.client.get(reverse("location"))
+
+        self.assertFalse(response.cookies)
+
+    def test_empty_location_headers_return_empty_object(self):
+        response = self.client.get(reverse("location"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"location": {}})
 
 
 class ProxySecurityTests(SimpleTestCase):

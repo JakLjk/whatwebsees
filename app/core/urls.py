@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import client_ip, health, home, request_headers
+from .views import client_ip, health, home, location, request_headers
 
 
 urlpatterns = [
@@ -8,4 +8,5 @@ urlpatterns = [
     path("health", health, name="health"),
     path("headers", request_headers, name="headers"),
     path("ip", client_ip, name="ip"),
+    path("location", location, name="location"),
 ]

@@ -22,6 +22,19 @@ REQUEST_HEADER_ALLOWLIST = (
     "Upgrade-Insecure-Requests",
 )
 
+CLOUDFLARE_LOCATION_HEADERS = (
+    ("CF-IPCity", "city"),
+    ("CF-IPCountry", "country_code"),
+    ("CF-IPContinent", "continent_code"),
+    ("CF-IPLongitude", "longitude"),
+    ("CF-IPLatitude", "latitude"),
+    ("CF-Region", "region"),
+    ("CF-Region-Code", "region_code"),
+    ("CF-Metro-Code", "metro_code"),
+    ("CF-Postal-Code", "postal_code"),
+    ("CF-Timezone", "timezone"),
+)
+
 
 @require_safe
 def home(request):
@@ -67,3 +80,13 @@ def request_headers(request):
         if name in request.headers
     }
     return private_json_response({"headers": headers})
+
+
+@require_GET
+def location(request):
+    location_data = {
+        key: request.headers[header]
+        for header, key in CLOUDFLARE_LOCATION_HEADERS
+        if header in request.headers
+    }
+    return private_json_response({"location": location_data})

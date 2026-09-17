@@ -259,6 +259,11 @@
             padding: clamp(1.5rem, 5vw, 2.5rem);
         }
 
+        .location-card {
+            margin-top: 1.25rem;
+            padding: clamp(1.5rem, 5vw, 2.5rem);
+        }
+
         .browser-heading {
             max-width: 42rem;
             margin-bottom: 1.5rem;
@@ -322,6 +327,26 @@
         }
 
         .signal-value {
+            overflow-wrap: anywhere;
+            user-select: text;
+        }
+
+        .location-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+            gap: 0.75rem;
+            margin: 1.25rem 0 0;
+        }
+
+        .location-row {
+            min-width: 0;
+            padding: 1rem;
+            border: 1px solid var(--border);
+            border-radius: 0.9rem;
+            background: var(--surface-muted);
+        }
+
+        .location-value {
             overflow-wrap: anywhere;
             user-select: text;
         }
@@ -443,6 +468,17 @@
             </aside>
         </div>
 
+        <section class="card location-card" aria-labelledby="location-title">
+            <div class="browser-heading">
+                <p class="card-label">Cloudflare IP geolocation</p>
+                <h2 id="location-title">Approximate location</h2>
+                <p>This is an approximate location inferred from your IP address by Cloudflare. IP geolocation can be inaccurate and does not reveal your precise physical location.</p>
+            </div>
+
+            <p class="status" id="location-status" role="status" aria-live="polite">Loading approximate location…</p>
+            <dl class="location-list" id="location-list" hidden></dl>
+        </section>
+
         <section class="card browser-card" aria-labelledby="browser-title">
             <div class="browser-heading">
                 <p class="card-label">Visible in your browser</p>
@@ -547,6 +583,8 @@
             const connectionVersion = document.getElementById("connection-version");
             const publicAddress = document.getElementById("public-address");
             const connectionNote = document.getElementById("connection-note");
+            const locationStatus = document.getElementById("location-status");
+            const locationList = document.getElementById("location-list");
             const headersStatus = document.getElementById("headers-status");
             const headersList = document.getElementById("headers-list");
             const unavailable = "Unavailable";
@@ -726,6 +764,118 @@
                 setPrivacySignal("javascript-status", "Enabled");
             };
 
+            const hasLocationValue = (value) => (
+                typeof value === "string" && value.trim() !== ""
+            );
+
+            const appendLocationRow = (label, value) => {
+                const row = document.createElement("div");
+                const term = document.createElement("dt");
+                const description = document.createElement("dd");
+
+                row.className = "location-row";
+                description.className = "location-value";
+                term.textContent = label;
+                description.textContent = value;
+                row.append(term, description);
+                locationList.append(row);
+            };
+
+            const showLocation = (location) => {
+                locationList.replaceChildren();
+                const fields = (
+                    [
+                        ["city", "City"],
+                        ["region", "Region"],
+                        ["region_code", "Region code"],
+                        ["country_code", "Country code"],
+                        ["continent_code", "Continent"],
+                        ["postal_code", "Postal code"],
+                        ["timezone", "Time zone"],
+                        ["metro_code", "Metro code"],
+                    ]
+                );
+
+                fields.forEach(([key, label]) => {
+                    if (hasLocationValue(location[key])) {
+                        appendLocationRow(label, location[key]);
+                    }
+                });
+
+                const hasLatitude = hasLocationValue(location.latitude);
+                const hasLongitude = hasLocationValue(location.longitude);
+
+                if (hasLatitude && hasLongitude) {
+                    appendLocationRow(
+                        "Approximate coordinates",
+                        `${location.latitude}, ${location.longitude}`,
+                    );
+                } else if (hasLatitude) {
+                    appendLocationRow("Latitude", location.latitude);
+                } else if (hasLongitude) {
+                    appendLocationRow("Longitude", location.longitude);
+                }
+
+                if (locationList.children.length === 0) {
+                    locationList.hidden = true;
+                    locationStatus.className = "status is-ready";
+                    locationStatus.textContent = "Location information unavailable.";
+                    return;
+                }
+
+                locationList.hidden = false;
+                locationStatus.className = "status is-ready";
+                locationStatus.textContent = "Approximate location information loaded.";
+            };
+
+            const showLocationError = () => {
+                locationList.hidden = true;
+                locationStatus.className = "status is-error";
+                locationStatus.textContent = "Location information is temporarily unavailable.";
+            };
+
+            const loadLocation = async () => {
+                let response;
+
+                try {
+                    response = await fetch("/location", {
+                        method: "GET",
+                        headers: {"Accept": "application/json"},
+                        cache: "no-store",
+                    });
+                } catch {
+                    showLocationError();
+                    return;
+                }
+
+                if (!response.ok) {
+                    showLocationError();
+                    return;
+                }
+
+                let data;
+
+                try {
+                    data = await response.json();
+                } catch {
+                    showLocationError();
+                    return;
+                }
+
+                if (
+                    data === null
+                    || typeof data !== "object"
+                    || data.location === null
+                    || typeof data.location !== "object"
+                    || Array.isArray(data.location)
+                ) {
+                    showLocationError();
+                    return;
+                }
+
+                showLocation(data.location);
+            };
+
             const showHeadersError = () => {
                 headersList.hidden = true;
                 headersStatus.className = "status is-error";
@@ -844,6 +994,7 @@
             loadBrowserInfo();
             loadPrivacySignals();
             loadIp();
+            loadLocation();
             loadHeaders();
         })();
     </script>

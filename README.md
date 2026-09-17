@@ -40,6 +40,10 @@ The address is stripped and validated with Python's `ipaddress` module before be
 
 `GET /headers` returns a private, non-cacheable JSON response containing an explicit allowlist of selected request headers received by the Django origin through Cloudflare, cloudflared, and Nginx. Headers outside that allowlist—including cookies, authorization, client IP, forwarding, and internal proxy headers—are never returned or stored. Cloudflare and the proxies may modify or add headers before they reach the origin.
 
+## Location endpoint
+
+`GET /location` returns an explicit subset of Cloudflare visitor-location headers as private, non-cacheable JSON. This is approximate IP geolocation supplied by Cloudflare, not a precise physical location, and the application does not store it.
+
 ## Homepage
 
 `GET /` is the user-facing homepage. It is a generic server-rendered page that fetches visitor-specific IP information from `/ip` in the browser. A reported version of 4 or 6 describes the protocol used by the current request; it does not determine the browser or network's complete IPv6 capability.
