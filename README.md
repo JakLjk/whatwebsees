@@ -6,25 +6,21 @@ The current implementation is intentionally limited to an infrastructure skeleto
 
 ## Current architecture
 
-Requests made on the VM follow this path:
+Local diagnostic requests made on the VM follow this path:
 
 ```text
 127.0.0.1:8080 -> Nginx -> Gunicorn -> Django
 ```
 
-Only Nginx is published to the host, and it is bound to the loopback interface. Gunicorn is available only on the internal Docker network. SQLite data is stored in `./data` on the host and mounted at `/data` in the Django container.
+Production requests follow this path:
 
-The eventual planned stack is:
+```text
+Cloudflare -> cloudflared -> Nginx -> Gunicorn -> Django
+```
 
-- Debian 13 VM on Proxmox
-- Docker Engine + Docker Compose
-- Python / Django
-- Gunicorn
-- Nginx
-- Cloudflare Tunnel
-- SQLite for the initial MVP
+Cloudflared runs a remotely-managed Cloudflare Tunnel and communicates with Nginx over the `edge` network. The public hostname must use `http://nginx:80` as its service in the Cloudflare dashboard. Nginx communicates with Django/Gunicorn over the internal `backend` network.
 
-Cloudflare Tunnel is not configured yet. No inbound public web ports are exposed directly on the VM.
+No public inbound ports are exposed directly from the VM. Nginx remains published only at `127.0.0.1:8080` for local diagnostics, and Gunicorn has no host port. SQLite data is stored in `./data` on the host and mounted at `/data` in the Django container.
 
 ## Privacy principles
 
@@ -40,13 +36,14 @@ Minimal local Django/Gunicorn/Nginx stack.
 
 ## Local operation
 
-Create a local environment file and replace the placeholder secret with a unique value:
+Create a local environment file, replace the Django placeholder secret with a unique value, and set the Cloudflare Tunnel token:
 
 ```sh
 cp .env.example .env
 ```
 
 The `.env` file is ignored by Git and must not be committed.
+The tunnel token belongs only in `.env`; do not place it in Compose files, documentation, or Git.
 
 Build and start the services:
 
