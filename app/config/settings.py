@@ -37,6 +37,9 @@ ALLOWED_HOSTS = [
     if host.strip()
 ]
 
+# Django is directly behind our controlled Nginx proxy, which normalizes this header.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 INSTALLED_APPS = [
     "core.apps.CoreConfig",
 ]

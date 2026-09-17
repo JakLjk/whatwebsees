@@ -22,6 +22,14 @@ Cloudflared runs a remotely-managed Cloudflare Tunnel and communicates with Ngin
 
 No public inbound ports are exposed directly from the VM. Nginx remains published only at `127.0.0.1:8080` for local diagnostics, and Gunicorn has no host port. SQLite data is stored in `./data` on the host and mounted at `/data` in the Django container.
 
+## Trusted proxy headers
+
+Cloudflare supplies the visitor address in `CF-Connecting-IP`. Nginx normalizes that header into `X-Real-IP`, falling back to its direct peer address for local diagnostic requests. Application code must use this normalized value for visitor identity and must not trust arbitrary values in `X-Forwarded-For`.
+
+Nginx also preserves Cloudflare's incoming `X-Forwarded-Proto` value, falling back to its own request scheme when the header is absent. This lets Django recognize the original HTTPS request even though cloudflared connects to Nginx over HTTP.
+
+Client IP addresses are not logged or stored. Nginx and Gunicorn access logging remain disabled, and the application does not persist request or visitor data.
+
 ## Privacy principles
 
 - Do not persist visitor IP addresses unless technically necessary.
