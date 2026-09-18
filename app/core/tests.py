@@ -99,6 +99,12 @@ class HomeViewTests(SimpleTestCase):
         self.assertNotContains(response, "Load approximate map")
         self.assertNotContains(response, 'id="load-approximate-map"')
 
+    def test_home_location_helpers_accept_numeric_coordinates(self):
+        response = self.client.get(reverse("home"))
+
+        self.assertContains(response, 'typeof value === "number"')
+        self.assertContains(response, "Number.isFinite(value)")
+
     def test_home_creates_map_iframe_automatically_and_safely(self):
         response = self.client.get(reverse("home"))
 

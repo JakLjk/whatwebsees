@@ -1258,9 +1258,17 @@
                 setPrivacySignal("javascript-status", "Enabled");
             };
 
-            const hasLocationValue = (value) => (
-                typeof value === "string" && value.trim() !== ""
-            );
+            const hasLocationValue = (value) => {
+                if (typeof value === "string") {
+                    return value.trim() !== "";
+                }
+
+                if (typeof value === "number") {
+                    return Number.isFinite(value);
+                }
+
+                return false;
+            };
 
             const countryName = (countryCode) => {
                 if (!hasLocationValue(countryCode)) {
