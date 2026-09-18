@@ -666,6 +666,10 @@
                                 <dt>Public address</dt>
                                 <dd id="public-address"></dd>
                             </div>
+                            <div>
+                                <dt>Autonomous system</dt>
+                                <dd id="network-asn">Loading…</dd>
+                            </div>
                         </dl>
                         <p class="connection-note" id="connection-note"></p>
                     </div>
@@ -805,6 +809,7 @@
             const ipAddress = document.getElementById("ip-address");
             const connectionVersion = document.getElementById("connection-version");
             const publicAddress = document.getElementById("public-address");
+            const networkAsn = document.getElementById("network-asn");
             const connectionNote = document.getElementById("connection-note");
             const summaryIp = document.getElementById("summary-ip");
             const summaryConnection = document.getElementById("summary-connection");
@@ -1550,6 +1555,59 @@
                 showHeaders(data.headers);
             };
 
+            const showNetworkUnavailable = () => {
+                networkAsn.textContent = unavailable;
+            };
+
+            const showNetwork = (data) => {
+                if (
+                    data === null
+                    || typeof data !== "object"
+                    || data.network === null
+                    || typeof data.network !== "object"
+                    || Array.isArray(data.network)
+                    || !Number.isInteger(data.network.asn)
+                    || data.network.asn < 1
+                    || data.network.asn > 4294967295
+                ) {
+                    showNetworkUnavailable();
+                    return;
+                }
+
+                networkAsn.textContent = `AS${data.network.asn}`;
+            };
+
+            const loadNetwork = async () => {
+                let response;
+
+                try {
+                    response = await fetch("/network", {
+                        method: "GET",
+                        headers: {"Accept": "application/json"},
+                        cache: "no-store",
+                    });
+                } catch {
+                    showNetworkUnavailable();
+                    return;
+                }
+
+                if (!response.ok) {
+                    showNetworkUnavailable();
+                    return;
+                }
+
+                let data;
+
+                try {
+                    data = await response.json();
+                } catch {
+                    showNetworkUnavailable();
+                    return;
+                }
+
+                showNetwork(data);
+            };
+
             const loadIp = async () => {
                 let response;
 
@@ -1590,6 +1648,7 @@
             loadBrowserInfo();
             loadPrivacySignals();
             loadIp();
+            loadNetwork();
             loadLocation();
             loadHeaders();
         })();

@@ -70,6 +70,19 @@ class HomeViewTests(SimpleTestCase):
             with self.subTest(element_id=element_id):
                 self.assertContains(response, f'id="{element_id}"')
 
+    def test_home_contains_network_asn_display(self):
+        response = self.client.get(reverse("home"))
+
+        self.assertContains(response, 'id="network-asn"')
+        self.assertContains(response, "Autonomous system")
+
+    def test_home_loads_network_diagnostics(self):
+        response = self.client.get(reverse("home"))
+
+        self.assertContains(response, 'fetch("/network"')
+        self.assertContains(response, "loadNetwork()")
+        self.assertContains(response, "`AS${data.network.asn}`")
+
     def test_home_contains_automatic_map_container(self):
         response = self.client.get(reverse("home"))
 
