@@ -55,23 +55,55 @@ class HomeViewTests(SimpleTestCase):
 
         self.assertContains(response, "Approximate location")
 
-    def test_home_contains_click_to_load_map_controls(self):
+    def test_home_contains_primary_information_summary(self):
         response = self.client.get(reverse("home"))
 
-        self.assertContains(response, 'id="load-approximate-map"')
-        self.assertContains(response, "Load approximate map")
+        for element_id in (
+            "primary-information",
+            "summary-ip",
+            "summary-connection",
+            "summary-location",
+            "summary-browser",
+            "summary-platform",
+            "summary-timezone",
+        ):
+            with self.subTest(element_id=element_id):
+                self.assertContains(response, f'id="{element_id}"')
+
+    def test_home_contains_automatic_map_container(self):
+        response = self.client.get(reverse("home"))
+
         self.assertContains(response, 'id="approximate-map-container"')
         self.assertContains(response, "OpenStreetMap")
+        self.assertNotContains(response, "Load approximate map")
+        self.assertNotContains(response, 'id="load-approximate-map"')
 
-    def test_home_creates_map_iframe_dynamically(self):
+    def test_home_creates_map_iframe_automatically_and_safely(self):
         response = self.client.get(reverse("home"))
 
         self.assertContains(response, 'document.createElement("iframe")')
+        self.assertContains(response, "renderApproximateMap(location)")
         self.assertContains(
             response,
             "https://www.openstreetmap.org/export/embed.html",
         )
+        self.assertContains(response, 'mapFrame.referrerPolicy = "no-referrer"')
         self.assertNotContains(response, "<iframe")
+
+    def test_home_contains_progressive_disclosure_sections(self):
+        response = self.client.get(reverse("home"))
+
+        for element_id in (
+            "connection-details",
+            "location-details",
+            "browser-device-details",
+            "privacy-details",
+            "advanced-technical-details",
+        ):
+            with self.subTest(element_id=element_id):
+                self.assertContains(response, f'id="{element_id}"')
+
+        self.assertGreaterEqual(response.content.count(b"<details"), 5)
 
     def test_home_does_not_use_browser_geolocation(self):
         response = self.client.get(reverse("home"))
@@ -90,6 +122,13 @@ class HomeViewTests(SimpleTestCase):
         ):
             with self.subTest(library_reference=library_reference):
                 self.assertNotContains(response, library_reference)
+
+    def test_home_keeps_analytics_dynamically_consent_controlled(self):
+        response = self.client.get(reverse("home"))
+
+        self.assertContains(response, "const loadGoogleAnalytics = () =>")
+        self.assertContains(response, 'document.createElement("script")')
+        self.assertContains(response, 'if (consent === "granted")')
 
     def test_home_contains_analytics_consent_controls(self):
         response = self.client.get(reverse("home"))
@@ -468,3 +507,29 @@ class ClientIpViewTests(SimpleTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("no-store", response.headers["Cache-Control"])
         self.assertIn("private", response.headers["Cache-Control"])
+
+
+
+class CloudflareLocationEncodingTests(SimpleTestCase):
+    def test_location_recovers_utf8_cloudflare_header_value(self):
+        response = self.client.get(
+            reverse("location"),
+            HTTP_CF_IPCITY="Ruda \u00c5\u009al\u00c4\u0085ska",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()["location"]["city"],
+            "Ruda Śląska",
+        )
+
+    def test_location_keeps_already_correct_unicode(self):
+        response = self.client.get(
+            reverse("location"),
+            HTTP_CF_IPCITY="Ruda Śląska",
+        )
+
+        self.assertEqual(
+            response.json()["location"]["city"],
+            "Ruda Śląska",
+        )

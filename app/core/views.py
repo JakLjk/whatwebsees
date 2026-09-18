@@ -82,10 +82,18 @@ def request_headers(request):
     return private_json_response({"headers": headers})
 
 
+def decode_cloudflare_utf8_header(value):
+    """Recover UTF-8 Cloudflare header values decoded through WSGI as Latin-1."""
+    try:
+        return value.encode("latin-1").decode("utf-8")
+    except (UnicodeEncodeError, UnicodeDecodeError):
+        return value
+
+
 @require_GET
 def location(request):
     location_data = {
-        key: request.headers[header]
+        key: decode_cloudflare_utf8_header(request.headers[header])
         for header, key in CLOUDFLARE_LOCATION_HEADERS
         if header in request.headers
     }

@@ -44,13 +44,13 @@ The address is stripped and validated with Python's `ipaddress` module before be
 
 `GET /location` returns an explicit subset of Cloudflare visitor-location headers as private, non-cacheable JSON. This is approximate IP geolocation supplied by Cloudflare, not a precise physical location, and the application does not store it.
 
-When valid approximate coordinates are available, the homepage offers an optional OpenStreetMap view. The map is click-to-load: the browser contacts OpenStreetMap only after the visitor explicitly chooses to load it. The coordinates and other location values are not persisted by the application.
+When valid approximate coordinates are available, the homepage automatically creates an OpenStreetMap view with a conservative local-area bounding box. This causes the browser to request the map from OpenStreetMap; the iframe suppresses referrer information with `no-referrer`. The map uses no GPS or browser geolocation permission, and the approximate coordinates and other location values are not persisted by the application. OpenStreetMap loading is independent of the separately consent-controlled Google Analytics integration.
 
 ## Homepage
 
-`GET /` is the user-facing homepage. It is a generic server-rendered page that fetches visitor-specific IP information from `/ip` in the browser. A reported version of 4 or 6 describes the protocol used by the current request; it does not determine the browser or network's complete IPv6 capability.
+`GET /` is the user-facing homepage. Its primary result summarizes the visitor's IP, current IPv4/IPv6 connection, approximate IP location, conservatively detected browser, reported platform, and time zone alongside the approximate map. Additional connection, location, browser/device, privacy-signal, and request-header diagnostics are organized into collapsed detail sections. A reported IP version describes the protocol used by the current request; it does not determine the browser or network's complete IPv6 capability.
 
-The homepage also uses JavaScript to display browser-visible language, time zone, screen, viewport, pixel ratio, color depth, reported platform, and User-Agent values. These values remain in the browser: they are not sent back to this application or stored. Reported platform and User-Agent are raw browser-reported values; browser and operating-system inference is not implemented. A separate request to `/headers` displays the selected headers received by the origin.
+The homepage also uses JavaScript to display browser-visible language, time zone, screen, viewport, pixel ratio, color depth, reported platform, and User-Agent values. The primary summary applies conservative browser and platform labels using browser-provided information and small User-Agent fallbacks; it does not attempt to identify an exact device model. The detailed reported-platform and User-Agent values remain available as raw browser-reported values. These diagnostic values are not sent back to this application or persisted by it. A separate request to `/headers` displays the selected headers received by the origin.
 
 Browser-reported cookie availability, Do Not Track, Global Privacy Control, online status, and JavaScript status are also displayed locally. These privacy signals are read once in the browser and are not transmitted to the application or stored.
 

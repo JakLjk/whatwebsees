@@ -104,13 +104,6 @@
             font-size: clamp(1rem, 2.2vw, 1.2rem);
         }
 
-        .dashboard {
-            display: grid;
-            grid-template-columns: minmax(0, 1.65fr) minmax(16rem, 0.85fr);
-            gap: 1.25rem;
-            align-items: stretch;
-        }
-
         .card {
             border: 1px solid var(--border);
             border-radius: 1.4rem;
@@ -118,17 +111,77 @@
             box-shadow: var(--shadow);
         }
 
-        .ip-card {
-            padding: clamp(1.5rem, 5vw, 2.5rem);
+        .primary-results {
+            display: grid;
+            grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+            gap: 1.25rem;
+            align-items: stretch;
+        }
+
+        .summary-panel,
+        .map-panel {
+            min-width: 0;
+            padding: clamp(1.4rem, 4vw, 2.25rem);
         }
 
         .card-label {
-            margin: 0 0 1.4rem;
-            color: var(--muted);
-            font-size: 0.84rem;
-            font-weight: 700;
-            letter-spacing: 0.08em;
+            margin: 0 0 0.6rem;
+            color: var(--accent);
+            font-size: 0.76rem;
+            font-weight: 750;
+            letter-spacing: 0.1em;
             text-transform: uppercase;
+        }
+
+        .summary-panel h2,
+        .map-panel h2,
+        .details-heading {
+            margin-bottom: 0.65rem;
+            font-size: clamp(1.4rem, 3vw, 2rem);
+        }
+
+        .summary-ip {
+            display: block;
+            overflow-wrap: anywhere;
+            margin: 1.4rem 0 1.5rem;
+            color: var(--text);
+            font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+            font-size: clamp(1.85rem, 4.5vw, 3.35rem);
+            font-weight: 780;
+            letter-spacing: -0.05em;
+            line-height: 1.12;
+            user-select: all;
+        }
+
+        .summary-list {
+            display: grid;
+            gap: 0;
+            margin: 0;
+        }
+
+        .summary-list > div {
+            display: grid;
+            grid-template-columns: minmax(7rem, 0.8fr) minmax(0, 1.4fr);
+            gap: 1rem;
+            padding-block: 0.75rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .summary-list dt,
+        .summary-list dd {
+            margin: 0;
+        }
+
+        .summary-list dt {
+            color: var(--muted);
+            font-size: 0.85rem;
+            font-weight: 650;
+        }
+
+        .summary-list dd {
+            overflow-wrap: anywhere;
+            font-weight: 750;
+            text-align: right;
         }
 
         .status {
@@ -138,6 +191,7 @@
             gap: 0.65rem;
             margin: 0;
             color: var(--muted);
+            font-size: 0.9rem;
         }
 
         .status::before {
@@ -168,236 +222,49 @@
             animation: none;
         }
 
-        .ip-address {
-            display: block;
-            overflow-wrap: anywhere;
-            margin: 0.7rem 0 1.75rem;
-            color: var(--text);
-            font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-            font-size: clamp(1.65rem, 5vw, 3.2rem);
-            font-weight: 750;
-            letter-spacing: -0.045em;
-            line-height: 1.2;
-            user-select: all;
-        }
-
-        .details {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 0.75rem;
-            margin: 0;
-        }
-
-        .details > div {
-            padding: 1rem;
-            border-radius: 0.9rem;
-            background: var(--surface-muted);
-        }
-
-        dt {
-            margin-bottom: 0.2rem;
-            color: var(--muted);
-            font-size: 0.82rem;
-            font-weight: 650;
-        }
-
-        dd {
-            margin: 0;
-            font-size: 1rem;
-            font-weight: 750;
-        }
-
-        .connection-note {
-            margin: 1rem 0 0;
-            color: var(--muted);
-            font-size: 0.9rem;
-        }
-
-        .privacy-card {
+        .map-panel {
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            padding: clamp(1.4rem, 4vw, 2rem);
-            background: var(--accent-soft);
-            box-shadow: none;
+            background: #eef3ff;
         }
 
-        .privacy-card h2 {
-            margin-bottom: 0.8rem;
-            font-size: 1.35rem;
-        }
-
-        .privacy-card p {
-            margin: 0;
+        .map-panel-copy {
+            margin: 0 0 1rem;
             color: #3f5068;
-            font-size: 0.94rem;
-        }
-
-        .privacy-tag {
-            align-self: flex-start;
-            margin-top: 2rem;
-            padding: 0.35rem 0.65rem;
-            border: 1px solid rgba(36, 87, 214, 0.2);
-            border-radius: 999px;
-            color: #214aa8;
-            font-size: 0.78rem;
-            font-weight: 750;
-        }
-
-        .browser-card {
-            margin-top: 1.25rem;
-            padding: clamp(1.5rem, 5vw, 2.5rem);
-        }
-
-        .headers-card {
-            margin-top: 1.25rem;
-            padding: clamp(1.5rem, 5vw, 2.5rem);
-        }
-
-        .signals-card {
-            margin-top: 1.25rem;
-            padding: clamp(1.5rem, 5vw, 2.5rem);
-        }
-
-        .location-card {
-            margin-top: 1.25rem;
-            padding: clamp(1.5rem, 5vw, 2.5rem);
-        }
-
-        .browser-heading {
-            max-width: 42rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .browser-heading h2 {
-            margin-bottom: 0.55rem;
-            font-size: clamp(1.45rem, 3vw, 2rem);
-        }
-
-        .browser-heading p {
-            margin: 0;
-            color: var(--muted);
-            font-size: 0.94rem;
-        }
-
-        .browser-details {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 0.75rem;
-            margin: 0;
-        }
-
-        .browser-details > div {
-            min-width: 0;
-            padding: 1rem;
-            border: 1px solid var(--border);
-            border-radius: 0.9rem;
-            background: var(--surface-muted);
-        }
-
-        .browser-details .wide-value {
-            grid-column: 1 / -1;
-        }
-
-        .browser-value {
-            overflow-wrap: anywhere;
-            user-select: text;
-        }
-
-        .user-agent-value {
-            font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
             font-size: 0.88rem;
-            font-weight: 550;
-            line-height: 1.55;
-        }
-
-        .signal-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-            gap: 0.75rem;
-            margin: 0;
-        }
-
-        .signal-details > div {
-            min-width: 0;
-            padding: 1rem;
-            border: 1px solid var(--border);
-            border-radius: 0.9rem;
-            background: var(--surface-muted);
-        }
-
-        .signal-value {
-            overflow-wrap: anywhere;
-            user-select: text;
-        }
-
-        .location-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-            gap: 0.75rem;
-            margin: 1.25rem 0 0;
-        }
-
-        .location-row {
-            min-width: 0;
-            padding: 1rem;
-            border: 1px solid var(--border);
-            border-radius: 0.9rem;
-            background: var(--surface-muted);
-        }
-
-        .location-value {
-            overflow-wrap: anywhere;
-            user-select: text;
-        }
-
-        .map-control {
-            margin-top: 1.5rem;
-            padding: 1.15rem;
-            border: 1px solid var(--border);
-            border-radius: 1rem;
-            background: var(--accent-soft);
-        }
-
-        .map-control p {
-            margin: 0;
-            color: #3f5068;
-            font-size: 0.92rem;
-        }
-
-        .map-load-button {
-            margin-top: 1rem;
-            padding: 0.7rem 1rem;
-            border: 1px solid var(--accent);
-            border-radius: 0.75rem;
-            background: var(--accent);
-            color: #ffffff;
-            font: inherit;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-        .map-load-button:disabled {
-            cursor: default;
-            opacity: 0.7;
         }
 
         .map-frame-container {
-            margin-top: 1rem;
+            display: grid;
+            min-height: 20rem;
+            flex: 1;
+            place-items: center;
+            overflow: hidden;
+            margin-top: 0.75rem;
+            border: 1px solid rgba(36, 87, 214, 0.18);
+            border-radius: 1rem;
+            background: var(--surface);
+        }
+
+        .map-frame-container > span {
+            padding: 1rem;
+            color: var(--muted);
+            text-align: center;
         }
 
         .approximate-map-frame {
             display: block;
             width: 100%;
-            aspect-ratio: 16 / 9;
-            border: 1px solid var(--border);
-            border-radius: 0.8rem;
+            height: 100%;
+            min-height: 20rem;
+            border: 0;
             background: var(--surface-muted);
         }
 
         .map-attribution {
-            margin-top: 0.75rem !important;
-            font-size: 0.8rem !important;
+            margin: 0.75rem 0 0;
+            color: var(--muted);
+            font-size: 0.78rem;
         }
 
         .map-attribution a {
@@ -405,33 +272,167 @@
             font-weight: 700;
         }
 
+        .privacy-note {
+            margin: 1.25rem 0 0;
+            padding: 0.9rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 0.9rem;
+            background: rgba(255, 255, 255, 0.72);
+            color: var(--muted);
+            font-size: 0.88rem;
+        }
+
+        .details-area {
+            margin-top: clamp(2.5rem, 6vw, 4.5rem);
+        }
+
+        .details-heading {
+            margin-bottom: 0.4rem;
+        }
+
+        .details-intro {
+            margin: 0 0 1.25rem;
+            color: var(--muted);
+        }
+
+        .disclosure {
+            overflow: hidden;
+            margin-top: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            background: var(--surface);
+        }
+
+        .disclosure summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1.05rem 1.2rem;
+            cursor: pointer;
+            font-weight: 750;
+            list-style: none;
+        }
+
+        .disclosure summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .disclosure summary::after {
+            color: var(--accent);
+            content: "+";
+            font-size: 1.35rem;
+            line-height: 1;
+        }
+
+        .disclosure[open] summary::after {
+            content: "−";
+        }
+
+        .disclosure summary:focus-visible {
+            outline: 3px solid var(--accent-soft);
+            outline-offset: -3px;
+        }
+
+        .detail-content {
+            padding: 1.2rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .detail-copy {
+            margin: 0 0 1rem;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .detail-content h3 {
+            margin: 0 0 0.4rem;
+            font-size: 1.1rem;
+        }
+
+        .ip-address {
+            display: block;
+            overflow-wrap: anywhere;
+            margin: 0.7rem 0 1.25rem;
+            font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+            font-size: clamp(1.35rem, 4vw, 2.25rem);
+            font-weight: 750;
+            user-select: all;
+        }
+
+        .details,
+        .browser-details,
+        .signal-details,
+        .location-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+            gap: 0.75rem;
+            margin: 1rem 0 0;
+        }
+
+        .details > div,
+        .browser-details > div,
+        .signal-details > div,
+        .location-row {
+            min-width: 0;
+            padding: 1rem;
+            border-radius: 0.85rem;
+            background: var(--surface-muted);
+        }
+
+        .browser-details .wide-value {
+            grid-column: 1 / -1;
+        }
+
+        dt {
+            margin-bottom: 0.2rem;
+            color: var(--muted);
+            font-size: 0.8rem;
+            font-weight: 650;
+        }
+
+        dd {
+            margin: 0;
+            overflow-wrap: anywhere;
+            font-size: 0.98rem;
+            font-weight: 750;
+        }
+
+        .connection-note {
+            margin: 1rem 0 0;
+            color: var(--muted);
+            font-size: 0.88rem;
+        }
+
+        .browser-value,
+        .signal-value,
+        .location-value {
+            user-select: text;
+        }
+
+        .user-agent-value,
+        .header-value {
+            font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+            font-size: 0.84rem;
+            font-weight: 550;
+            line-height: 1.55;
+            user-select: text;
+        }
+
         .headers-list {
             display: grid;
             gap: 0.65rem;
-            margin: 1.25rem 0 0;
+            margin: 1rem 0 0;
         }
 
         .header-row {
             display: grid;
             grid-template-columns: minmax(10rem, 0.55fr) minmax(0, 1.45fr);
             gap: 1rem;
+            min-width: 0;
             padding: 1rem;
-            border: 1px solid var(--border);
-            border-radius: 0.9rem;
+            border-radius: 0.85rem;
             background: var(--surface-muted);
-        }
-
-        .header-row dt {
-            overflow-wrap: anywhere;
-        }
-
-        .header-value {
-            overflow-wrap: anywhere;
-            font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-            font-size: 0.88rem;
-            font-weight: 550;
-            line-height: 1.55;
-            user-select: text;
         }
 
         .site-footer {
@@ -513,8 +514,7 @@
         }
 
         .consent-button:focus-visible,
-        .analytics-settings:focus-visible,
-        .map-load-button:focus-visible {
+        .analytics-settings:focus-visible {
             outline: 3px solid var(--accent-soft);
             outline-offset: 3px;
         }
@@ -536,12 +536,23 @@
         }
 
         @media (max-width: 46rem) {
-            .dashboard {
+            .primary-results {
                 grid-template-columns: 1fr;
             }
 
+            .summary-list > div {
+                grid-template-columns: 1fr;
+                gap: 0.2rem;
+            }
+
+            .summary-list dd {
+                text-align: left;
+            }
+
             .details,
-            .browser-details {
+            .browser-details,
+            .signal-details,
+            .location-list {
                 grid-template-columns: 1fr;
             }
 
@@ -574,148 +585,176 @@
         <section class="intro" aria-labelledby="page-title">
             <p class="eyebrow">Connection privacy</p>
             <h1 id="page-title">What Does the Web See?</h1>
-            <p class="intro-text">See what information a website can observe about your connection and browser.</p>
+            <p class="intro-text">See the basic information a website can observe, with technical details available when you want them.</p>
         </section>
 
-        <div class="dashboard">
-            <section class="card ip-card" aria-labelledby="ip-title">
-                <h2 class="card-label" id="ip-title">Your IP address</h2>
-                <p class="status" id="ip-status" role="status" aria-live="polite">Loading your connection information…</p>
+        <section class="primary-results" id="primary-information" aria-label="Your basic information">
+            <div class="card summary-panel">
+                <p class="card-label">Your information</p>
+                <h2>What this connection reports</h2>
+                <output class="summary-ip" id="summary-ip" aria-label="Your current public IP address">Loading…</output>
 
-                <div id="ip-details" hidden>
-                    <output class="ip-address" id="ip-address" aria-label="Your current public IP address"></output>
-                    <dl class="details">
-                        <div>
-                            <dt>Current connection</dt>
-                            <dd id="connection-version"></dd>
-                        </div>
-                        <div>
-                            <dt>Public address</dt>
-                            <dd id="public-address"></dd>
-                        </div>
-                    </dl>
-                    <p class="connection-note" id="connection-note"></p>
-                </div>
-            </section>
-
-            <aside class="card privacy-card" aria-labelledby="privacy-title">
-                <div>
-                    <h2 id="privacy-title">A privacy-minded view</h2>
-                    <p>Your IP address is returned to you so this page can display it. This application does not store it, and application access logging is disabled.</p>
-                </div>
-                <span class="privacy-tag">Analytics only with your consent</span>
-            </aside>
-        </div>
-
-        <section class="card location-card" aria-labelledby="location-title">
-            <div class="browser-heading">
-                <p class="card-label">Cloudflare IP geolocation</p>
-                <h2 id="location-title">Approximate location</h2>
-                <p>This is an approximate location inferred from your IP address by Cloudflare. IP geolocation can be inaccurate and does not reveal your precise physical location.</p>
+                <dl class="summary-list">
+                    <div>
+                        <dt>Connection</dt>
+                        <dd id="summary-connection">Loading…</dd>
+                    </div>
+                    <div>
+                        <dt>Approximate location</dt>
+                        <dd id="summary-location">Loading…</dd>
+                    </div>
+                    <div>
+                        <dt>Browser</dt>
+                        <dd id="summary-browser">Loading…</dd>
+                    </div>
+                    <div>
+                        <dt>Platform</dt>
+                        <dd id="summary-platform">Loading…</dd>
+                    </div>
+                    <div>
+                        <dt>Time zone</dt>
+                        <dd id="summary-timezone">Loading…</dd>
+                    </div>
+                </dl>
             </div>
 
-            <p class="status" id="location-status" role="status" aria-live="polite">Loading approximate location…</p>
-            <dl class="location-list" id="location-list" hidden></dl>
-
-            <div class="map-control" id="approximate-map-control" hidden>
-                <p>The marker represents approximate IP geolocation, not your GPS or precise physical location. IP geolocation can be inaccurate.</p>
-                <p>The map is loaded from OpenStreetMap only after you choose to load it. OpenStreetMap will receive a network request from your browser.</p>
-                <button class="map-load-button" id="load-approximate-map" type="button" disabled>Load approximate map</button>
-                <p id="approximate-map-status" role="status" aria-live="polite">The external map has not been loaded.</p>
-                <div class="map-frame-container" id="approximate-map-container"></div>
+            <div class="card map-panel" aria-labelledby="map-title">
+                <p class="card-label">Approximate location</p>
+                <h2 id="map-title">Where your IP appears to be</h2>
+                <p class="map-panel-copy">This map uses approximate IP geolocation and is provided by OpenStreetMap. When approximate coordinates are available, the map loads automatically and sends a request from your browser to OpenStreetMap. It is not GPS or a precise physical location, and IP geolocation can be inaccurate.</p>
+                <p class="status" id="approximate-map-status" role="status" aria-live="polite">Waiting for approximate coordinates…</p>
+                <div class="map-frame-container" id="approximate-map-container">
+                    <span>Map loading…</span>
+                </div>
                 <p class="map-attribution">
                     <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer external">© OpenStreetMap contributors</a>
                 </p>
             </div>
         </section>
 
-        <section class="card browser-card" aria-labelledby="browser-title">
-            <div class="browser-heading">
-                <p class="card-label">Visible in your browser</p>
-                <h2 id="browser-title">Browser &amp; device</h2>
-                <p>These are raw values reported by standard browser APIs. They describe this browsing context and are not used to infer a browser, operating system, or device model.</p>
-            </div>
+        <p class="privacy-note">Displayed diagnostic values are not persisted by this application. Optional Google Analytics remains separate and runs only after consent.</p>
 
-            <dl class="browser-details">
-                <div>
-                    <dt>Browser language</dt>
-                    <dd class="browser-value" id="browser-language">Loading…</dd>
-                </div>
-                <div>
-                    <dt>Preferred languages</dt>
-                    <dd class="browser-value" id="preferred-languages">Loading…</dd>
-                </div>
-                <div>
-                    <dt>Time zone</dt>
-                    <dd class="browser-value" id="time-zone">Loading…</dd>
-                </div>
-                <div>
-                    <dt>Screen resolution</dt>
-                    <dd class="browser-value" id="screen-resolution">Loading…</dd>
-                </div>
-                <div>
-                    <dt>Viewport size</dt>
-                    <dd class="browser-value" id="viewport-size">Loading…</dd>
-                </div>
-                <div>
-                    <dt>Device pixel ratio</dt>
-                    <dd class="browser-value" id="device-pixel-ratio">Loading…</dd>
-                </div>
-                <div>
-                    <dt>Color depth</dt>
-                    <dd class="browser-value" id="color-depth">Loading…</dd>
-                </div>
-                <div>
-                    <dt>Reported platform</dt>
-                    <dd class="browser-value" id="reported-platform">Loading…</dd>
-                </div>
-                <div class="wide-value">
-                    <dt>User-Agent</dt>
-                    <dd class="browser-value user-agent-value" id="user-agent">Loading…</dd>
-                </div>
-            </dl>
-        </section>
+        <section class="details-area" aria-labelledby="details-heading">
+            <h2 class="details-heading" id="details-heading">Explore more details</h2>
+            <p class="details-intro">Open a section for additional context or raw technical information.</p>
 
-        <section class="card signals-card" aria-labelledby="signals-title">
-            <div class="browser-heading">
-                <p class="card-label">Browser-reported status</p>
-                <h2 id="signals-title">Privacy signals</h2>
-                <p>These values are exposed by browser APIs and may vary between browsers. They are read once in this page and are not stored or transmitted.</p>
-            </div>
+            <details class="disclosure" id="connection-details">
+                <summary>Connection details</summary>
+                <div class="detail-content">
+                    <p class="status" id="ip-status" role="status" aria-live="polite">Loading your connection information…</p>
+                    <div id="ip-details" hidden>
+                        <output class="ip-address" id="ip-address" aria-label="Your current public IP address"></output>
+                        <dl class="details">
+                            <div>
+                                <dt>Current connection</dt>
+                                <dd id="connection-version"></dd>
+                            </div>
+                            <div>
+                                <dt>Public address</dt>
+                                <dd id="public-address"></dd>
+                            </div>
+                        </dl>
+                        <p class="connection-note" id="connection-note"></p>
+                    </div>
+                </div>
+            </details>
 
-            <dl class="signal-details">
-                <div>
-                    <dt>Cookies enabled</dt>
-                    <dd class="signal-value" id="cookies-enabled">Unavailable</dd>
+            <details class="disclosure" id="location-details">
+                <summary>Location details</summary>
+                <div class="detail-content">
+                    <p class="detail-copy">Cloudflare estimates these values from the public IP address. They are approximate and are not GPS coordinates.</p>
+                    <p class="status" id="location-status" role="status" aria-live="polite">Loading approximate location…</p>
+                    <dl class="location-list" id="location-list" hidden></dl>
                 </div>
-                <div>
-                    <dt>Do Not Track</dt>
-                    <dd class="signal-value" id="do-not-track">Unavailable</dd>
-                </div>
-                <div>
-                    <dt>Global Privacy Control</dt>
-                    <dd class="signal-value" id="global-privacy-control">Unavailable</dd>
-                </div>
-                <div>
-                    <dt>Online status</dt>
-                    <dd class="signal-value" id="online-status">Unavailable</dd>
-                </div>
-                <div>
-                    <dt>JavaScript</dt>
-                    <dd class="signal-value" id="javascript-status">Unavailable</dd>
-                </div>
-            </dl>
-        </section>
+            </details>
 
-        <section class="card headers-card" aria-labelledby="headers-title">
-            <div class="browser-heading">
-                <p class="card-label">Visible at the origin</p>
-                <h2 id="headers-title">Request headers</h2>
-                <p>These are selected request headers received by this application's origin. Cloudflare and other proxies in the request path may modify or add headers before they arrive.</p>
-            </div>
+            <details class="disclosure" id="browser-device-details">
+                <summary>Browser &amp; device details</summary>
+                <div class="detail-content">
+                    <p class="detail-copy">Browser-reported values describe this browsing context and may not identify the exact device.</p>
+                    <dl class="browser-details">
+                        <div>
+                            <dt>Detected browser</dt>
+                            <dd class="browser-value" id="detected-browser">Loading…</dd>
+                        </div>
+                        <div>
+                            <dt>Browser language</dt>
+                            <dd class="browser-value" id="browser-language">Loading…</dd>
+                        </div>
+                        <div>
+                            <dt>Preferred languages</dt>
+                            <dd class="browser-value" id="preferred-languages">Loading…</dd>
+                        </div>
+                        <div>
+                            <dt>Time zone</dt>
+                            <dd class="browser-value" id="time-zone">Loading…</dd>
+                        </div>
+                        <div>
+                            <dt>Screen resolution</dt>
+                            <dd class="browser-value" id="screen-resolution">Loading…</dd>
+                        </div>
+                        <div>
+                            <dt>Viewport size</dt>
+                            <dd class="browser-value" id="viewport-size">Loading…</dd>
+                        </div>
+                        <div>
+                            <dt>Device pixel ratio</dt>
+                            <dd class="browser-value" id="device-pixel-ratio">Loading…</dd>
+                        </div>
+                        <div>
+                            <dt>Color depth</dt>
+                            <dd class="browser-value" id="color-depth">Loading…</dd>
+                        </div>
+                        <div>
+                            <dt>Reported platform</dt>
+                            <dd class="browser-value" id="reported-platform">Loading…</dd>
+                        </div>
+                        <div class="wide-value">
+                            <dt>Raw User-Agent</dt>
+                            <dd class="browser-value user-agent-value" id="user-agent">Loading…</dd>
+                        </div>
+                    </dl>
+                </div>
+            </details>
 
-            <p class="status" id="headers-status" role="status" aria-live="polite">Loading selected request headers…</p>
-            <dl class="headers-list" id="headers-list" hidden></dl>
+            <details class="disclosure" id="privacy-details">
+                <summary>Privacy signals</summary>
+                <div class="detail-content">
+                    <p class="detail-copy">These status values are exposed by browser APIs and can vary between browsers.</p>
+                    <dl class="signal-details">
+                        <div>
+                            <dt>Cookies enabled</dt>
+                            <dd class="signal-value" id="cookies-enabled">Unavailable</dd>
+                        </div>
+                        <div>
+                            <dt>Do Not Track</dt>
+                            <dd class="signal-value" id="do-not-track">Unavailable</dd>
+                        </div>
+                        <div>
+                            <dt>Global Privacy Control</dt>
+                            <dd class="signal-value" id="global-privacy-control">Unavailable</dd>
+                        </div>
+                        <div>
+                            <dt>Online status</dt>
+                            <dd class="signal-value" id="online-status">Unavailable</dd>
+                        </div>
+                        <div>
+                            <dt>JavaScript</dt>
+                            <dd class="signal-value" id="javascript-status">Unavailable</dd>
+                        </div>
+                    </dl>
+                </div>
+            </details>
+
+            <details class="disclosure" id="advanced-technical-details">
+                <summary>Advanced technical details</summary>
+                <div class="detail-content">
+                    <h3>Request headers</h3>
+                    <p class="detail-copy">These selected headers reached this application's origin through Cloudflare and the reverse proxies. They may differ from the browser's original request.</p>
+                    <p class="status" id="headers-status" role="status" aria-live="polite">Loading selected request headers…</p>
+                    <dl class="headers-list" id="headers-list" hidden></dl>
+                </div>
+            </details>
         </section>
     </main>
 
@@ -754,16 +793,19 @@
             const connectionVersion = document.getElementById("connection-version");
             const publicAddress = document.getElementById("public-address");
             const connectionNote = document.getElementById("connection-note");
+            const summaryIp = document.getElementById("summary-ip");
+            const summaryConnection = document.getElementById("summary-connection");
+            const summaryLocation = document.getElementById("summary-location");
+            const summaryBrowser = document.getElementById("summary-browser");
+            const summaryPlatform = document.getElementById("summary-platform");
+            const summaryTimezone = document.getElementById("summary-timezone");
             const locationStatus = document.getElementById("location-status");
             const locationList = document.getElementById("location-list");
-            const mapControl = document.getElementById("approximate-map-control");
-            const mapLoadButton = document.getElementById("load-approximate-map");
             const mapStatus = document.getElementById("approximate-map-status");
             const mapContainer = document.getElementById("approximate-map-container");
             const headersStatus = document.getElementById("headers-status");
             const headersList = document.getElementById("headers-list");
             const unavailable = "Unavailable";
-            let approximateMapCoordinates = null;
 
             const analyticsMeasurementId = "G-GJ3PP8PF5J";
             const analyticsConsentKey = "web-privacy-analytics-consent";
@@ -890,6 +932,8 @@
 
             const showError = (message) => {
                 details.hidden = true;
+                summaryIp.textContent = unavailable;
+                summaryConnection.textContent = unavailable;
                 status.className = "status is-error";
                 status.textContent = message;
             };
@@ -899,6 +943,8 @@
                 connectionVersion.textContent = `IPv${data.version}`;
                 publicAddress.textContent = data.is_public ? "Yes" : "No";
                 connectionNote.textContent = `This connection used IPv${data.version}. This does not determine your network's overall IPv6 capability.`;
+                summaryIp.textContent = data.ip;
+                summaryConnection.textContent = `IPv${data.version}`;
                 details.hidden = false;
                 status.className = "status is-ready";
                 status.textContent = "Connection information loaded.";
@@ -964,17 +1010,119 @@
                 return navigator.platform;
             };
 
+            const readablePlatform = (reportedValue, userAgent) => {
+                const reported = reportedValue.toLowerCase();
+                const agent = userAgent.toLowerCase();
+
+                if (agent.includes("android") || reported.includes("android")) {
+                    return "Android";
+                }
+
+                if (
+                    /iphone|ipad|ipod/.test(agent)
+                    || reported === "ios"
+                    || reported === "ipados"
+                ) {
+                    return reported === "ipados" ? "iPadOS" : "iOS";
+                }
+
+                if (reported.includes("mac")) {
+                    return "macOS";
+                }
+
+                if (reported.includes("win")) {
+                    return "Windows";
+                }
+
+                if (reported.includes("cros") || reported.includes("chrome os")) {
+                    return "ChromeOS";
+                }
+
+                if (reported.includes("linux")) {
+                    return "Linux";
+                }
+
+                return reportedValue;
+            };
+
+            const detectBrowser = async (userAgent) => {
+                try {
+                    if (
+                        navigator.brave
+                        && typeof navigator.brave.isBrave === "function"
+                        && await navigator.brave.isBrave()
+                    ) {
+                        return "Brave";
+                    }
+                } catch {
+                    // Fall through to the remaining conservative browser checks.
+                }
+
+                try {
+                    if (
+                        navigator.userAgentData
+                        && Array.isArray(navigator.userAgentData.brands)
+                    ) {
+                        const brandNames = navigator.userAgentData.brands.map(
+                            ({brand}) => String(brand),
+                        );
+                        const knownBrands = (
+                            [
+                                ["Brave", "Brave"],
+                                ["Microsoft Edge", "Edge"],
+                                ["Opera", "Opera"],
+                                ["Google Chrome", "Chrome"],
+                                ["Chromium", "Chromium"],
+                            ]
+                        );
+
+                        for (const [reportedBrand, displayName] of knownBrands) {
+                            if (brandNames.some((brand) => brand.includes(reportedBrand))) {
+                                return displayName;
+                            }
+                        }
+                    }
+                } catch {
+                    // Fall through to conservative User-Agent checks.
+                }
+
+                if (/Edg\//.test(userAgent)) {
+                    return "Edge";
+                }
+
+                if (/OPR\//.test(userAgent)) {
+                    return "Opera";
+                }
+
+                if (/Firefox\/|FxiOS\//.test(userAgent)) {
+                    return "Firefox";
+                }
+
+                if (/CriOS\/|Chrome\//.test(userAgent)) {
+                    return "Chrome";
+                }
+
+                if (/Safari\//.test(userAgent) && /Version\//.test(userAgent)) {
+                    return "Safari";
+                }
+
+                return unavailable;
+            };
+
             const setBrowserValue = (id, value) => {
                 document.getElementById(id).textContent = formatBrowserValue(value);
             };
 
-            const loadBrowserInfo = () => {
+            const loadBrowserInfo = async () => {
+                const userAgent = safelyRead(() => navigator.userAgent);
+                const platform = safelyRead(reportedPlatform);
+                const timeZone = safelyRead(
+                    () => Intl.DateTimeFormat().resolvedOptions().timeZone,
+                );
+
                 setBrowserValue("browser-language", safelyRead(() => navigator.language));
                 setBrowserValue("preferred-languages", safelyRead(preferredLanguages));
-                setBrowserValue(
-                    "time-zone",
-                    safelyRead(() => Intl.DateTimeFormat().resolvedOptions().timeZone),
-                );
+                setBrowserValue("time-zone", timeZone);
                 setBrowserValue(
                     "screen-resolution",
                     safelyRead(() => formatDimensions(screen.width, screen.height)),
@@ -988,8 +1136,25 @@
                     safelyRead(() => window.devicePixelRatio),
                 );
                 setBrowserValue("color-depth", safelyRead(() => screen.colorDepth));
-                setBrowserValue("reported-platform", safelyRead(reportedPlatform));
-                setBrowserValue("user-agent", safelyRead(() => navigator.userAgent));
+                setBrowserValue("reported-platform", platform);
+                setBrowserValue("user-agent", userAgent);
+
+                const browser = await detectBrowser(
+                    userAgent === unavailable ? "" : userAgent,
+                );
+                const friendlyPlatform = (
+                    platform === unavailable
+                        ? unavailable
+                        : readablePlatform(
+                            platform,
+                            userAgent === unavailable ? "" : userAgent,
+                        )
+                );
+
+                setBrowserValue("detected-browser", browser);
+                summaryBrowser.textContent = browser;
+                summaryPlatform.textContent = friendlyPlatform;
+                summaryTimezone.textContent = timeZone;
             };
 
             const enabledStatus = (value) => {
@@ -1067,6 +1232,36 @@
                 typeof value === "string" && value.trim() !== ""
             );
 
+            const countryName = (countryCode) => {
+                if (!hasLocationValue(countryCode)) {
+                    return unavailable;
+                }
+
+                try {
+                    if (typeof Intl.DisplayNames === "function") {
+                        const displayNames = new Intl.DisplayNames(
+                            [navigator.language || "en"],
+                            {type: "region"},
+                        );
+                        return displayNames.of(countryCode.toUpperCase()) || countryCode;
+                    }
+                } catch {
+                    return countryCode;
+                }
+
+                return countryCode;
+            };
+
+            const locationSummary = (location) => {
+                const city = hasLocationValue(location.city) ? location.city : null;
+                const region = hasLocationValue(location.region) ? location.region : null;
+                const country = countryName(location.country_code);
+                const area = city || region;
+                const parts = [area, country === unavailable ? null : country].filter(Boolean);
+
+                return parts.length > 0 ? parts.join(", ") : unavailable;
+            };
+
             const appendLocationRow = (label, value) => {
                 const row = document.createElement("div");
                 const term = document.createElement("dt");
@@ -1105,12 +1300,6 @@
                 return {latitude, longitude};
             };
 
-            const configureApproximateMap = (location) => {
-                approximateMapCoordinates = validatedCoordinates(location);
-                mapControl.hidden = approximateMapCoordinates === null;
-                mapLoadButton.disabled = approximateMapCoordinates === null;
-            };
-
             const roundedMapCoordinate = (value) => (
                 Math.round(value * 100000) / 100000
             );
@@ -1129,11 +1318,27 @@
                 return mapUrl.toString();
             };
 
-            const loadApproximateMap = () => {
-                if (
-                    approximateMapCoordinates === null
-                    || mapContainer.querySelector("iframe") !== null
-                ) {
+            const showMapUnavailable = () => {
+                if (mapContainer.querySelector("iframe") !== null) {
+                    return;
+                }
+
+                const message = document.createElement("span");
+                message.textContent = "Map unavailable";
+                mapContainer.replaceChildren(message);
+                mapStatus.className = "status is-error";
+                mapStatus.textContent = "Map unavailable because valid approximate coordinates were not provided.";
+            };
+
+            const renderApproximateMap = (location) => {
+                const coordinates = validatedCoordinates(location);
+
+                if (coordinates === null) {
+                    showMapUnavailable();
+                    return;
+                }
+
+                if (mapContainer.querySelector("iframe") !== null) {
                     return;
                 }
 
@@ -1143,21 +1348,21 @@
                 mapFrame.title = "Approximate IP location map";
                 mapFrame.loading = "lazy";
                 mapFrame.referrerPolicy = "no-referrer";
-                mapFrame.src = approximateMapUrl(approximateMapCoordinates);
+                mapFrame.src = approximateMapUrl(coordinates);
                 mapFrame.addEventListener("load", () => {
-                    mapLoadButton.textContent = "Approximate map loaded";
+                    mapStatus.className = "status is-ready";
                     mapStatus.textContent = "Approximate map loaded from OpenStreetMap.";
                 }, {once: true});
 
-                mapLoadButton.disabled = true;
-                mapLoadButton.textContent = "Loading approximate map…";
+                mapStatus.className = "status";
                 mapStatus.textContent = "Loading the external map from OpenStreetMap.";
-                mapContainer.append(mapFrame);
+                mapContainer.replaceChildren(mapFrame);
             };
 
             const showLocation = (location) => {
                 locationList.replaceChildren();
-                configureApproximateMap(location);
+                summaryLocation.textContent = locationSummary(location);
+                renderApproximateMap(location);
                 const fields = (
                     [
                         ["city", "City"],
@@ -1205,7 +1410,8 @@
 
             const showLocationError = () => {
                 locationList.hidden = true;
-                configureApproximateMap({});
+                summaryLocation.textContent = unavailable;
+                showMapUnavailable();
                 locationStatus.className = "status is-error";
                 locationStatus.textContent = "Location information is temporarily unavailable.";
             };
@@ -1368,7 +1574,6 @@
             };
 
             initializeAnalyticsConsent();
-            mapLoadButton.addEventListener("click", loadApproximateMap);
             loadBrowserInfo();
             loadPrivacySignals();
             loadIp();
