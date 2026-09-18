@@ -1,4 +1,8 @@
+from functools import lru_cache
 from ipaddress import ip_address
+from pathlib import Path
+
+import maxminddb
 
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
@@ -34,6 +38,8 @@ CLOUDFLARE_LOCATION_HEADERS = (
     ("CF-Postal-Code", "postal_code"),
     ("CF-Timezone", "timezone"),
 )
+
+GEOIP_DATABASE_PATH = Path("/data/geoip/dbip-city-lite.mmdb")
 
 
 @require_safe
@@ -79,23 +85,30 @@ def private_json_response(data, *, status=200):
 
 @require_GET
 def network(request):
-    value = request.headers.get("X-Visitor-ASN", "").strip()
+    asn_value = request.headers.get("X-Visitor-ASN", "").strip()
+    organization_value = request.headers.get(
+        "X-Visitor-AS-Organization", ""
+    ).strip()
 
     try:
-        asn = int(value)
+        asn = int(asn_value)
     except ValueError:
         asn = 0
 
-    if not 1 <= asn <= 4294967295:
-        return private_json_response({"network": {}})
+    network_data = {}
 
-    return private_json_response(
-        {
-            "network": {
-                "asn": asn,
-            }
-        }
-    )
+    if 1 <= asn <= 4294967295:
+        network_data["asn"] = asn
+
+    if organization_value:
+        organization = decode_cloudflare_utf8_header(
+            organization_value
+        ).strip()
+
+        if organization:
+            network_data["organization"] = organization[:200]
+
+    return private_json_response({"network": network_data})
 
 
 @require_GET
@@ -136,6 +149,112 @@ def decode_cloudflare_utf8_header(value):
         return value
 
 
+def has_valid_coordinates(location_data):
+    try:
+        latitude = float(location_data["latitude"])
+        longitude = float(location_data["longitude"])
+    except (KeyError, TypeError, ValueError):
+        return False
+
+    return -90 <= latitude <= 90 and -180 <= longitude <= 180
+
+
+@lru_cache(maxsize=1)
+def geoip_reader():
+    return maxminddb.open_database(str(GEOIP_DATABASE_PATH))
+
+
+def localized_name(record):
+    if not isinstance(record, dict):
+        return None
+
+    names = record.get("names")
+    if not isinstance(names, dict):
+        return None
+
+    name = names.get("en")
+
+    if not isinstance(name, str):
+        return None
+
+    name = name.strip()
+    return name or None
+
+
+def dbip_location(address):
+    if address is None or not address.is_global:
+        return {}
+
+    try:
+        record = geoip_reader().get(str(address))
+    except Exception:
+        # GeoIP is only a fallback. A missing/corrupt database must not
+        # make the public location endpoint fail.
+        return {}
+
+    if not isinstance(record, dict):
+        return {}
+
+    result = {}
+
+    city = localized_name(record.get("city"))
+    if city:
+        result["city"] = city
+
+    subdivisions = record.get("subdivisions")
+    if isinstance(subdivisions, list) and subdivisions:
+        region = localized_name(subdivisions[0])
+        if region:
+            result["region"] = region
+
+    country = record.get("country")
+    if isinstance(country, dict):
+        country_code = country.get("iso_code")
+
+        if isinstance(country_code, str) and country_code.strip():
+            result["country_code"] = country_code.strip()
+
+        country_name = localized_name(country)
+        if country_name:
+            result["country"] = country_name
+
+    continent = record.get("continent")
+    if isinstance(continent, dict):
+        continent_code = continent.get("code")
+
+        if isinstance(continent_code, str) and continent_code.strip():
+            result["continent_code"] = continent_code.strip()
+
+    geo = record.get("location")
+    if isinstance(geo, dict):
+        latitude = geo.get("latitude")
+        longitude = geo.get("longitude")
+
+        if (
+            isinstance(latitude, (int, float))
+            and not isinstance(latitude, bool)
+            and -90 <= latitude <= 90
+            and isinstance(longitude, (int, float))
+            and not isinstance(longitude, bool)
+            and -180 <= longitude <= 180
+        ):
+            result["latitude"] = latitude
+            result["longitude"] = longitude
+
+        timezone = geo.get("time_zone")
+        if isinstance(timezone, str) and timezone.strip():
+            result["timezone"] = timezone.strip()
+
+    postal = record.get("postal")
+    if isinstance(postal, dict):
+        postal_code = postal.get("code")
+
+        if isinstance(postal_code, str) and postal_code.strip():
+            result["postal_code"] = postal_code.strip()
+
+    return result
+
+
 @require_GET
 def location(request):
     location_data = {
@@ -143,4 +262,29 @@ def location(request):
         for header, key in CLOUDFLARE_LOCATION_HEADERS
         if header in request.headers
     }
+
+    # Prefer Cloudflare when it provides a complete coordinate pair.
+    # Otherwise use the local DB-IP database as a privacy-friendly fallback.
+    if not has_valid_coordinates(location_data):
+        value = request.META.get("HTTP_X_REAL_IP")
+
+        try:
+            address = ip_address(value.strip())
+        except (AttributeError, ValueError):
+            address = None
+
+        fallback = dbip_location(address)
+
+        if fallback:
+            # Keep useful Cloudflare values and fill only missing metadata.
+            for key, value in fallback.items():
+                if key not in {"latitude", "longitude"}:
+                    if not location_data.get(key):
+                        location_data[key] = value
+
+            # Coordinates must always come from one provider as a pair.
+            if has_valid_coordinates(fallback):
+                location_data["latitude"] = fallback["latitude"]
+                location_data["longitude"] = fallback["longitude"]
+
     return private_json_response({"location": location_data})

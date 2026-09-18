@@ -62,6 +62,7 @@ class HomeViewTests(SimpleTestCase):
             "primary-information",
             "summary-ip",
             "summary-connection",
+            "summary-network-provider",
             "summary-location",
             "summary-browser",
             "summary-platform",
@@ -75,6 +76,13 @@ class HomeViewTests(SimpleTestCase):
 
         self.assertContains(response, 'id="network-asn"')
         self.assertContains(response, "Autonomous system")
+
+    def test_home_contains_network_provider_display(self):
+        response = self.client.get(reverse("home"))
+
+        self.assertContains(response, 'id="network-provider"')
+        self.assertContains(response, 'id="summary-network-provider"')
+        self.assertContains(response, "Network provider")
 
     def test_home_loads_network_diagnostics(self):
         response = self.client.get(reverse("home"))
@@ -369,6 +377,59 @@ class LocationViewTests(SimpleTestCase):
             },
         )
 
+    def test_dbip_fallback_fills_missing_cloudflare_coordinates(self):
+        from unittest.mock import patch
+
+        fallback = {
+            "city": "Lutoryż",
+            "region": "Subcarpathia",
+            "country": "Poland",
+            "country_code": "PL",
+            "continent_code": "EU",
+            "latitude": 49.9671,
+            "longitude": 21.9124,
+        }
+
+        with patch(
+            "core.views.dbip_location",
+            return_value=fallback,
+        ) as lookup:
+            response = self.client.get(
+                reverse("location"),
+                HTTP_CF_IPCOUNTRY="PL",
+                HTTP_X_REAL_IP="8.8.8.8",
+            )
+
+        location_data = response.json()["location"]
+
+        self.assertEqual(location_data["country_code"], "PL")
+        self.assertEqual(location_data["country"], "Poland")
+        self.assertEqual(location_data["city"], "Lutoryż")
+        self.assertEqual(location_data["region"], "Subcarpathia")
+        self.assertEqual(location_data["latitude"], 49.9671)
+        self.assertEqual(location_data["longitude"], 21.9124)
+        lookup.assert_called_once()
+
+    def test_dbip_fallback_is_skipped_when_cloudflare_has_coordinates(self):
+        from unittest.mock import patch
+
+        with patch("core.views.dbip_location") as lookup:
+            response = self.client.get(
+                reverse("location"),
+                HTTP_CF_IPCOUNTRY="PL",
+                HTTP_CF_IPCITY="Warsaw",
+                HTTP_CF_IPLATITUDE="52.2297",
+                HTTP_CF_IPLONGITUDE="21.0122",
+                HTTP_X_REAL_IP="8.8.8.8",
+            )
+
+        location_data = response.json()["location"]
+
+        self.assertEqual(location_data["city"], "Warsaw")
+        self.assertEqual(location_data["latitude"], "52.2297")
+        self.assertEqual(location_data["longitude"], "21.0122")
+        lookup.assert_not_called()
+
     def test_post_is_rejected(self):
         response = self.client.post(reverse("location"))
 
@@ -621,6 +682,38 @@ class NetworkViewTests(SimpleTestCase):
         self.assertEqual(
             response.json(),
             {"network": {"asn": 5617}},
+        )
+
+    def test_network_returns_asn_and_organization(self):
+        response = self.client.get(
+            reverse("network"),
+            HTTP_X_VISITOR_ASN="9009",
+            HTTP_X_VISITOR_AS_ORGANIZATION="M247 Europe SRL",
+        )
+
+        self.assertEqual(
+            response.json(),
+            {
+                "network": {
+                    "asn": 9009,
+                    "organization": "M247 Europe SRL",
+                }
+            },
+        )
+
+    def test_network_returns_organization_without_asn(self):
+        response = self.client.get(
+            reverse("network"),
+            HTTP_X_VISITOR_AS_ORGANIZATION="Example Network",
+        )
+
+        self.assertEqual(
+            response.json(),
+            {
+                "network": {
+                    "organization": "Example Network",
+                }
+            },
         )
 
     def test_network_without_asn_returns_empty_object(self):

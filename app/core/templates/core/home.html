@@ -613,6 +613,10 @@
                         <dd id="summary-connection">Loading…</dd>
                     </div>
                     <div>
+                        <dt>Network provider</dt>
+                        <dd id="summary-network-provider">Loading…</dd>
+                    </div>
+                    <div>
                         <dt>Approximate location</dt>
                         <dd id="summary-location">Loading…</dd>
                     </div>
@@ -641,6 +645,8 @@
                 </div>
                 <p class="map-attribution">
                     <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer external">© OpenStreetMap contributors</a>
+                    · IP geolocation fallback data by
+                    <a href="https://db-ip.com/" target="_blank" rel="noopener noreferrer external">DB-IP</a>
                 </p>
             </div>
         </section>
@@ -667,6 +673,10 @@
                                 <dd id="public-address"></dd>
                             </div>
                             <div>
+                                <dt>Network provider</dt>
+                                <dd id="network-provider">Loading…</dd>
+                            </div>
+                            <div>
                                 <dt>Autonomous system</dt>
                                 <dd id="network-asn">Loading…</dd>
                             </div>
@@ -679,7 +689,7 @@
             <details class="disclosure" id="location-details">
                 <summary>Location details</summary>
                 <div class="detail-content">
-                    <p class="detail-copy">Cloudflare estimates these values from the public IP address. They are approximate and are not GPS coordinates.</p>
+                    <p class="detail-copy">These values are estimated from the public IP address. Cloudflare is preferred, with a local DB-IP database used as a fallback when coordinates are unavailable. They are approximate and are not GPS coordinates.</p>
                     <p class="status" id="location-status" role="status" aria-live="polite">Loading approximate location…</p>
                     <dl class="location-list" id="location-list" hidden></dl>
                 </div>
@@ -809,10 +819,12 @@
             const ipAddress = document.getElementById("ip-address");
             const connectionVersion = document.getElementById("connection-version");
             const publicAddress = document.getElementById("public-address");
+            const networkProvider = document.getElementById("network-provider");
             const networkAsn = document.getElementById("network-asn");
             const connectionNote = document.getElementById("connection-note");
             const summaryIp = document.getElementById("summary-ip");
             const summaryConnection = document.getElementById("summary-connection");
+            const summaryNetworkProvider = document.getElementById("summary-network-provider");
             const summaryLocation = document.getElementById("summary-location");
             const summaryBrowser = document.getElementById("summary-browser");
             const summaryPlatform = document.getElementById("summary-platform");
@@ -1556,7 +1568,9 @@
             };
 
             const showNetworkUnavailable = () => {
+                networkProvider.textContent = unavailable;
                 networkAsn.textContent = unavailable;
+                summaryNetworkProvider.textContent = unavailable;
             };
 
             const showNetwork = (data) => {
@@ -1566,15 +1580,29 @@
                     || data.network === null
                     || typeof data.network !== "object"
                     || Array.isArray(data.network)
-                    || !Number.isInteger(data.network.asn)
-                    || data.network.asn < 1
-                    || data.network.asn > 4294967295
                 ) {
                     showNetworkUnavailable();
                     return;
                 }
 
-                networkAsn.textContent = `AS${data.network.asn}`;
+                const organization = (
+                    typeof data.network.organization === "string"
+                    && data.network.organization.trim().length > 0
+                )
+                    ? data.network.organization.trim()
+                    : unavailable;
+
+                const asn = (
+                    Number.isInteger(data.network.asn)
+                    && data.network.asn >= 1
+                    && data.network.asn <= 4294967295
+                )
+                    ? `AS${data.network.asn}`
+                    : unavailable;
+
+                networkProvider.textContent = organization;
+                networkAsn.textContent = asn;
+                summaryNetworkProvider.textContent = organization;
             };
 
             const loadNetwork = async () => {
