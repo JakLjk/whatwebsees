@@ -533,3 +533,64 @@ class CloudflareLocationEncodingTests(SimpleTestCase):
             response.json()["location"]["city"],
             "Ruda Śląska",
         )
+
+
+
+class SeoFoundationTests(SimpleTestCase):
+    def test_home_contains_production_seo_metadata(self):
+        response = self.client.get(reverse("home"))
+
+        self.assertContains(
+            response,
+            "What Is My IP? IP Address, Location &amp; Browser | WhatWebSees",
+        )
+        self.assertContains(
+            response,
+            'rel="canonical" href="https://whatwebsees.com/"',
+        )
+        self.assertContains(response, 'property="og:title"')
+        self.assertContains(response, 'property="og:url"')
+        self.assertContains(response, 'name="twitter:card"')
+
+    def test_robots_txt(self):
+        response = self.client.get(reverse("robots"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(
+            response.headers["Content-Type"].startswith("text/plain")
+        )
+        self.assertContains(response, "User-agent: *")
+        self.assertContains(response, "Allow: /")
+        self.assertContains(
+            response,
+            "Sitemap: https://whatwebsees.com/sitemap.xml",
+        )
+
+    def test_sitemap_xml(self):
+        response = self.client.get(reverse("sitemap"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(
+            response.headers["Content-Type"].startswith("application/xml")
+        )
+        self.assertContains(response, "<urlset")
+        self.assertContains(
+            response,
+            "<loc>https://whatwebsees.com/</loc>",
+        )
+
+    def test_health_is_not_indexable(self):
+        response = self.client.get(reverse("health"))
+
+        self.assertEqual(
+            response.headers.get("X-Robots-Tag"),
+            "noindex, nofollow",
+        )
+
+    def test_location_api_is_not_indexable(self):
+        response = self.client.get(reverse("location"))
+
+        self.assertEqual(
+            response.headers.get("X-Robots-Tag"),
+            "noindex, nofollow",
+        )

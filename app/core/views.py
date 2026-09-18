@@ -1,6 +1,6 @@
 from ipaddress import ip_address
 
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.utils.cache import patch_cache_control
 from django.views.decorators.http import require_GET, require_safe
@@ -37,17 +37,42 @@ CLOUDFLARE_LOCATION_HEADERS = (
 
 
 @require_safe
+def robots_txt(request):
+    content = """User-agent: *
+Allow: /
+
+Sitemap: https://whatwebsees.com/sitemap.xml
+"""
+    return HttpResponse(content, content_type="text/plain; charset=utf-8")
+
+
+@require_safe
+def sitemap_xml(request):
+    content = """<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://whatwebsees.com/</loc>
+  </url>
+</urlset>
+"""
+    return HttpResponse(content, content_type="application/xml; charset=utf-8")
+
+
+@require_safe
 def home(request):
     return render(request, "core/home.html")
 
 
 @require_GET
 def health(request):
-    return JsonResponse({"status": "ok"})
+    response = JsonResponse({"status": "ok"})
+    response["X-Robots-Tag"] = "noindex, nofollow"
+    return response
 
 
 def private_json_response(data, *, status=200):
     response = JsonResponse(data, status=status)
+    response["X-Robots-Tag"] = "noindex, nofollow"
     patch_cache_control(response, private=True, no_store=True)
     return response
 

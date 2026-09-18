@@ -106,3 +106,16 @@ Stop the services:
 ```sh
 sudo docker compose down
 ```
+
+
+## Search and indexing
+
+The canonical production origin is `https://whatwebsees.com`.
+
+The homepage exposes SEO and social metadata with a canonical URL.
+`/robots.txt` allows normal crawling and advertises `/sitemap.xml`.
+The sitemap currently contains the homepage and should be expanded as
+additional public tools and content pages are added.
+
+Diagnostic JSON endpoints return `X-Robots-Tag: noindex, nofollow` so
+they are not intended to appear as standalone search results.
