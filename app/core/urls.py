@@ -5,6 +5,7 @@ from .views import (
     health,
     home,
     location,
+    network,
     request_headers,
     robots_txt,
     sitemap_xml,
@@ -19,4 +20,5 @@ urlpatterns = [
     path("headers", request_headers, name="headers"),
     path("ip", client_ip, name="ip"),
     path("location", location, name="location"),
+    path("network", network, name="network"),
 ]

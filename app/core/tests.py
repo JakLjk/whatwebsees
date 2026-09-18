@@ -594,3 +594,50 @@ class SeoFoundationTests(SimpleTestCase):
             response.headers.get("X-Robots-Tag"),
             "noindex, nofollow",
         )
+
+
+
+class NetworkViewTests(SimpleTestCase):
+    def test_network_returns_asn(self):
+        response = self.client.get(
+            reverse("network"),
+            HTTP_X_VISITOR_ASN="5617",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {"network": {"asn": 5617}},
+        )
+
+    def test_network_without_asn_returns_empty_object(self):
+        response = self.client.get(reverse("network"))
+
+        self.assertEqual(
+            response.json(),
+            {"network": {}},
+        )
+
+    def test_network_rejects_invalid_asn(self):
+        response = self.client.get(
+            reverse("network"),
+            HTTP_X_VISITOR_ASN="not-an-asn",
+        )
+
+        self.assertEqual(
+            response.json(),
+            {"network": {}},
+        )
+
+    def test_network_is_private_and_not_indexable(self):
+        response = self.client.get(
+            reverse("network"),
+            HTTP_X_VISITOR_ASN="5617",
+        )
+
+        self.assertEqual(
+            response.headers.get("X-Robots-Tag"),
+            "noindex, nofollow",
+        )
+        self.assertIn("private", response.headers["Cache-Control"])
+        self.assertIn("no-store", response.headers["Cache-Control"])

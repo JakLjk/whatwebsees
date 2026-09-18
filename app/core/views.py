@@ -78,6 +78,27 @@ def private_json_response(data, *, status=200):
 
 
 @require_GET
+def network(request):
+    value = request.headers.get("X-Visitor-ASN", "").strip()
+
+    try:
+        asn = int(value)
+    except ValueError:
+        asn = 0
+
+    if not 1 <= asn <= 4294967295:
+        return private_json_response({"network": {}})
+
+    return private_json_response(
+        {
+            "network": {
+                "asn": asn,
+            }
+        }
+    )
+
+
+@require_GET
 def client_ip(request):
     value = request.META.get("HTTP_X_REAL_IP")
 
