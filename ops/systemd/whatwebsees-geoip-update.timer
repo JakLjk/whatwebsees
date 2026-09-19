@@ -1,0 +1,11 @@
+[Unit]
+Description=Monthly WhatWebSees DB-IP City Lite update
+
+[Timer]
+OnCalendar=*-*-05 04:10:00
+Persistent=true
+RandomizedDelaySec=20min
+Unit=whatwebsees-geoip-update.service
+
+[Install]
+WantedBy=timers.target
