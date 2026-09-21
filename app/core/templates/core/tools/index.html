@@ -1,0 +1,70 @@
+{% extends "core/tools/base.html" %}
+
+{% block content %}
+<section class="intro" aria-labelledby="page-title">
+    <p class="eyebrow">WhatWebSees tool suite</p>
+    <h1 id="page-title">Privacy &amp; Browser Tools</h1>
+    <p class="intro-text">
+        Explore what ordinary websites can learn from browser APIs and selected request data.
+        Results are explained in plain language, with technical details available when useful.
+    </p>
+</section>
+
+<section class="tool-grid" aria-label="Available privacy and browser tools">
+    <article class="card tool-card">
+        <p class="card-label">Browser identity</p>
+        <h2>User Agent Checker</h2>
+        <p>Read the User-Agent and available Client Hints your browser reports, with cautious browser and platform detection.</p>
+        <a class="tool-link" href="/user-agent/">Check your User-Agent</a>
+    </article>
+    <article class="card tool-card">
+        <p class="card-label">Browser details</p>
+        <h2>Browser Checker</h2>
+        <p>See a friendly summary of your browser, platform, language, time zone and browsing context.</p>
+        <a class="tool-link" href="/browser-check/">Check your browser</a>
+    </article>
+    <article class="card tool-card">
+        <p class="card-label">Display</p>
+        <h2>Screen Resolution Checker</h2>
+        <p>Compare screen size, available area, live browser viewport and device pixel ratio locally.</p>
+        <a class="tool-link" href="/screen-resolution/">Check screen resolution</a>
+    </article>
+    <article class="card tool-card">
+        <p class="card-label">Request data</p>
+        <h2>HTTP Headers Checker</h2>
+        <p>Inspect a carefully limited selection of request headers received by this website's origin.</p>
+        <a class="tool-link" href="/http-headers/">Check HTTP headers</a>
+    </article>
+    <article class="card tool-card">
+        <p class="card-label">Privacy preferences</p>
+        <h2>Browser Privacy Signals Checker</h2>
+        <p>Review Do Not Track, Global Privacy Control, cookie availability and related browser signals.</p>
+        <a class="tool-link" href="/privacy-check/">Check privacy signals</a>
+    </article>
+    <article class="card tool-card">
+        <p class="card-label">Graphics</p>
+        <h2>WebGL &amp; GPU Checker</h2>
+        <p>Inspect browser-reported WebGL graphics information and capabilities without uploading the results.</p>
+        <a class="tool-link" href="/webgl/">Check WebGL and GPU</a>
+    </article>
+    <article class="card tool-card">
+        <p class="card-label">Fingerprint awareness</p>
+        <h2>Canvas Fingerprint Test</h2>
+        <p>Choose when to run a local canvas rendering test and create a SHA-256 hash of its output.</p>
+        <a class="tool-link" href="/canvas-fingerprint/">Run a canvas test</a>
+    </article>
+</section>
+
+<section class="content-section" aria-labelledby="privacy-first-title">
+    <h2 id="privacy-first-title">Useful diagnostics with a smaller privacy footprint</h2>
+    <p>
+        These tools use standard browser features to make otherwise hidden technical details easier to understand.
+        Screen, browser, canvas and WebGL results stay in your browser. The headers checker requests only the existing
+        safe server allowlist; sensitive headers such as cookies and authorization credentials are excluded.
+    </p>
+    <p>
+        Browser-reported values can be reduced, standardized or changed by privacy settings and extensions. Treat the
+        results as a view of this browsing context, not proof of an exact device or a person's identity.
+    </p>
+</section>
+{% endblock %}

@@ -1,0 +1,147 @@
+{% extends "core/tools/base.html" %}
+
+{% block content %}
+<p class="breadcrumb"><a href="/tools/">All tools</a> / User Agent Checker</p>
+<section class="intro" aria-labelledby="page-title">
+    <p class="eyebrow">Browser identity</p>
+    <h1 id="page-title">User Agent Checker</h1>
+    <p class="intro-text">See the User-Agent and related browser hints available to a website. Detection is intentionally conservative because reported values can be reduced or spoofed.</p>
+</section>
+
+<section class="card result-card" aria-labelledby="result-title">
+    <p class="card-label">Primary result</p>
+    <h2 id="result-title">Your User-Agent</h2>
+    <output class="primary-value mono" id="user-agent" aria-live="polite">Loading…</output>
+    <button class="button" id="copy-user-agent" type="button">Copy User Agent</button>
+    <p class="status" id="copy-status" role="status" aria-live="polite"></p>
+
+    <dl class="data-list">
+        <div><dt>Detected browser</dt><dd id="detected-browser">Loading…</dd></div>
+        <div><dt>Reported platform</dt><dd id="reported-platform">Loading…</dd></div>
+        <div><dt>Readable platform</dt><dd id="readable-platform">Loading…</dd></div>
+        <div><dt>Browser language</dt><dd id="browser-language">Loading…</dd></div>
+        <div><dt>Preferred languages</dt><dd id="preferred-languages">Loading…</dd></div>
+        <div><dt>Mobile indication</dt><dd id="mobile-status">Loading…</dd></div>
+        <div><dt>User-Agent Client Hints API</dt><dd id="ua-data-available">Loading…</dd></div>
+    </dl>
+
+    <details class="disclosure">
+        <summary>Technical browser values and received Client Hints</summary>
+        <div class="disclosure-content">
+            <dl class="data-list">
+                <div class="wide"><dt>navigator.userAgent</dt><dd class="mono" id="raw-user-agent">Loading…</dd></div>
+                <div><dt>navigator.platform</dt><dd id="navigator-platform">Loading…</dd></div>
+                <div><dt>navigator.vendor</dt><dd id="navigator-vendor">Loading…</dd></div>
+                <div><dt>navigator.language</dt><dd id="navigator-language">Loading…</dd></div>
+                <div><dt>navigator.languages</dt><dd id="navigator-languages">Loading…</dd></div>
+                <div><dt>userAgentData.platform</dt><dd id="ua-platform">Unavailable</dd></div>
+                <div><dt>userAgentData.mobile</dt><dd id="ua-mobile">Unavailable</dd></div>
+                <div class="wide"><dt>userAgentData.brands</dt><dd class="mono" id="ua-brands">Unavailable</dd></div>
+            </dl>
+            <h3>Selected headers received by the origin</h3>
+            <p class="status" id="headers-status" role="status" aria-live="polite">Loading the safe header selection…</p>
+            <dl class="data-list" id="client-hints" hidden></dl>
+        </div>
+    </details>
+</section>
+
+<p class="privacy-note">Browser values are read locally. Only the existing safe <code>/headers</code> endpoint is requested; this page does not send locally read diagnostics to Django.</p>
+
+<section class="content-section" aria-labelledby="about-title">
+    <h2 id="about-title">Understanding User-Agents</h2>
+    <h3>What is a User-Agent?</h3>
+    <p>A User-Agent is a browser-provided text string sent with many web requests. It usually names a browser engine, operating-system family and compatibility tokens.</p>
+    <h3>What can a User-Agent reveal?</h3>
+    <p>It can suggest a browser family, platform and whether a browsing context is likely mobile. It should not be treated as reliable identification of an exact device or person.</p>
+    <h3>Why User-Agent detection is imperfect</h3>
+    <p>Browsers often include historical tokens for compatibility, while privacy features and extensions can reduce or change the string. Browser detection is therefore a best-effort interpretation.</p>
+    <h3>User-Agent vs Client Hints</h3>
+    <p>Client Hints expose selected structured values, such as brand, platform and mobile status. Support varies, and browsers can limit the values to reduce fingerprinting.</p>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (() => {
+        "use strict";
+        const tools = window.WhatWebSeesTools;
+        const userAgent = tools.safelyRead(() => navigator.userAgent);
+        const platform = tools.reportedPlatform();
+
+        tools.setText("user-agent", userAgent);
+        tools.setText("raw-user-agent", userAgent);
+        tools.setText("reported-platform", platform);
+        tools.setText("readable-platform", tools.readablePlatform(platform, userAgent));
+        tools.setText("navigator-platform", tools.safelyRead(() => navigator.platform));
+        tools.setText("navigator-vendor", tools.safelyRead(() => navigator.vendor));
+        tools.setText("browser-language", tools.safelyRead(() => navigator.language));
+        tools.setText("navigator-language", tools.safelyRead(() => navigator.language));
+        tools.setText("preferred-languages", tools.preferredLanguages());
+        tools.setText("navigator-languages", tools.preferredLanguages());
+        tools.setText("mobile-status", tools.mobileStatus(userAgent));
+        tools.setText("ua-data-available", navigator.userAgentData ? "Available" : "Unavailable");
+
+        tools.detectBrowser(userAgent).then((browser) => tools.setText("detected-browser", browser));
+
+        try {
+            if (navigator.userAgentData) {
+                tools.setText("ua-platform", navigator.userAgentData.platform);
+                tools.setText("ua-mobile", navigator.userAgentData.mobile ? "Yes" : "No");
+                const brands = Array.isArray(navigator.userAgentData.brands)
+                    ? navigator.userAgentData.brands.map(({brand, version}) => `${brand} ${version}`).join(", ")
+                    : tools.unavailable;
+                tools.setText("ua-brands", brands);
+            }
+        } catch {
+            // Defaults already communicate that Client Hints are unavailable.
+        }
+
+        const copyStatus = document.getElementById("copy-status");
+        document.getElementById("copy-user-agent").addEventListener("click", async () => {
+            try {
+                if (!navigator.clipboard || typeof navigator.clipboard.writeText !== "function") {
+                    throw new Error("Clipboard API unavailable");
+                }
+                await navigator.clipboard.writeText(userAgent);
+                copyStatus.className = "status is-ready";
+                copyStatus.textContent = "User-Agent copied.";
+            } catch {
+                copyStatus.className = "status is-error";
+                copyStatus.textContent = "Could not copy automatically. Select the User-Agent text and copy it manually.";
+            }
+        });
+
+        const headersStatus = document.getElementById("headers-status");
+        const clientHints = document.getElementById("client-hints");
+        const relevantHeaders = ["User-Agent", "Sec-CH-UA", "Sec-CH-UA-Mobile", "Sec-CH-UA-Platform"];
+
+        fetch("/headers", {headers: {Accept: "application/json"}, credentials: "same-origin"})
+            .then((response) => {
+                if (!response.ok) throw new Error("Header request failed");
+                return response.json();
+            })
+            .then((data) => {
+                const headers = data && typeof data.headers === "object" ? data.headers : {};
+                relevantHeaders.forEach((name) => {
+                    const row = document.createElement("div");
+                    const term = document.createElement("dt");
+                    const value = document.createElement("dd");
+                    term.textContent = name;
+                    value.textContent = Object.prototype.hasOwnProperty.call(headers, name)
+                        ? tools.formatValue(headers[name])
+                        : tools.unavailable;
+                    value.className = "mono";
+                    row.append(term, value);
+                    clientHints.append(row);
+                });
+                clientHints.hidden = false;
+                headersStatus.className = "status is-ready";
+                headersStatus.textContent = "Selected header values loaded.";
+            })
+            .catch(() => {
+                headersStatus.className = "status is-error";
+                headersStatus.textContent = "Selected headers are currently unavailable.";
+            });
+    })();
+</script>
+{% endblock %}

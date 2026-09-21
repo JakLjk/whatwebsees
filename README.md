@@ -54,6 +54,20 @@ The homepage also uses JavaScript to display browser-visible language, time zone
 
 Browser-reported cookie availability, Do Not Track, Global Privacy Control, online status, and JavaScript status are also displayed locally. These privacy signals are read once in the browser and are not transmitted to the application or stored.
 
+## Public tool suite
+
+`GET /tools/` links to seven focused, indexable tools for User-Agent details,
+browser information, screen resolution, selected HTTP headers, browser privacy
+signals, WebGL graphics information, and an explicit-action canvas rendering
+test. The pages share a lightweight Django template shell, browser helpers and
+the homepage's analytics consent key and behavior.
+
+Browser, screen, privacy, WebGL and canvas diagnostic values remain in the
+browser. The User Agent and HTTP Headers tools call only the existing
+allowlisted `/headers` endpoint. The canvas test runs only after its button is
+pressed, uses Web Crypto for its local SHA-256 result, and does not store or
+transmit the canvas output or hash.
+
 ## Privacy principles
 
 - Do not persist visitor IP addresses unless technically necessary.
@@ -114,8 +128,8 @@ The canonical production origin is `https://whatwebsees.com`.
 
 The homepage exposes SEO and social metadata with a canonical URL.
 `/robots.txt` allows normal crawling and advertises `/sitemap.xml`.
-The sitemap currently contains the homepage and should be expanded as
-additional public tools and content pages are added.
+The sitemap contains the homepage, tools hub and each public tool page. JSON
+diagnostic endpoints remain excluded from the sitemap.
 
 Diagnostic JSON endpoints return `X-Robots-Tag: noindex, nofollow` so
 they are not intended to appear as standalone search results.

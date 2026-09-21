@@ -1,0 +1,69 @@
+{% extends "core/tools/base.html" %}
+
+{% block content %}
+<p class="breadcrumb"><a href="/tools/">All tools</a> / Browser Privacy Signals Checker</p>
+<section class="intro" aria-labelledby="page-title">
+    <p class="eyebrow">Privacy preferences</p>
+    <h1 id="page-title">Browser Privacy Signals Checker</h1>
+    <p class="intro-text">Review privacy-related preferences and status values that this browser makes available to an ordinary webpage.</p>
+</section>
+
+<section class="card result-card" aria-labelledby="result-title">
+    <p class="card-label">Browser-reported signals</p>
+    <h2 id="result-title">Your privacy signals</h2>
+    <dl class="data-list">
+        <div><dt>JavaScript enabled</dt><dd>Yes</dd></div>
+        <div><dt>Cookies enabled</dt><dd id="cookies-enabled">Loading…</dd></div>
+        <div><dt>Do Not Track</dt><dd id="do-not-track">Loading…</dd></div>
+        <div><dt>Global Privacy Control</dt><dd id="global-privacy-control">Loading…</dd></div>
+        <div><dt>Online state</dt><dd id="online-state">Loading…</dd></div>
+        <div><dt>Browser language</dt><dd id="browser-language">Loading…</dd></div>
+        <div><dt>Time zone</dt><dd id="time-zone">Loading…</dd></div>
+        <div><dt>User-Agent Client Hints API</dt><dd id="ua-data-available">Loading…</dd></div>
+    </dl>
+</section>
+
+<p class="privacy-note">No unique test value is created or stored. The checks use existing browser properties and remain local to this page.</p>
+
+<section class="content-section" aria-labelledby="meaning-title">
+    <h2 id="meaning-title">What these signals mean</h2>
+    <h3>Do Not Track</h3>
+    <p>DNT expresses a preference, but it is not technical enforcement. Websites and other recipients decide how they respond, and some browsers no longer expose a meaningful value.</p>
+    <h3>Global Privacy Control</h3>
+    <p>GPC is a privacy preference signal intended to communicate that a person does not want their data sold or shared. Its legal effect depends on the applicable jurisdiction and recipient.</p>
+    <h3>Cookie availability</h3>
+    <p><code>navigator.cookieEnabled</code> is a broad browser indication. It does not prove that every cookie or storage mechanism works in every context, and this tool does not set a test cookie.</p>
+    <h3>Why results vary</h3>
+    <p>Browsers, extensions, managed policies and privacy modes can alter or hide these values. An unavailable result is not an error and does not necessarily mean a preference is disabled.</p>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (() => {
+        "use strict";
+        const tools = window.WhatWebSeesTools;
+        const preference = (value) => {
+            if (value === true || value === "1") return "Enabled";
+            if (value === false || value === "0") return "Disabled";
+            return tools.unavailable;
+        };
+
+        const safelyReadPreference = (reader) => {
+            try {
+                return reader();
+            } catch {
+                return undefined;
+            }
+        };
+
+        tools.setText("cookies-enabled", navigator.cookieEnabled ? "Enabled" : "Disabled or unavailable");
+        tools.setText("do-not-track", preference(safelyReadPreference(() => navigator.doNotTrack)));
+        tools.setText("global-privacy-control", preference(safelyReadPreference(() => navigator.globalPrivacyControl)));
+        tools.setText("online-state", navigator.onLine ? "Online" : "Offline");
+        tools.setText("browser-language", tools.safelyRead(() => navigator.language));
+        tools.setText("time-zone", tools.safelyRead(() => Intl.DateTimeFormat().resolvedOptions().timeZone));
+        tools.setText("ua-data-available", navigator.userAgentData ? "Available" : "Unavailable");
+    })();
+</script>
+{% endblock %}

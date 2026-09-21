@@ -1,0 +1,92 @@
+{% extends "core/tools/base.html" %}
+
+{% block content %}
+<p class="breadcrumb"><a href="/tools/">All tools</a> / HTTP Headers Checker</p>
+<section class="intro" aria-labelledby="page-title">
+    <p class="eyebrow">Request data</p>
+    <h1 id="page-title">HTTP Headers Checker</h1>
+    <p class="intro-text">See a deliberately limited selection of the HTTP headers that reached the WhatWebSees origin for this request.</p>
+</section>
+
+<section class="card result-card" aria-labelledby="result-title">
+    <p class="card-label">Selected safe headers</p>
+    <h2 id="result-title">Headers received by the origin</h2>
+    <p class="status" id="headers-status" role="status" aria-live="polite">Loading selected request headers…</p>
+    <div id="headers-result" hidden>
+        <table class="headers-table">
+            <thead><tr><th scope="col">Header</th><th scope="col">Value</th></tr></thead>
+            <tbody id="headers-table-body"></tbody>
+        </table>
+    </div>
+
+    <details class="disclosure">
+        <summary>Raw technical view</summary>
+        <div class="disclosure-content">
+            <p>The JSON below contains the same allowlisted values shown above.</p>
+            <pre class="mono" id="raw-headers">Loading…</pre>
+        </div>
+    </details>
+</section>
+
+<p class="privacy-note">Cookie, Authorization, proxy IP headers and similar sensitive values are intentionally excluded by the backend allowlist.</p>
+
+<section class="content-section" aria-labelledby="headers-explained-title">
+    <h2 id="headers-explained-title">What HTTP headers show</h2>
+    <p>HTTP request headers provide context that helps a server respond, such as accepted content types, language preferences and a browser's User-Agent. This checker displays only the project's existing safe selection.</p>
+    <h3>Why values may differ along the way</h3>
+    <p>Cloudflare and reverse proxies sit between your browser and this Django application. They can normalize, add, remove or modify headers, so these values represent what reached the origin rather than a guaranteed byte-for-byte copy of the browser's original request.</p>
+    <h3>A deliberate privacy boundary</h3>
+    <p>This is not a dump of every incoming header. Cookies, credentials, visitor IP forwarding headers and Cloudflare internal or security metadata are not included. The response is also marked private and not cacheable.</p>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (() => {
+        "use strict";
+        const tools = window.WhatWebSeesTools;
+        const status = document.getElementById("headers-status");
+        const result = document.getElementById("headers-result");
+        const body = document.getElementById("headers-table-body");
+        const raw = document.getElementById("raw-headers");
+
+        fetch("/headers", {headers: {Accept: "application/json"}, credentials: "same-origin"})
+            .then((response) => {
+                if (!response.ok) throw new Error("Header request failed");
+                return response.json();
+            })
+            .then((data) => {
+                const headers = data && typeof data.headers === "object" && data.headers !== null
+                    ? data.headers
+                    : {};
+                const entries = Object.entries(headers).sort(([left], [right]) => left.localeCompare(right));
+
+                if (entries.length === 0) {
+                    status.textContent = "No allowlisted headers were available for this request.";
+                } else {
+                    entries.forEach(([name, headerValue]) => {
+                        const row = document.createElement("tr");
+                        const heading = document.createElement("th");
+                        const value = document.createElement("td");
+                        heading.scope = "row";
+                        heading.textContent = name;
+                        value.textContent = tools.formatValue(headerValue);
+                        value.className = "mono";
+                        row.append(heading, value);
+                        body.append(row);
+                    });
+                    status.textContent = `${entries.length} selected header value${entries.length === 1 ? "" : "s"} loaded.`;
+                }
+
+                raw.textContent = JSON.stringify({headers}, null, 2);
+                result.hidden = false;
+                status.className = "status is-ready";
+            })
+            .catch(() => {
+                raw.textContent = tools.unavailable;
+                status.className = "status is-error";
+                status.textContent = "Selected headers are currently unavailable.";
+            });
+    })();
+</script>
+{% endblock %}

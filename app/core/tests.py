@@ -753,3 +753,288 @@ class NetworkViewTests(SimpleTestCase):
         )
         self.assertIn("private", response.headers["Cache-Control"])
         self.assertIn("no-store", response.headers["Cache-Control"])
+
+
+class PublicToolPageTests(SimpleTestCase):
+    pages = (
+        ("tools", "Privacy &amp; Browser Tools", "/tools/"),
+        ("user-agent", "User Agent Checker", "/user-agent/"),
+        ("browser-check", "Browser Checker", "/browser-check/"),
+        (
+            "screen-resolution",
+            "Screen Resolution Checker",
+            "/screen-resolution/",
+        ),
+        ("http-headers", "HTTP Headers Checker", "/http-headers/"),
+        (
+            "privacy-check",
+            "Browser Privacy Signals Checker",
+            "/privacy-check/",
+        ),
+        ("webgl", "WebGL &amp; GPU Checker", "/webgl/"),
+        (
+            "canvas-fingerprint",
+            "Canvas Fingerprint Test",
+            "/canvas-fingerprint/",
+        ),
+    )
+
+    def test_each_public_tool_route_returns_ok_with_expected_h1(self):
+        for route_name, expected_heading, _ in self.pages:
+            with self.subTest(route_name=route_name):
+                response = self.client.get(reverse(route_name))
+
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(response, f'<h1 id="page-title">{expected_heading}</h1>')
+
+    def test_each_public_tool_page_has_its_production_canonical(self):
+        for route_name, _, path in self.pages:
+            with self.subTest(route_name=route_name):
+                response = self.client.get(reverse(route_name))
+
+                self.assertContains(
+                    response,
+                    f'rel="canonical" href="https://whatwebsees.com{path}"',
+                )
+
+    def test_tool_pages_have_unique_titles_and_descriptions(self):
+        from html import unescape
+        from re import search
+
+        titles = set()
+        descriptions = set()
+
+        for route_name, _, _ in self.pages:
+            response = self.client.get(reverse(route_name))
+            html = response.content.decode()
+            title_match = search(r"<title>(.*?)</title>", html)
+            description_match = search(
+                r'<meta name="description" content="([^"]+)">',
+                html,
+            )
+
+            self.assertIsNotNone(title_match)
+            self.assertIsNotNone(description_match)
+            titles.add(unescape(title_match.group(1)))
+            descriptions.add(unescape(description_match.group(1)))
+
+        self.assertEqual(len(titles), len(self.pages))
+        self.assertEqual(len(descriptions), len(self.pages))
+
+    def test_tool_pages_have_social_metadata(self):
+        for route_name, _, _ in self.pages:
+            with self.subTest(route_name=route_name):
+                response = self.client.get(reverse(route_name))
+
+                self.assertContains(response, 'property="og:title"')
+                self.assertContains(response, 'property="og:description"')
+                self.assertContains(response, 'property="og:url"')
+                self.assertContains(response, 'name="twitter:card"')
+                self.assertContains(response, 'name="twitter:title"')
+                self.assertContains(response, 'name="twitter:description"')
+
+    def test_public_tool_pages_are_not_marked_noindex(self):
+        for route_name, _, _ in self.pages:
+            with self.subTest(route_name=route_name):
+                response = self.client.get(reverse(route_name))
+
+                self.assertNotContains(response, 'name="robots"')
+                self.assertNotIn("X-Robots-Tag", response.headers)
+
+    def test_public_tool_pages_do_not_set_cookies(self):
+        for route_name, _, _ in self.pages:
+            with self.subTest(route_name=route_name):
+                response = self.client.get(reverse(route_name))
+
+                self.assertFalse(response.cookies)
+
+    def test_tool_pages_do_not_use_browser_geolocation(self):
+        for route_name, _, _ in self.pages:
+            with self.subTest(route_name=route_name):
+                response = self.client.get(reverse(route_name))
+
+                self.assertNotContains(response, "navigator.geolocation")
+
+    def test_diagnostic_pages_do_not_embed_server_side_visitor_data(self):
+        markers = (
+            "198.51.100.42",
+            "server-side-user-agent-marker",
+            "server-side-language-marker",
+        )
+        diagnostic_routes = [page[0] for page in self.pages if page[0] != "tools"]
+
+        for route_name in diagnostic_routes:
+            with self.subTest(route_name=route_name):
+                response = self.client.get(
+                    reverse(route_name),
+                    HTTP_X_REAL_IP=markers[0],
+                    HTTP_USER_AGENT=markers[1],
+                    HTTP_ACCEPT_LANGUAGE=markers[2],
+                )
+
+                for marker in markers:
+                    self.assertNotContains(response, marker)
+
+    def test_home_links_to_tools_and_tools_links_to_every_tool(self):
+        self.assertContains(self.client.get(reverse("home")), 'href="/tools/"')
+        response = self.client.get(reverse("tools"))
+
+        for route_name, _, _ in self.pages[1:]:
+            with self.subTest(route_name=route_name):
+                self.assertContains(response, f'href="{reverse(route_name)}"')
+
+    def test_tool_pages_preserve_consent_controlled_analytics(self):
+        response = self.client.get(reverse("tools"))
+
+        self.assertContains(response, "web-privacy-analytics-consent")
+        self.assertContains(response, 'if (consent === "granted")')
+        self.assertContains(response, 'document.createElement("script")')
+        self.assertNotContains(
+            response,
+            '<script async src="https://www.googletagmanager.com/gtag/js',
+        )
+
+    def test_http_headers_page_uses_existing_safe_endpoint(self):
+        response = self.client.get(reverse("http-headers"))
+
+        self.assertContains(response, 'fetch("/headers"')
+        self.assertContains(response, "Selected safe headers")
+
+    def test_user_agent_page_references_expected_browser_apis(self):
+        response = self.client.get(reverse("user-agent"))
+
+        for api_reference in (
+            "navigator.userAgent",
+            "navigator.platform",
+            "navigator.vendor",
+            "navigator.language",
+            "navigator.languages",
+            "navigator.userAgentData",
+            "navigator.clipboard",
+        ):
+            with self.subTest(api_reference=api_reference):
+                self.assertContains(response, api_reference)
+
+    def test_screen_page_references_screen_and_viewport_apis(self):
+        response = self.client.get(reverse("screen-resolution"))
+
+        for api_reference in (
+            "screen.width",
+            "screen.height",
+            "screen.availWidth",
+            "screen.colorDepth",
+            "window.innerWidth",
+            "window.devicePixelRatio",
+            "screen.orientation",
+            "window.requestAnimationFrame",
+        ):
+            with self.subTest(api_reference=api_reference):
+                self.assertContains(response, api_reference)
+
+    def test_privacy_page_references_privacy_signal_apis(self):
+        response = self.client.get(reverse("privacy-check"))
+
+        for api_reference in (
+            "navigator.cookieEnabled",
+            "navigator.doNotTrack",
+            "navigator.globalPrivacyControl",
+            "navigator.onLine",
+            "navigator.language",
+            "navigator.userAgentData",
+        ):
+            with self.subTest(api_reference=api_reference):
+                self.assertContains(response, api_reference)
+
+    def test_webgl_page_tries_webgl2_then_webgl(self):
+        response = self.client.get(reverse("webgl"))
+
+        html = response.content.decode()
+        webgl2_position = html.index('getContext("webgl2")')
+        webgl_position = html.index('getContext("webgl")')
+        self.assertLess(webgl2_position, webgl_position)
+        self.assertContains(response, "WEBGL_debug_renderer_info")
+
+    def test_canvas_page_requires_explicit_action_and_uses_sha256(self):
+        response = self.client.get(reverse("canvas-fingerprint"))
+
+        self.assertContains(response, 'id="run-canvas-test"')
+        self.assertContains(response, "Run canvas test")
+        self.assertContains(response, 'addEventListener("click", runCanvasTest)')
+        self.assertContains(response, 'digest("SHA-256"')
+        self.assertNotContains(response, "runCanvasTest();")
+
+    def test_local_only_pages_do_not_make_diagnostic_network_requests(self):
+        for route_name in (
+            "browser-check",
+            "screen-resolution",
+            "privacy-check",
+            "webgl",
+            "canvas-fingerprint",
+        ):
+            with self.subTest(route_name=route_name):
+                self.assertNotContains(
+                    self.client.get(reverse(route_name)),
+                    "fetch(",
+                )
+
+
+class ToolSitemapAndApiIndexingTests(SimpleTestCase):
+    def test_sitemap_contains_all_public_pages_and_no_api_endpoints(self):
+        response = self.client.get(reverse("sitemap"))
+        public_paths = (
+            "",
+            "tools/",
+            "user-agent/",
+            "browser-check/",
+            "screen-resolution/",
+            "http-headers/",
+            "privacy-check/",
+            "webgl/",
+            "canvas-fingerprint/",
+        )
+
+        for path in public_paths:
+            with self.subTest(path=path):
+                self.assertContains(
+                    response,
+                    f"<loc>https://whatwebsees.com/{path}</loc>",
+                )
+
+        for api_path in ("health", "headers", "ip", "location", "network"):
+            with self.subTest(api_path=api_path):
+                self.assertNotContains(
+                    response,
+                    f"<loc>https://whatwebsees.com/{api_path}</loc>",
+                )
+
+    def test_all_api_endpoints_remain_noindex(self):
+        request_options = {
+            "health": {},
+            "headers": {},
+            "ip": {"HTTP_X_REAL_IP": "8.8.8.8"},
+            "location": {},
+            "network": {},
+        }
+
+        for route_name, options in request_options.items():
+            with self.subTest(route_name=route_name):
+                response = self.client.get(reverse(route_name), **options)
+
+                self.assertEqual(
+                    response.headers.get("X-Robots-Tag"),
+                    "noindex, nofollow",
+                )
+
+    def test_backend_header_allowlist_has_no_sensitive_names(self):
+        from core.views import REQUEST_HEADER_ALLOWLIST
+
+        forbidden = {
+            "Cookie",
+            "Authorization",
+            "CF-Connecting-IP",
+            "X-Real-IP",
+            "X-Forwarded-For",
+            "CF-Ray",
+        }
+
+        self.assertTrue(forbidden.isdisjoint(REQUEST_HEADER_ALLOWLIST))

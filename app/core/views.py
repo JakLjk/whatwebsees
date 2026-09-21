@@ -41,6 +41,93 @@ CLOUDFLARE_LOCATION_HEADERS = (
 
 GEOIP_DATABASE_PATH = Path("/data/geoip/dbip-city-lite.mmdb")
 
+PUBLIC_PAGES = (
+    "/",
+    "/tools/",
+    "/user-agent/",
+    "/browser-check/",
+    "/screen-resolution/",
+    "/http-headers/",
+    "/privacy-check/",
+    "/webgl/",
+    "/canvas-fingerprint/",
+)
+
+TOOL_PAGE_METADATA = {
+    "tools": {
+        "template": "core/tools/index.html",
+        "title": "Privacy & Browser Tools | WhatWebSees",
+        "description": (
+            "Explore privacy-conscious tools for checking your browser, screen, "
+            "HTTP headers, privacy signals, WebGL graphics and canvas output."
+        ),
+        "path": "/tools/",
+    },
+    "user_agent": {
+        "template": "core/tools/user_agent.html",
+        "title": "User Agent Checker | WhatWebSees",
+        "description": (
+            "View your browser's User-Agent, reported platform and available "
+            "Client Hints with a private, browser-based checker."
+        ),
+        "path": "/user-agent/",
+    },
+    "browser_check": {
+        "template": "core/tools/browser_check.html",
+        "title": "Browser Checker | WhatWebSees",
+        "description": (
+            "Check your browser, platform, language, time zone and other "
+            "browser-reported details without storing diagnostic values."
+        ),
+        "path": "/browser-check/",
+    },
+    "screen_resolution": {
+        "template": "core/tools/screen_resolution.html",
+        "title": "Screen Resolution Checker | WhatWebSees",
+        "description": (
+            "Check screen resolution, browser viewport, device pixel ratio, "
+            "color depth and orientation locally in your browser."
+        ),
+        "path": "/screen-resolution/",
+    },
+    "http_headers": {
+        "template": "core/tools/http_headers.html",
+        "title": "HTTP Headers Checker | WhatWebSees",
+        "description": (
+            "See a privacy-conscious selection of HTTP request headers that "
+            "reached this website through Cloudflare and its reverse proxy."
+        ),
+        "path": "/http-headers/",
+    },
+    "privacy_check": {
+        "template": "core/tools/privacy_check.html",
+        "title": "Browser Privacy Signals Checker | WhatWebSees",
+        "description": (
+            "Check browser-reported privacy preferences including Do Not Track, "
+            "Global Privacy Control and cookie availability."
+        ),
+        "path": "/privacy-check/",
+    },
+    "webgl": {
+        "template": "core/tools/webgl.html",
+        "title": "WebGL & GPU Checker | WhatWebSees",
+        "description": (
+            "Inspect browser-reported WebGL support, renderer, vendor and useful "
+            "graphics limits without sending GPU details to the server."
+        ),
+        "path": "/webgl/",
+    },
+    "canvas_fingerprint": {
+        "template": "core/tools/canvas_fingerprint.html",
+        "title": "Canvas Fingerprint Test | WhatWebSees",
+        "description": (
+            "Run an explicit, local canvas rendering test and compare a SHA-256 "
+            "hash without uploading or storing the result."
+        ),
+        "path": "/canvas-fingerprint/",
+    },
+}
+
 
 @require_safe
 def robots_txt(request):
@@ -54,19 +141,71 @@ Sitemap: https://whatwebsees.com/sitemap.xml
 
 @require_safe
 def sitemap_xml(request):
-    content = """<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://whatwebsees.com/</loc>
-  </url>
-</urlset>
-"""
+    urls = "\n".join(
+        f"  <url>\n    <loc>https://whatwebsees.com{path}</loc>\n  </url>"
+        for path in PUBLIC_PAGES
+    )
+    content = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        f"{urls}\n"
+        "</urlset>\n"
+    )
     return HttpResponse(content, content_type="application/xml; charset=utf-8")
 
 
 @require_safe
 def home(request):
     return render(request, "core/home.html")
+
+
+def render_tool_page(request, page):
+    metadata = TOOL_PAGE_METADATA[page]
+    context = {
+        **metadata,
+        "canonical_url": f"https://whatwebsees.com{metadata['path']}",
+    }
+    return render(request, metadata["template"], context)
+
+
+@require_safe
+def tools(request):
+    return render_tool_page(request, "tools")
+
+
+@require_safe
+def user_agent(request):
+    return render_tool_page(request, "user_agent")
+
+
+@require_safe
+def browser_check(request):
+    return render_tool_page(request, "browser_check")
+
+
+@require_safe
+def screen_resolution(request):
+    return render_tool_page(request, "screen_resolution")
+
+
+@require_safe
+def http_headers(request):
+    return render_tool_page(request, "http_headers")
+
+
+@require_safe
+def privacy_check(request):
+    return render_tool_page(request, "privacy_check")
+
+
+@require_safe
+def webgl(request):
+    return render_tool_page(request, "webgl")
+
+
+@require_safe
+def canvas_fingerprint(request):
+    return render_tool_page(request, "canvas_fingerprint")
 
 
 @require_GET

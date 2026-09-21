@@ -1,0 +1,73 @@
+{% extends "core/tools/base.html" %}
+
+{% block content %}
+<p class="breadcrumb"><a href="/tools/">All tools</a> / Browser Checker</p>
+<section class="intro" aria-labelledby="page-title">
+    <p class="eyebrow">Browser details</p>
+    <h1 id="page-title">Browser Checker</h1>
+    <p class="intro-text">See a readable summary of the browser information available to this page. Browser privacy protections can reduce or deliberately alter these values.</p>
+</section>
+
+<section class="card result-card" aria-labelledby="result-title">
+    <p class="card-label">Your browser</p>
+    <h2 class="primary-value" id="result-title"><span id="detected-browser">Checking…</span></h2>
+    <dl class="data-list">
+        <div><dt>Platform</dt><dd id="friendly-platform">Loading…</dd></div>
+        <div><dt>Language</dt><dd id="browser-language">Loading…</dd></div>
+        <div><dt>Time zone</dt><dd id="time-zone">Loading…</dd></div>
+        <div><dt>Device class indication</dt><dd id="mobile-status">Loading…</dd></div>
+    </dl>
+
+    <details class="disclosure">
+        <summary>Detailed browser values</summary>
+        <div class="disclosure-content">
+            <dl class="data-list">
+                <div class="wide"><dt>Raw User-Agent</dt><dd class="mono" id="raw-user-agent">Loading…</dd></div>
+                <div><dt>Reported platform</dt><dd id="reported-platform">Loading…</dd></div>
+                <div><dt>Preferred languages</dt><dd id="preferred-languages">Loading…</dd></div>
+                <div><dt>Time zone</dt><dd id="detail-time-zone">Loading…</dd></div>
+                <div><dt>Cookies enabled</dt><dd id="cookies-enabled">Loading…</dd></div>
+                <div><dt>JavaScript enabled</dt><dd>Yes</dd></div>
+                <div><dt>Online state</dt><dd id="online-state">Loading…</dd></div>
+                <div><dt>Device pixel ratio</dt><dd id="device-pixel-ratio">Loading…</dd></div>
+                <div><dt>Touch points</dt><dd id="touch-points">Loading…</dd></div>
+            </dl>
+        </div>
+    </details>
+</section>
+
+<p class="privacy-note">All values on this page are read and displayed locally. This tool does not claim to identify an exact hardware model.</p>
+
+<section class="content-section" aria-labelledby="detection-title">
+    <h2 id="detection-title">How websites detect browsers</h2>
+    <p>Websites can inspect the User-Agent, newer Client Hints and feature support exposed by browser APIs. This checker uses a small set of conservative rules and labels uncertain device-class results as indications rather than facts.</p>
+    <h3>Why browser detection can be inaccurate</h3>
+    <p>User-Agent strings contain compatibility tokens, browsers can share the same rendering engine, and privacy tools may standardize or spoof details. Feature detection is usually better for deciding whether a web feature works; browser names are mainly useful as a human-friendly summary.</p>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (() => {
+        "use strict";
+        const tools = window.WhatWebSeesTools;
+        const userAgent = tools.safelyRead(() => navigator.userAgent);
+        const platform = tools.reportedPlatform();
+        const timeZone = tools.safelyRead(() => Intl.DateTimeFormat().resolvedOptions().timeZone);
+
+        tools.detectBrowser(userAgent).then((browser) => tools.setText("detected-browser", browser));
+        tools.setText("friendly-platform", tools.readablePlatform(platform, userAgent));
+        tools.setText("browser-language", tools.safelyRead(() => navigator.language));
+        tools.setText("time-zone", timeZone);
+        tools.setText("mobile-status", tools.mobileStatus(userAgent));
+        tools.setText("raw-user-agent", userAgent);
+        tools.setText("reported-platform", platform);
+        tools.setText("preferred-languages", tools.preferredLanguages());
+        tools.setText("detail-time-zone", timeZone);
+        tools.setText("cookies-enabled", navigator.cookieEnabled ? "Enabled" : "Disabled or unavailable");
+        tools.setText("online-state", navigator.onLine ? "Online" : "Offline");
+        tools.setText("device-pixel-ratio", tools.safelyRead(() => window.devicePixelRatio));
+        tools.setText("touch-points", tools.safelyRead(() => navigator.maxTouchPoints));
+    })();
+</script>
+{% endblock %}

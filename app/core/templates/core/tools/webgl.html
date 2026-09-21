@@ -1,0 +1,95 @@
+{% extends "core/tools/base.html" %}
+
+{% block content %}
+<p class="breadcrumb"><a href="/tools/">All tools</a> / WebGL &amp; GPU Checker</p>
+<section class="intro" aria-labelledby="page-title">
+    <p class="eyebrow">Browser graphics</p>
+    <h1 id="page-title">WebGL &amp; GPU Checker</h1>
+    <p class="intro-text">Inspect the graphics interface and renderer information your browser chooses to expose. These values are browser-reported and do not guarantee exact hardware identification.</p>
+</section>
+
+<section class="card result-card" aria-labelledby="result-title">
+    <p class="card-label">Graphics result</p>
+    <h2 id="result-title">WebGL support</h2>
+    <output class="primary-value" id="webgl-support" aria-live="polite">Checking…</output>
+    <p class="status" id="webgl-status" role="status" aria-live="polite">Testing graphics support locally…</p>
+    <dl class="data-list">
+        <div><dt>Context</dt><dd id="context-version">Unavailable</dd></div>
+        <div><dt>Vendor</dt><dd id="vendor">Unavailable</dd></div>
+        <div><dt>Renderer</dt><dd id="renderer">Unavailable</dd></div>
+        <div class="wide"><dt>Shading language version</dt><dd id="shading-version">Unavailable</dd></div>
+        <div><dt>Maximum texture size</dt><dd id="max-texture-size">Unavailable</dd></div>
+        <div><dt>Maximum viewport dimensions</dt><dd id="max-viewport-dimensions">Unavailable</dd></div>
+        <div><dt>Maximum combined texture units</dt><dd id="max-texture-units">Unavailable</dd></div>
+        <div><dt>Maximum vertex attributes</dt><dd id="max-vertex-attributes">Unavailable</dd></div>
+        <div><dt>Antialiasing</dt><dd id="antialiasing">Unavailable</dd></div>
+        <div><dt>Unmasked vendor</dt><dd id="unmasked-vendor">Unavailable</dd></div>
+        <div class="wide"><dt>Unmasked renderer</dt><dd id="unmasked-renderer">Unavailable</dd></div>
+    </dl>
+</section>
+
+<p class="privacy-note">The WebGL check runs entirely in your browser. GPU and capability values are not sent to Django or stored.</p>
+
+<section class="content-section" aria-labelledby="webgl-title">
+    <h2 id="webgl-title">What WebGL tells a website</h2>
+    <p>WebGL is a browser graphics API used for interactive 2D and 3D content. A webpage can ask the graphics context about supported versions, limits and a renderer description.</p>
+    <h3>Why graphics information is privacy-relevant</h3>
+    <p>Renderer names and capability limits can contribute one signal to browser fingerprinting. They are not normally unique on their own, and virtual machines, drivers and browser translation layers can change what appears.</p>
+    <h3>Why information may be unavailable</h3>
+    <p>Browsers can hide, standardize or substitute graphics details to protect privacy or improve compatibility. Disabled hardware acceleration, blocklists and hardened settings can also make WebGL unavailable.</p>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (() => {
+        "use strict";
+        const tools = window.WhatWebSeesTools;
+        const status = document.getElementById("webgl-status");
+
+        try {
+            const canvas = document.createElement("canvas");
+            let gl = canvas.getContext("webgl2");
+            let contextName = "WebGL 2";
+            if (!gl) {
+                gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+                contextName = "WebGL 1";
+            }
+
+            if (!gl) {
+                tools.setText("webgl-support", "Unavailable");
+                status.textContent = "WebGL is unavailable or disabled in this browser.";
+                return;
+            }
+
+            const parameter = (name) => tools.safelyRead(() => gl.getParameter(name));
+            tools.setText("webgl-support", "Supported");
+            tools.setText("context-version", `${contextName} — ${parameter(gl.VERSION)}`);
+            tools.setText("vendor", parameter(gl.VENDOR));
+            tools.setText("renderer", parameter(gl.RENDERER));
+            tools.setText("shading-version", parameter(gl.SHADING_LANGUAGE_VERSION));
+            tools.setText("max-texture-size", parameter(gl.MAX_TEXTURE_SIZE));
+            tools.setText("max-viewport-dimensions", tools.safelyRead(() => {
+                const value = gl.getParameter(gl.MAX_VIEWPORT_DIMS);
+                return tools.formatDimensions(value[0], value[1]);
+            }));
+            tools.setText("max-texture-units", parameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS));
+            tools.setText("max-vertex-attributes", parameter(gl.MAX_VERTEX_ATTRIBS));
+            tools.setText("antialiasing", tools.safelyRead(() => gl.getContextAttributes().antialias ? "Available" : "Unavailable"));
+
+            const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
+            if (debugInfo) {
+                tools.setText("unmasked-vendor", parameter(debugInfo.UNMASKED_VENDOR_WEBGL));
+                tools.setText("unmasked-renderer", parameter(debugInfo.UNMASKED_RENDERER_WEBGL));
+            }
+
+            status.className = "status is-ready";
+            status.textContent = "Browser-reported graphics information loaded locally.";
+        } catch {
+            tools.setText("webgl-support", "Unavailable");
+            status.className = "status is-error";
+            status.textContent = "The browser did not allow this page to inspect WebGL support.";
+        }
+    })();
+</script>
+{% endblock %}

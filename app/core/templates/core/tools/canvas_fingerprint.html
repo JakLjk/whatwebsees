@@ -1,0 +1,104 @@
+{% extends "core/tools/base.html" %}
+
+{% block content %}
+<p class="breadcrumb"><a href="/tools/">All tools</a> / Canvas Fingerprint Test</p>
+<section class="intro" aria-labelledby="page-title">
+    <p class="eyebrow">Fingerprint awareness</p>
+    <h1 id="page-title">Canvas Fingerprint Test</h1>
+    <p class="intro-text">Run a small deterministic canvas test only when you choose. Rendering and hashing happen locally; no canvas data or result is uploaded or stored.</p>
+</section>
+
+<section class="card result-card" aria-labelledby="result-title">
+    <p class="card-label">Explicit local test</p>
+    <h2 id="result-title">Canvas rendering hash</h2>
+    <dl class="data-list">
+        <div><dt>Canvas support</dt><dd id="canvas-support">Checking…</dd></div>
+        <div><dt>SHA-256 support</dt><dd id="crypto-support">Checking…</dd></div>
+        <div class="wide"><dt>Hash</dt><dd class="mono" id="canvas-hash">Not run</dd></div>
+    </dl>
+    <button class="button" id="run-canvas-test" type="button">Run canvas test</button>
+    <p class="status" id="canvas-status" role="status" aria-live="polite">The test has not run.</p>
+</section>
+
+<p class="privacy-note">The canvas diagnostic does not store or transmit its canvas data or SHA-256 hash. The result exists only in this page's memory.</p>
+
+<section class="content-section" aria-labelledby="canvas-title">
+    <h2 id="canvas-title">How a canvas fingerprint test works</h2>
+    <p>A website can ask the browser to draw text and shapes on an HTML canvas. Small differences in fonts, graphics libraries, operating systems and rendering settings can sometimes change the pixels.</p>
+    <h3>What this test does</h3>
+    <p>After you press the button, this page draws the same small scene each time, reads its local PNG representation and computes a SHA-256 hash using Web Crypto. The canvas data and hash never leave your browser.</p>
+    <h3>What the hash does not prove</h3>
+    <p>Different environments may produce different output, but matching hashes do not uniquely identify a person. Many people can share the same result, and browsers can resist or randomize canvas reads.</p>
+    <h3>Fingerprinting is usually combined</h3>
+    <p>Real-world fingerprinting can combine canvas output with many other signals. A canvas hash is only one possible input and should not be treated as a stable global identifier.</p>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (() => {
+        "use strict";
+        const tools = window.WhatWebSeesTools;
+        const button = document.getElementById("run-canvas-test");
+        const status = document.getElementById("canvas-status");
+        const canvasSupported = typeof window.HTMLCanvasElement !== "undefined";
+        const cryptoSupported = Boolean(window.crypto && window.crypto.subtle && window.TextEncoder);
+
+        tools.setText("canvas-support", canvasSupported ? "Supported" : "Unavailable");
+        tools.setText("crypto-support", cryptoSupported ? "Supported" : "Unavailable");
+
+        if (!canvasSupported || !cryptoSupported) {
+            button.disabled = true;
+            status.textContent = "Canvas or Web Crypto is unavailable, so this test cannot run.";
+        }
+
+        const bytesToHex = (buffer) => Array.from(new Uint8Array(buffer))
+            .map((byte) => byte.toString(16).padStart(2, "0"))
+            .join("");
+
+        const runCanvasTest = async () => {
+            button.disabled = true;
+            status.className = "status";
+            status.textContent = "Drawing and hashing locally…";
+
+            try {
+                const canvas = document.createElement("canvas");
+                canvas.width = 320;
+                canvas.height = 120;
+                const context = canvas.getContext("2d");
+                if (!context) throw new Error("Canvas context unavailable");
+
+                context.fillStyle = "#f4f7fb";
+                context.fillRect(0, 0, canvas.width, canvas.height);
+                context.fillStyle = "#2457d6";
+                context.fillRect(18, 18, 76, 76);
+                context.beginPath();
+                context.arc(130, 56, 34, 0, Math.PI * 2);
+                context.fillStyle = "rgba(23, 100, 58, 0.82)";
+                context.fill();
+                context.font = "18px Arial, sans-serif";
+                context.fillStyle = "#182230";
+                context.fillText("WhatWebSees canvas test ✓", 18, 111);
+                context.strokeStyle = "#a42828";
+                context.lineWidth = 3;
+                context.strokeRect(177.5, 20.5, 122, 66);
+
+                const representation = canvas.toDataURL("image/png");
+                const encoded = new TextEncoder().encode(representation);
+                const digest = await window.crypto.subtle.digest("SHA-256", encoded);
+                tools.setText("canvas-hash", bytesToHex(digest));
+                status.className = "status is-ready";
+                status.textContent = "Canvas test completed locally. Nothing was uploaded or stored.";
+            } catch {
+                tools.setText("canvas-hash", "Unavailable");
+                status.className = "status is-error";
+                status.textContent = "The browser could not complete the canvas test.";
+            } finally {
+                button.disabled = false;
+            }
+        };
+
+        button.addEventListener("click", runCanvasTest);
+    })();
+</script>
+{% endblock %}

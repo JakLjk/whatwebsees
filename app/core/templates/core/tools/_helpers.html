@@ -1,0 +1,126 @@
+<script>
+    (() => {
+        "use strict";
+
+        const unavailable = "Unavailable";
+
+        const formatValue = (value) => {
+            if (value === undefined || value === null) return unavailable;
+            if (typeof value === "number" && !Number.isFinite(value)) return unavailable;
+            const text = String(value).trim();
+            return text || unavailable;
+        };
+
+        const safelyRead = (reader) => {
+            try {
+                return formatValue(reader());
+            } catch {
+                return unavailable;
+            }
+        };
+
+        const setText = (id, value) => {
+            const element = document.getElementById(id);
+            if (element) element.textContent = formatValue(value);
+        };
+
+        const formatDimensions = (width, height) => {
+            const safeWidth = formatValue(width);
+            const safeHeight = formatValue(height);
+            return safeWidth === unavailable || safeHeight === unavailable
+                ? unavailable
+                : `${safeWidth} × ${safeHeight}`;
+        };
+
+        const preferredLanguages = () => (
+            Array.isArray(navigator.languages) && navigator.languages.length
+                ? navigator.languages.map(formatValue).join(", ")
+                : unavailable
+        );
+
+        const reportedPlatform = () => {
+            if (navigator.userAgentData) {
+                const modern = formatValue(navigator.userAgentData.platform);
+                if (modern !== unavailable) return modern;
+            }
+            return safelyRead(() => navigator.platform);
+        };
+
+        const readablePlatform = (reportedValue, userAgent) => {
+            const reported = formatValue(reportedValue).toLowerCase();
+            const agent = formatValue(userAgent).toLowerCase();
+            if (agent.includes("android") || reported.includes("android")) return "Android";
+            if (/iphone|ipad|ipod/.test(agent) || reported === "ios" || reported === "ipados") {
+                return reported === "ipados" ? "iPadOS" : "iOS";
+            }
+            if (reported.includes("mac")) return "macOS";
+            if (reported.includes("win")) return "Windows";
+            if (reported.includes("cros") || reported.includes("chrome os")) return "ChromeOS";
+            if (reported.includes("linux")) return "Linux";
+            return formatValue(reportedValue);
+        };
+
+        const detectBrowser = async (userAgent) => {
+            try {
+                if (
+                    navigator.brave
+                    && typeof navigator.brave.isBrave === "function"
+                    && await navigator.brave.isBrave()
+                ) return "Brave";
+            } catch {
+                // Continue with conservative browser checks.
+            }
+
+            try {
+                if (navigator.userAgentData && Array.isArray(navigator.userAgentData.brands)) {
+                    const brands = navigator.userAgentData.brands.map(({brand}) => String(brand));
+                    const known = [
+                        ["Brave", "Brave"],
+                        ["Microsoft Edge", "Edge"],
+                        ["Opera", "Opera"],
+                        ["Google Chrome", "Chrome"],
+                        ["Chromium", "Chromium"],
+                    ];
+                    for (const [reported, display] of known) {
+                        if (brands.some((brand) => brand.includes(reported))) return display;
+                    }
+                }
+            } catch {
+                // Continue with User-Agent checks.
+            }
+
+            if (/Edg\//.test(userAgent)) return "Edge";
+            if (/OPR\//.test(userAgent)) return "Opera";
+            if (/Firefox\/|FxiOS\//.test(userAgent)) return "Firefox";
+            if (/CriOS\/|Chrome\//.test(userAgent)) return "Chrome";
+            if (/Safari\//.test(userAgent) && /Version\//.test(userAgent)) return "Safari";
+            return unavailable;
+        };
+
+        const mobileStatus = (userAgent) => {
+            try {
+                if (navigator.userAgentData && typeof navigator.userAgentData.mobile === "boolean") {
+                    return navigator.userAgentData.mobile ? "Mobile" : "Desktop or non-mobile";
+                }
+            } catch {
+                // Fall back to a conservative User-Agent indication.
+            }
+            return /Android|iPhone|iPad|iPod|Mobile/i.test(userAgent)
+                ? "Likely mobile"
+                : "Likely desktop or non-mobile";
+        };
+
+        window.WhatWebSeesTools = Object.freeze({
+            unavailable,
+            formatValue,
+            safelyRead,
+            setText,
+            formatDimensions,
+            preferredLanguages,
+            reportedPlatform,
+            readablePlatform,
+            detectBrowser,
+            mobileStatus,
+        });
+    })();
+</script>
