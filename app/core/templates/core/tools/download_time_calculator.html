@@ -1,0 +1,39 @@
+{% extends "core/tools/base.html" %}
+{% block content %}
+<p class="breadcrumb"><a href="/tools/">All tools</a> / Download Time Calculator</p>
+<section class="intro" aria-labelledby="page-title"><p class="eyebrow">Security &amp; Utilities</p><h1 id="page-title">Download Time Calculator</h1><p class="intro-text">Estimate ideal transfer time from a file size and advertised connection speed. This is a calculator, not a live speed test.</p></section>
+<section class="card result-card" aria-labelledby="download-title"><h2 id="download-title">Estimate download time</h2><div class="local-tool-grid"><div class="field-group"><label for="file-size">File size</label><input id="file-size" type="number" min="0" step="any" value="1" inputmode="decimal"></div><div class="field-group"><label for="size-unit">File-size unit</label><select id="size-unit"><option>KB</option><option selected>MB</option><option>GB</option><option>TB</option></select></div><div class="field-group"><label for="speed">Connection speed</label><input id="speed" type="number" min="0" step="any" value="100" inputmode="decimal"></div><div class="field-group"><label for="speed-unit">Speed unit</label><select id="speed-unit"><option>Kbps</option><option selected>Mbps</option><option>Gbps</option></select></div></div>
+<div class="result-block" aria-live="polite"><p class="card-label">Ideal estimated time</p><output class="primary-value" id="download-result">0.08 seconds</output><p class="status" id="download-details">1 MB at 100 Mbps, using decimal units.</p></div></section>
+<p class="privacy-note">All calculations happen in this browser. KB, MB, GB and TB use decimal multiples; Kbps, Mbps and Gbps are bits per second.</p>
+<section class="content-section" aria-labelledby="download-explained"><h2 id="download-explained">How the estimate works</h2><p>The calculator converts file bytes to bits, divides by the selected bits-per-second rate and formats the duration. For example, one decimal gigabyte contains eight gigabits before overhead.</p><h3>Why real downloads take longer</h3><p>The ideal estimate does not include protocol overhead, latency, congestion, Wi-Fi interference, retransmissions, server limits or competing traffic. Advertised access speed may also differ from throughput to a particular server.</p><h3>Calculator, not measurement</h3><p>No file is downloaded and no network performance is tested. Use the estimate for planning, then allow a margin for real-world conditions.</p></section>
+{% endblock %}
+{% block scripts %}<script>
+(() => {
+    "use strict";
+    const sizeFactors = {KB: 1e3, MB: 1e6, GB: 1e9, TB: 1e12};
+    const speedFactors = {Kbps: 1e3, Mbps: 1e6, Gbps: 1e9};
+    const controls = ["file-size", "size-unit", "speed", "speed-unit"].map((id) => document.getElementById(id));
+    const formatDuration = (seconds) => {
+        if (seconds < 60) return `${seconds < 10 ? seconds.toFixed(2) : seconds.toFixed(1)} seconds`;
+        if (seconds < 3600) return `${Math.floor(seconds / 60)} min ${Math.round(seconds % 60)} sec`;
+        if (seconds < 86400) return `${Math.floor(seconds / 3600)} hr ${Math.round((seconds % 3600) / 60)} min`;
+        return `${Math.floor(seconds / 86400)} days ${Math.round((seconds % 86400) / 3600)} hr`;
+    };
+    const calculateDownloadTime = () => {
+        const size = Number(controls[0].value);
+        const speed = Number(controls[2].value);
+        const result = document.getElementById("download-result");
+        const details = document.getElementById("download-details");
+        if (!Number.isFinite(size) || !Number.isFinite(speed) || size < 0 || speed <= 0) {
+            result.textContent = "Enter positive values";
+            details.textContent = "Connection speed must be greater than zero.";
+            return;
+        }
+        const seconds = (size * sizeFactors[controls[1].value] * 8) / (speed * speedFactors[controls[3].value]);
+        result.textContent = formatDuration(seconds);
+        details.textContent = `${size} ${controls[1].value} at ${speed} ${controls[3].value}, using decimal units.`;
+    };
+    controls.forEach((control) => control.addEventListener("input", calculateDownloadTime));
+    calculateDownloadTime();
+})();
+</script>{% endblock %}

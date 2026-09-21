@@ -39,6 +39,7 @@ ALLOWED_HOSTS = [
 
 # Django is directly behind our controlled Nginx proxy, which normalizes this header.
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+CSRF_COOKIE_SECURE = True
 
 INSTALLED_APPS = [
     "core.apps.CoreConfig",
@@ -47,6 +48,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"

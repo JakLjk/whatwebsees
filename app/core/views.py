@@ -1,5 +1,6 @@
 from functools import lru_cache
-from ipaddress import ip_address
+from ipaddress import ip_address, ip_interface, ip_network
+import json
 from pathlib import Path
 
 import maxminddb
@@ -7,7 +8,17 @@ import maxminddb
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.utils.cache import patch_cache_control
-from django.views.decorators.http import require_GET, require_safe
+from django.views.decorators.http import require_GET, require_http_methods, require_safe
+
+from .dns_utils import DNS_RECORD_TYPES, lookup_records, reverse_lookup
+from .network_utils import (
+    NetworkToolError,
+    check_tls_certificate,
+    normalize_domain,
+    normalize_http_url,
+    resolve_public_host,
+    safe_http_request,
+)
 
 
 REQUEST_HEADER_ALLOWLIST = (
@@ -41,25 +52,13 @@ CLOUDFLARE_LOCATION_HEADERS = (
 
 GEOIP_DATABASE_PATH = Path("/data/geoip/dbip-city-lite.mmdb")
 
-PUBLIC_PAGES = (
-    "/",
-    "/tools/",
-    "/user-agent/",
-    "/browser-check/",
-    "/screen-resolution/",
-    "/http-headers/",
-    "/privacy-check/",
-    "/webgl/",
-    "/canvas-fingerprint/",
-)
-
 TOOL_PAGE_METADATA = {
     "tools": {
         "template": "core/tools/index.html",
         "title": "Privacy & Browser Tools | WhatWebSees",
         "description": (
-            "Explore privacy-conscious tools for checking your browser, screen, "
-            "HTTP headers, privacy signals, WebGL graphics and canvas output."
+            "Explore privacy-conscious IP, DNS, website, browser, security and "
+            "calculation tools with useful explanations and no diagnostic history."
         ),
         "path": "/tools/",
     },
@@ -126,7 +125,132 @@ TOOL_PAGE_METADATA = {
         ),
         "path": "/canvas-fingerprint/",
     },
+    "ip_lookup": {
+        "template": "core/tools/ip_lookup.html",
+        "title": "IP Address Lookup & Geolocation | WhatWebSees",
+        "description": "Look up and classify an IPv4 or IPv6 address with approximate location data from a local privacy-conscious GeoIP database.",
+        "path": "/ip-lookup/",
+    },
+    "ip_address_checker": {
+        "template": "core/tools/ip_address_checker.html",
+        "title": "IP Address Checker & Validator | WhatWebSees",
+        "description": "Validate, normalize and explain an IPv4 or IPv6 address, including public, private, loopback and reserved classifications.",
+        "path": "/ip-address-checker/",
+    },
+    "dns_lookup": {
+        "template": "core/tools/dns_lookup.html",
+        "title": "DNS Lookup for A, MX, TXT & More | WhatWebSees",
+        "description": "Query common DNS records for a domain, including A, AAAA, CNAME, MX, NS, TXT and SOA records with TTL values.",
+        "path": "/dns-lookup/",
+    },
+    "reverse_dns": {
+        "template": "core/tools/reverse_dns.html",
+        "title": "Reverse DNS & PTR Lookup | WhatWebSees",
+        "description": "Look up PTR hostnames for a public IPv4 or IPv6 address and understand what reverse DNS records mean.",
+        "path": "/reverse-dns/",
+    },
+    "hostname_lookup": {
+        "template": "core/tools/hostname_lookup.html",
+        "title": "Hostname to IP Lookup | WhatWebSees",
+        "description": "Resolve a public hostname to its deduplicated IPv4 and IPv6 addresses with a simple privacy-conscious lookup.",
+        "path": "/hostname-lookup/",
+    },
+    "ssl_checker": {
+        "template": "core/tools/ssl_checker.html",
+        "title": "SSL Certificate Checker | WhatWebSees",
+        "description": "Validate a public website's TLS certificate on port 443 and inspect its issuer, names, dates, protocol and cipher.",
+        "path": "/ssl-checker/",
+    },
+    "website_status": {
+        "template": "core/tools/website_status.html",
+        "title": "Website Status & Response Time Checker | WhatWebSees",
+        "description": "Check a public website's HTTP status, response time, redirects, final URL and content type using bounded safe requests.",
+        "path": "/website-status/",
+    },
+    "server_headers": {
+        "template": "core/tools/server_headers.html",
+        "title": "Server Response Headers Checker | WhatWebSees",
+        "description": "Inspect a safe selection of HTTP response and security headers returned by a public website without exposing cookies.",
+        "path": "/server-headers/",
+    },
+    "subnet_calculator": {
+        "template": "core/tools/subnet_calculator.html",
+        "title": "Subnet & CIDR Calculator | WhatWebSees",
+        "description": "Calculate IPv4 or IPv6 CIDR network boundaries, masks, address counts and correct /31 and /32 host semantics.",
+        "path": "/subnet-calculator/",
+    },
+    "password_strength": {
+        "template": "core/tools/password_strength.html",
+        "title": "Private Password Strength Checker | WhatWebSees",
+        "description": "Check password length and useful strength signals entirely in your browser without transmitting or storing the password.",
+        "path": "/password-strength/",
+    },
+    "punycode_converter": {
+        "template": "core/tools/punycode_converter.html",
+        "title": "Punycode & IDN Domain Converter | WhatWebSees",
+        "description": "Convert Unicode internationalized domain names to ASCII Punycode and decode Punycode domains without a network lookup.",
+        "path": "/punycode-converter/",
+    },
+    "download_time_calculator": {
+        "template": "core/tools/download_time_calculator.html",
+        "title": "Download Time Calculator | WhatWebSees",
+        "description": "Estimate ideal file download time from file size and connection speed with clear decimal unit conversions.",
+        "path": "/download-time-calculator/",
+    },
 }
+
+TOOL_NAMES = {
+    "user_agent": "User Agent Checker",
+    "browser_check": "Browser Checker",
+    "screen_resolution": "Screen Resolution Checker",
+    "http_headers": "HTTP Headers Checker",
+    "privacy_check": "Browser Privacy Signals",
+    "webgl": "WebGL & GPU Checker",
+    "canvas_fingerprint": "Canvas Fingerprint Test",
+    "ip_lookup": "IP Address Lookup",
+    "ip_address_checker": "IP Address Checker",
+    "dns_lookup": "DNS Lookup",
+    "reverse_dns": "Reverse DNS Lookup",
+    "hostname_lookup": "Hostname Lookup",
+    "ssl_checker": "SSL Certificate Checker",
+    "website_status": "Website Status",
+    "server_headers": "Server Headers Checker",
+    "subnet_calculator": "Subnet / CIDR Calculator",
+    "password_strength": "Password Strength Checker",
+    "punycode_converter": "Punycode Converter",
+    "download_time_calculator": "Download Time Calculator",
+}
+
+TOOL_GROUPS = (
+    ("IP & Network", ("ip_lookup", "ip_address_checker", "dns_lookup", "reverse_dns", "hostname_lookup", "subnet_calculator")),
+    ("Browser & Device", ("user_agent", "browser_check", "screen_resolution", "privacy_check", "webgl", "canvas_fingerprint")),
+    ("Website Diagnostics", ("website_status", "ssl_checker", "server_headers", "http_headers")),
+    ("Security & Utilities", ("password_strength", "punycode_converter", "download_time_calculator")),
+)
+
+RELATED_TOOLS = {
+    "user_agent": ("browser_check", "privacy_check", "http_headers"),
+    "browser_check": ("user_agent", "screen_resolution", "privacy_check"),
+    "screen_resolution": ("browser_check", "webgl", "canvas_fingerprint"),
+    "http_headers": ("server_headers", "user_agent", "privacy_check"),
+    "privacy_check": ("password_strength", "browser_check", "user_agent"),
+    "webgl": ("browser_check", "screen_resolution", "canvas_fingerprint"),
+    "canvas_fingerprint": ("webgl", "privacy_check", "browser_check"),
+    "ip_lookup": ("ip_address_checker", "dns_lookup", "reverse_dns", "hostname_lookup"),
+    "ip_address_checker": ("ip_lookup", "subnet_calculator", "reverse_dns"),
+    "dns_lookup": ("hostname_lookup", "reverse_dns", "ssl_checker", "ip_lookup"),
+    "reverse_dns": ("ip_lookup", "dns_lookup", "hostname_lookup"),
+    "hostname_lookup": ("dns_lookup", "reverse_dns", "ssl_checker"),
+    "ssl_checker": ("website_status", "server_headers", "dns_lookup"),
+    "website_status": ("ssl_checker", "server_headers", "dns_lookup"),
+    "server_headers": ("website_status", "ssl_checker", "http_headers"),
+    "subnet_calculator": ("ip_address_checker", "ip_lookup", "hostname_lookup"),
+    "password_strength": ("privacy_check", "browser_check", "punycode_converter"),
+    "punycode_converter": ("dns_lookup", "hostname_lookup", "ssl_checker"),
+    "download_time_calculator": ("website_status", "browser_check", "screen_resolution"),
+}
+
+PUBLIC_PAGES = ("/",) + tuple(metadata["path"] for metadata in TOOL_PAGE_METADATA.values())
 
 
 @require_safe
@@ -159,18 +283,52 @@ def home(request):
     return render(request, "core/home.html")
 
 
-def render_tool_page(request, page):
+def _tool_link(page):
+    return {
+        "name": TOOL_NAMES[page],
+        "path": TOOL_PAGE_METADATA[page]["path"],
+        "description": TOOL_PAGE_METADATA[page]["description"],
+    }
+
+
+def render_tool_page(request, page, extra_context=None):
     metadata = TOOL_PAGE_METADATA[page]
+    breadcrumb_items = [
+        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://whatwebsees.com/"},
+        {"@type": "ListItem", "position": 2, "name": "Tools", "item": "https://whatwebsees.com/tools/"},
+    ]
+    if page != "tools":
+        breadcrumb_items.append(
+            {
+                "@type": "ListItem",
+                "position": 3,
+                "name": TOOL_NAMES[page],
+                "item": f"https://whatwebsees.com{metadata['path']}",
+            }
+        )
     context = {
         **metadata,
         "canonical_url": f"https://whatwebsees.com{metadata['path']}",
+        "breadcrumb_json": json.dumps(
+            {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": breadcrumb_items}
+        ),
+        "related_tools": [_tool_link(key) for key in RELATED_TOOLS.get(page, ())],
     }
-    return render(request, metadata["template"], context)
+    if extra_context:
+        context.update(extra_context)
+    response = render(request, metadata["template"], context)
+    if request.method == "POST":
+        patch_cache_control(response, private=True, no_store=True)
+    return response
 
 
 @require_safe
 def tools(request):
-    return render_tool_page(request, "tools")
+    groups = [
+        {"name": name, "tools": [_tool_link(key) for key in keys]}
+        for name, keys in TOOL_GROUPS
+    ]
+    return render_tool_page(request, "tools", {"tool_groups": groups})
 
 
 @require_safe
@@ -206,6 +364,251 @@ def webgl(request):
 @require_safe
 def canvas_fingerprint(request):
     return render_tool_page(request, "canvas_fingerprint")
+
+
+def _submitted_value(request, name, maximum=2048):
+    return request.POST.get(name, "").strip()[:maximum] if request.method == "POST" else ""
+
+
+def _ip_details(address):
+    mapped = getattr(address, "ipv4_mapped", None)
+    flags = (
+        ("Globally routable", address.is_global),
+        ("Private", address.is_private),
+        ("Loopback", address.is_loopback),
+        ("Link-local", address.is_link_local),
+        ("Multicast", address.is_multicast),
+        ("Reserved", address.is_reserved),
+        ("Unspecified", address.is_unspecified),
+    )
+    return {
+        "normalized": str(address),
+        "expanded": address.exploded,
+        "version": address.version,
+        "flags": flags,
+        "mapped_ipv4": str(mapped) if mapped is not None else None,
+    }
+
+
+@require_http_methods(["GET", "POST"])
+def ip_lookup(request):
+    value = _submitted_value(request, "ip", 200)
+    context = {"submitted_value": value}
+    if request.method == "POST":
+        try:
+            address = ip_address(value)
+            context["result"] = _ip_details(address)
+            context["location"] = dbip_location(address) if address.is_global else {}
+        except ValueError:
+            context["error"] = "Enter a valid IPv4 or IPv6 address."
+    return render_tool_page(request, "ip_lookup", context)
+
+
+@require_http_methods(["GET", "POST"])
+def ip_address_checker(request):
+    value = _submitted_value(request, "ip", 200)
+    context = {"submitted_value": value}
+    if request.method == "POST":
+        try:
+            context["result"] = _ip_details(ip_address(value))
+        except ValueError:
+            context["error"] = "This is not a valid IPv4 or IPv6 address."
+    return render_tool_page(request, "ip_address_checker", context)
+
+
+@require_http_methods(["GET", "POST"])
+def dns_lookup(request):
+    value = _submitted_value(request, "domain", 253)
+    record_type = request.POST.get("record_type", "A").upper() if request.method == "POST" else "A"
+    context = {
+        "submitted_value": value,
+        "record_type": record_type,
+        "record_types": ("ALL",) + DNS_RECORD_TYPES,
+    }
+    if request.method == "POST":
+        try:
+            domain, records = lookup_records(value, record_type)
+            context.update({"queried_domain": domain, "records": records})
+        except NetworkToolError as error:
+            context.update({"error": error.message, "error_code": error.code})
+    return render_tool_page(request, "dns_lookup", context)
+
+
+@require_http_methods(["GET", "POST"])
+def reverse_dns(request):
+    value = _submitted_value(request, "ip", 200)
+    context = {"submitted_value": value}
+    if request.method == "POST":
+        try:
+            address, hostnames = reverse_lookup(value)
+            context.update({"queried_ip": address, "hostnames": hostnames})
+        except NetworkToolError as error:
+            context.update({"error": error.message, "error_code": error.code})
+    return render_tool_page(request, "reverse_dns", context)
+
+
+@require_http_methods(["GET", "POST"])
+def hostname_lookup(request):
+    value = _submitted_value(request, "hostname", 253)
+    context = {"submitted_value": value}
+    if request.method == "POST":
+        try:
+            hostname = normalize_domain(value)
+            target = resolve_public_host(hostname, 443)
+            context.update(
+                {
+                    "queried_hostname": target.hostname,
+                    "ipv4_addresses": tuple(address for address in target.addresses if ip_address(address).version == 4),
+                    "ipv6_addresses": tuple(address for address in target.addresses if ip_address(address).version == 6),
+                }
+            )
+        except NetworkToolError as error:
+            context.update({"error": error.message, "error_code": error.code})
+    return render_tool_page(request, "hostname_lookup", context)
+
+
+@require_http_methods(["GET", "POST"])
+def ssl_checker(request):
+    value = _submitted_value(request, "hostname", 253)
+    context = {"submitted_value": value}
+    if request.method == "POST":
+        try:
+            context["result"] = check_tls_certificate(value)
+        except NetworkToolError as error:
+            context.update({"error": error.message, "error_code": error.code})
+    return render_tool_page(request, "ssl_checker", context)
+
+
+@require_http_methods(["GET", "POST"])
+def website_status(request):
+    value = _submitted_value(request, "url")
+    context = {"submitted_value": value}
+    if request.method == "POST":
+        try:
+            normalized_url = normalize_http_url(value)
+            result = safe_http_request(normalized_url)
+            context.update(
+                {
+                    "result": result,
+                    "normalized_url": normalized_url,
+                    "content_type": result.headers.get("content-type", "Not returned"),
+                    "is_https": result.url.startswith("https://"),
+                }
+            )
+        except NetworkToolError as error:
+            context.update({"error": error.message, "error_code": error.code})
+    return render_tool_page(request, "website_status", context)
+
+
+SERVER_HEADER_ALLOWLIST = (
+    ("server", "Server"),
+    ("content-type", "Content-Type"),
+    ("content-length", "Content-Length"),
+    ("cache-control", "Cache-Control"),
+    ("content-encoding", "Content-Encoding"),
+    ("strict-transport-security", "Strict-Transport-Security"),
+    ("content-security-policy", "Content-Security-Policy"),
+    ("x-content-type-options", "X-Content-Type-Options"),
+    ("referrer-policy", "Referrer-Policy"),
+    ("location", "Location"),
+)
+
+
+@require_http_methods(["GET", "POST"])
+def server_headers(request):
+    value = _submitted_value(request, "url")
+    context = {"submitted_value": value}
+    if request.method == "POST":
+        try:
+            result = safe_http_request(value)
+            selected = tuple(
+                (display_name, result.headers[lower_name])
+                for lower_name, display_name in SERVER_HEADER_ALLOWLIST
+                if lower_name in result.headers
+            )
+            context.update({"result": result, "selected_headers": selected})
+        except NetworkToolError as error:
+            context.update({"error": error.message, "error_code": error.code})
+    return render_tool_page(request, "server_headers", context)
+
+
+@require_http_methods(["GET", "POST"])
+def subnet_calculator(request):
+    value = _submitted_value(request, "cidr", 200)
+    context = {"submitted_value": value}
+    if request.method == "POST":
+        try:
+            interface = ip_interface(value)
+            network = ip_network(value, strict=False)
+            result = {
+                "input_address": str(interface.ip),
+                "network": str(network.network_address),
+                "prefix": network.prefixlen,
+                "netmask": str(network.netmask),
+                "total": network.num_addresses,
+                "first": str(network.network_address),
+                "last": str(network.broadcast_address),
+                "version": network.version,
+            }
+            if network.version == 4:
+                result["broadcast"] = str(network.broadcast_address)
+                if network.prefixlen == 32:
+                    result.update({"usable": 1, "first_usable": str(network.network_address), "last_usable": str(network.network_address), "host_note": "A /32 represents one host address."})
+                elif network.prefixlen == 31:
+                    result.update({"usable": 2, "first_usable": str(network.network_address), "last_usable": str(network.broadcast_address), "host_note": "Both addresses can be used on an RFC 3021 point-to-point link."})
+                else:
+                    result.update({"usable": network.num_addresses - 2, "first_usable": str(network.network_address + 1), "last_usable": str(network.broadcast_address - 1), "host_note": "Traditional IPv4 host count excludes the network and broadcast addresses."})
+            else:
+                result["host_note"] = "IPv6 has no broadcast address; address assignment depends on subnet policy."
+            context["result"] = result
+        except ValueError:
+            context["error"] = "Enter an IPv4 or IPv6 address with a CIDR prefix, such as 192.168.1.50/24."
+    return render_tool_page(request, "subnet_calculator", context)
+
+
+@require_safe
+def password_strength(request):
+    return render_tool_page(request, "password_strength")
+
+
+@require_http_methods(["GET", "POST"])
+def punycode_converter(request):
+    value = _submitted_value(request, "domain", 253)
+    context = {"submitted_value": value}
+    if request.method == "POST":
+        try:
+            candidate = value.strip().rstrip(".")
+            if (
+                not candidate
+                or any(ord(character) < 33 for character in candidate)
+                or any(character in candidate for character in "/\\@:#?%[]")
+            ):
+                raise UnicodeError
+            ascii_domain = candidate.encode("idna").decode("ascii").lower()
+            labels = ascii_domain.split(".")
+            if len(labels) < 2 or any(
+                not label
+                or len(label) > 63
+                or label.startswith("-")
+                or label.endswith("-")
+                or not all(character.isalnum() or character == "-" for character in label)
+                for label in labels
+            ):
+                raise UnicodeError
+            unicode_domain = ascii_domain.encode("ascii").decode("idna")
+            context["result"] = {"ascii": ascii_domain, "unicode": unicode_domain}
+        except (NetworkToolError, UnicodeError) as error:
+            context["error"] = getattr(
+                error,
+                "message",
+                "The domain could not be converted with the platform IDNA implementation.",
+            )
+    return render_tool_page(request, "punycode_converter", context)
+
+
+@require_safe
+def download_time_calculator(request):
+    return render_tool_page(request, "download_time_calculator")
 
 
 @require_GET

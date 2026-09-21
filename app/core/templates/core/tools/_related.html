@@ -1,0 +1,10 @@
+{% if related_tools %}
+<section class="related-tools" aria-labelledby="related-tools-title">
+    <h2 id="related-tools-title">Related tools</h2>
+    <div class="related-links">
+        {% for tool in related_tools %}
+        <a href="{{ tool.path }}">{{ tool.name }}</a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}

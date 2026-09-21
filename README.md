@@ -56,17 +56,38 @@ Browser-reported cookie availability, Do Not Track, Global Privacy Control, onli
 
 ## Public tool suite
 
-`GET /tools/` links to seven focused, indexable tools for User-Agent details,
-browser information, screen resolution, selected HTTP headers, browser privacy
-signals, WebGL graphics information, and an explicit-action canvas rendering
-test. The pages share a lightweight Django template shell, browser helpers and
-the homepage's analytics consent key and behavior.
+`GET /tools/` groups focused, indexable tools for IP and DNS diagnostics,
+website status and TLS checks, browser-visible information, privacy signals,
+and local security or network calculations. The pages share a lightweight
+Django template shell, categorized navigation, related-tool links, browser
+helpers, and the homepage's analytics consent key and behavior.
 
 Browser, screen, privacy, WebGL and canvas diagnostic values remain in the
 browser. The User Agent and HTTP Headers tools call only the existing
 allowlisted `/headers` endpoint. The canvas test runs only after its button is
 pressed, uses Web Crypto for its local SHA-256 result, and does not store or
 transmit the canvas output or hash.
+
+Password strength and download-time calculations also stay entirely in the
+browser. The password field has no form name or submission path and is not
+placed in browser storage. IP validation, subnet calculation and IDN conversion
+use local Python logic. Arbitrary IP geolocation reads only the mounted DB-IP
+City Lite database.
+
+## Server-side network safety
+
+User-directed HTTP and TLS diagnostics share `core/network_utils.py`. It accepts
+only HTTP or HTTPS on their standard ports, rejects credentials and malformed or
+internal names, resolves each hostname once, and fails closed if any returned
+address is not globally routable. Connections use the validated numeric address
+directly while retaining the original hostname for the HTTP Host header and TLS
+SNI/certificate validation. Redirect targets repeat the complete validation.
+
+HTTP checks use short timeouts, a strict redirect limit, HEAD by default and a
+small ranged GET fallback. The response-header tool exposes only a fixed safe
+allowlist and never returns Set-Cookie. DNS tools use bounded dnspython resolver
+timeouts; reverse DNS is limited to public addresses. Submitted diagnostics are
+not written to models or a lookup history.
 
 ## Privacy principles
 

@@ -17,6 +17,7 @@
     <meta name="twitter:title" content="{{ title }}">
     <meta name="twitter:description" content="{{ description }}">
     <meta name="theme-color" content="#2457d6">
+    <script type="application/ld+json">{{ breadcrumb_json|safe }}</script>
 
     <style>
         :root {
@@ -86,7 +87,7 @@
 
         .site-nav {
             display: flex;
-            gap: 0.85rem;
+            gap: 1rem;
             align-items: center;
         }
 
@@ -98,6 +99,41 @@
         }
 
         .site-nav a:hover { color: var(--accent); }
+
+        .tools-menu { position: relative; }
+        .tools-menu summary {
+            padding: 0.35rem 0;
+            color: var(--muted);
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .tools-menu summary:hover { color: var(--accent); }
+        .tools-menu summary:focus-visible {
+            outline: 3px solid rgba(36, 87, 214, 0.25);
+            outline-offset: 3px;
+        }
+        .tools-menu-panel {
+            position: absolute;
+            z-index: 20;
+            top: calc(100% + 0.65rem);
+            right: 0;
+            display: grid;
+            width: min(45rem, calc(100vw - 2rem));
+            max-height: min(34rem, calc(100vh - 7rem));
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem 1.5rem;
+            overflow: auto;
+            padding: 1.2rem;
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            background: var(--surface);
+            box-shadow: var(--shadow);
+        }
+        .tools-menu-group { display: grid; align-content: start; gap: 0.35rem; }
+        .tools-menu-group strong { margin-bottom: 0.2rem; font-size: 0.82rem; }
+        .tools-menu-group a { font-size: 0.82rem; font-weight: 600; }
+        .tools-menu-group .all-tools-link { margin-top: 0.35rem; color: var(--accent); font-weight: 750; }
 
         main { padding-block: clamp(1.75rem, 5vw, 4.5rem) 4rem; }
 
@@ -271,6 +307,54 @@
 
         .content-section h3 { margin: 1.75rem 0 0.45rem; }
 
+        .tool-form {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+        .tool-form .field-group { min-width: 0; }
+        .field-group label { display: block; margin-bottom: 0.35rem; font-weight: 750; }
+        .field-group input,
+        .field-group select {
+            width: 100%;
+            min-height: 2.75rem;
+            padding: 0.65rem 0.75rem;
+            border: 1px solid #b9c6d6;
+            border-radius: 0.7rem;
+            background: #fff;
+            color: var(--text);
+            font: inherit;
+        }
+        .field-group input:focus,
+        .field-group select:focus { outline: 3px solid rgba(36, 87, 214, 0.2); border-color: var(--accent); }
+        .tool-form .button { align-self: end; }
+        .form-help { margin: 0.4rem 0 0; color: var(--muted); font-size: 0.82rem; }
+        .error-message {
+            margin: 1rem 0 0;
+            padding: 0.85rem 1rem;
+            border: 1px solid #efb7b7;
+            border-radius: 0.75rem;
+            background: #fff4f4;
+            color: var(--error);
+            font-weight: 700;
+        }
+        .result-block { margin-top: 1.5rem; padding-top: 1.35rem; border-top: 1px solid var(--border); }
+        .result-block h3 { margin-bottom: 0.5rem; }
+        .record-list { margin: 0.5rem 0 0; padding-left: 1.25rem; }
+        .record-list li { margin-block: 0.35rem; overflow-wrap: anywhere; }
+        .related-tools { margin-top: clamp(2.25rem, 6vw, 4rem); }
+        .related-links { display: flex; flex-wrap: wrap; gap: 0.65rem; }
+        .related-links a {
+            padding: 0.55rem 0.8rem;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: var(--surface);
+            font-weight: 700;
+            text-decoration: none;
+        }
+        .local-tool-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0.85rem; }
+
         .disclosure {
             overflow: hidden;
             margin-top: 1rem;
@@ -313,6 +397,8 @@
             gap: 1rem;
         }
 
+        .tool-category { max-width: none; }
+
         .tool-card {
             display: flex;
             min-height: 13rem;
@@ -320,7 +406,8 @@
             padding: 1.35rem;
         }
 
-        .tool-card h2 { margin-bottom: 0.55rem; font-size: 1.25rem; }
+        .tool-card h2,
+        .tool-card h3 { margin-bottom: 0.55rem; font-size: 1.25rem; }
         .tool-card p { margin: 0 0 1.2rem; color: var(--muted); }
 
         .tool-link {
@@ -386,8 +473,10 @@
 
         @media (max-width: 42rem) {
             .site-header { align-items: flex-start; }
-            .site-nav { flex-direction: column; align-items: flex-end; gap: 0.25rem; }
+            .site-nav { align-items: center; }
+            .tools-menu-panel { grid-template-columns: 1fr; width: min(22rem, calc(100vw - 2rem)); }
             .data-list { grid-template-columns: 1fr; }
+            .tool-form { grid-template-columns: 1fr; }
             .headers-table, .headers-table tbody, .headers-table tr,
             .headers-table th, .headers-table td { display: block; width: 100%; }
             .headers-table th { padding-bottom: 0.15rem; border-bottom: 0; }
@@ -401,14 +490,12 @@
             <span class="brand-mark" aria-hidden="true">W</span>
             WhatWebSees
         </a>
-        <nav class="site-nav" aria-label="Main navigation">
-            <a href="/">Home</a>
-            <a href="/tools/">All tools</a>
-        </nav>
+        {% include "core/tools/_navigation.html" %}
     </header>
 
     <main class="page-shell">
         {% block content %}{% endblock %}
+        {% include "core/tools/_related.html" %}
     </main>
 
     <footer class="site-footer page-shell">

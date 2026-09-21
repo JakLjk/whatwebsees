@@ -1,0 +1,36 @@
+{% extends "core/tools/base.html" %}
+{% block content %}
+<p class="breadcrumb"><a href="/tools/">All tools</a> / IP Address Lookup</p>
+<section class="intro" aria-labelledby="page-title">
+    <p class="eyebrow">IP &amp; Network</p>
+    <h1 id="page-title">IP Address Lookup</h1>
+    <p class="intro-text">Classify any IPv4 or IPv6 address and, for public addresses, check approximate location data from the local DB-IP City Lite database.</p>
+</section>
+<section class="card result-card" aria-labelledby="lookup-title">
+    <h2 id="lookup-title">Look up an IP address</h2>
+    <form class="tool-form" method="post">
+        {% csrf_token %}
+        <div class="field-group"><label for="ip">IPv4 or IPv6 address</label><input id="ip" name="ip" value="{{ submitted_value }}" placeholder="2001:4860:4860::8888" required inputmode="text" autocomplete="off"><p class="form-help">Enter an address only, without a port or subnet prefix.</p></div>
+        <button class="button" type="submit">Look up address</button>
+    </form>
+    {% if error %}<p class="error-message" role="alert">{{ error }}</p>{% endif %}
+    {% if result %}
+    <div class="result-block">
+        <p class="card-label">Lookup result</p><output class="primary-value mono">{{ result.normalized }}</output>
+        <dl class="data-list">
+            <div><dt>Version</dt><dd>IPv{{ result.version }}</dd></div>
+            {% for label, enabled in result.flags %}<div><dt>{{ label }}</dt><dd>{{ enabled|yesno:"Yes,No" }}</dd></div>{% endfor %}
+            {% if location.city %}<div><dt>Approximate city</dt><dd>{{ location.city }}</dd></div>{% endif %}
+            {% if location.region %}<div><dt>Region</dt><dd>{{ location.region }}</dd></div>{% endif %}
+            {% if location.country %}<div><dt>Country</dt><dd>{{ location.country }}</dd></div>{% endif %}
+            {% if location.country_code %}<div><dt>Country code</dt><dd>{{ location.country_code }}</dd></div>{% endif %}
+            {% if location.latitude and location.longitude %}<div><dt>Approximate coordinates</dt><dd>{{ location.latitude }}, {{ location.longitude }}</dd></div>{% endif %}
+            {% if location.timezone %}<div><dt>Time zone</dt><dd>{{ location.timezone }}</dd></div>{% endif %}
+        </dl>
+        {% if not result.flags.0.1 %}<p class="status">Public geolocation does not apply to a non-global address.</p>{% elif not location %}<p class="status">No approximate location was available in the local database.</p>{% endif %}
+    </div>
+    {% endif %}
+</section>
+<p class="privacy-note"><strong>Location is approximate.</strong> IP geolocation identifies a broad network location, not a precise physical or GPS position. The entered address is not sent to an external geolocation API or persisted.</p>
+<section class="content-section" aria-labelledby="about-ip-lookup"><h2 id="about-ip-lookup">What an IP lookup can tell you</h2><p>An IP address identifies an interface on an IP network. Its syntax and routing classification are deterministic; a city or country is an estimate maintained in a database and may reflect an ISP gateway rather than the user.</p><h3>Why some addresses have no location</h3><p>Private, loopback, link-local, reserved and unspecified addresses are not globally routed destinations. Public GeoIP databases therefore do not provide meaningful geographic data for them.</p><h3>What this lookup does not claim</h3><p>The local City Lite data does not provide a reliable ISP or ASN result here, so this tool does not invent one. Results can also become outdated as address blocks move between networks.</p></section>
+{% endblock %}

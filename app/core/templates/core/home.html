@@ -73,12 +73,44 @@
             text-decoration: none;
         }
 
-        .site-nav-link {
+        .site-nav {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .site-nav a,
+        .tools-menu summary {
             color: var(--accent);
             font-size: 0.9rem;
             font-weight: 700;
             text-underline-offset: 0.2rem;
         }
+
+        .tools-menu { position: relative; }
+        .tools-menu summary { padding: 0.35rem 0; cursor: pointer; }
+        .tools-menu summary:focus-visible { outline: 3px solid var(--accent-soft); outline-offset: 3px; }
+        .tools-menu-panel {
+            position: absolute;
+            z-index: 20;
+            top: calc(100% + 0.65rem);
+            right: 0;
+            display: grid;
+            width: min(45rem, calc(100vw - 2rem));
+            max-height: min(34rem, calc(100vh - 7rem));
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem 1.5rem;
+            overflow: auto;
+            padding: 1.2rem;
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            background: var(--surface);
+            box-shadow: var(--shadow);
+        }
+        .tools-menu-group { display: grid; align-content: start; gap: 0.35rem; }
+        .tools-menu-group strong { margin-bottom: 0.2rem; font-size: 0.82rem; }
+        .tools-menu-group a { color: var(--muted); font-size: 0.82rem; font-weight: 600; text-decoration: none; }
+        .tools-menu-group .all-tools-link { margin-top: 0.35rem; color: var(--accent); font-weight: 750; }
 
         .brand-mark {
             display: grid;
@@ -561,6 +593,8 @@
         }
 
         @media (max-width: 46rem) {
+            .site-header { align-items: flex-start; }
+            .tools-menu-panel { grid-template-columns: 1fr; width: min(22rem, calc(100vw - 2rem)); }
             .primary-results {
                 grid-template-columns: 1fr;
             }
@@ -602,9 +636,9 @@
     <header class="site-header page-shell">
         <a class="brand" href="/" aria-label="WhatWebSees home">
             <span class="brand-mark" aria-hidden="true">W</span>
-            Web privacy inspector
+            WhatWebSees
         </a>
-        <a class="site-nav-link" href="/tools/">Privacy &amp; browser tools</a>
+        {% include "core/tools/_navigation.html" %}
     </header>
 
     <main class="page-shell">
