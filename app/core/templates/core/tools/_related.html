@@ -8,3 +8,11 @@
     </div>
 </section>
 {% endif %}
+{% if related_learn %}
+<section class="related-tools" aria-labelledby="related-learn-title">
+    <h2 id="related-learn-title">Learn more</h2>
+    <div class="related-links">
+        {% for article in related_learn %}<a href="{{ article.path }}">{{ article.heading }}</a>{% endfor %}
+    </div>
+</section>
+{% endif %}

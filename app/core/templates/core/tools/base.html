@@ -7,7 +7,7 @@
     <meta name="description" content="{{ description }}">
     <link rel="canonical" href="{{ canonical_url }}">
 
-    <meta property="og:type" content="website">
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
     <meta property="og:site_name" content="WhatWebSees">
     <meta property="og:title" content="{{ title }}">
     <meta property="og:description" content="{{ description }}">
@@ -17,7 +17,8 @@
     <meta name="twitter:title" content="{{ title }}">
     <meta name="twitter:description" content="{{ description }}">
     <meta name="theme-color" content="#2457d6">
-    <script type="application/ld+json">{{ breadcrumb_json|safe }}</script>
+    {% if breadcrumb_json %}<script type="application/ld+json">{{ breadcrumb_json|safe }}</script>{% endif %}
+    {% block head_structured %}{% endblock %}
 
     <style>
         :root {
@@ -354,6 +355,16 @@
             text-decoration: none;
         }
         .local-tool-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0.85rem; }
+        .raw-output {
+            max-height: 28rem;
+            overflow: auto;
+            padding: 1rem;
+            border: 1px solid var(--border);
+            border-radius: 0.85rem;
+            background: #f7f9fc;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
 
         .disclosure {
             overflow: hidden;
@@ -483,6 +494,7 @@
             .headers-table td { padding-top: 0.15rem; }
         }
     </style>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 </head>
 <body>
     <header class="site-header page-shell">
@@ -495,6 +507,7 @@
 
     <main class="page-shell">
         {% block content %}{% endblock %}
+        {% if result_guidance %}<section class="content-section" aria-labelledby="result-guidance-title"><h2 id="result-guidance-title">What this result means</h2><p>{{ result_guidance }}</p></section>{% endif %}
         {% include "core/tools/_related.html" %}
     </main>
 

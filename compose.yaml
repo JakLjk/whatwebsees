@@ -4,14 +4,17 @@ services:
       context: .
       dockerfile: app/Dockerfile
     restart: unless-stopped
-    env_file:
-      - .env
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-false}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
     volumes:
       - ./data:/data
     expose:
       - "8000"
     networks:
       - backend
+      - egress
     healthcheck:
       test:
         - CMD
@@ -70,3 +73,5 @@ networks:
   backend:
     internal: true
   edge:
+  egress:
+    driver: bridge

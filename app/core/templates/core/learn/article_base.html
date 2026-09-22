@@ -1,0 +1,12 @@
+{% extends "core/tools/base.html" %}
+{% block og_type %}article{% endblock %}
+{% block head_structured %}<script type="application/ld+json">{{ article_json|safe }}</script>{% endblock %}
+{% block content %}
+<p class="breadcrumb"><a href="/">Home</a> / <a href="/learn/">Learn</a> / {{ heading }}</p>
+<article class="article-content">
+<header class="intro"><p class="eyebrow">WhatWebSees Learn</p><h1 id="page-title">{{ heading }}</h1><p class="status">Published and updated {{ published }}</p></header>
+{% block article_content %}{% endblock %}
+</article>
+<section class="related-tools" aria-labelledby="article-tools"><h2 id="article-tools">Try the related tools</h2><div class="related-links">{% for tool in article_tools %}<a href="{{ tool.path }}">{{ tool.name }}</a>{% endfor %}</div></section>
+<section class="related-tools" aria-labelledby="related-reading"><h2 id="related-reading">Related reading</h2><div class="related-links">{% for article in related_articles %}<a href="{{ article.path }}">{{ article.heading }}</a>{% endfor %}<a href="/glossary/">Web and privacy glossary</a></div></section>
+{% endblock %}

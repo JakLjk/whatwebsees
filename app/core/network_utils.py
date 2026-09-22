@@ -46,6 +46,17 @@ class HTTPResult:
     elapsed_ms: int
     redirects: int
     headers: dict[str, str]
+    body: bytes = b""
+    chain: tuple["HTTPHop", ...] = ()
+
+
+@dataclass(frozen=True)
+class HTTPHop:
+    url: str
+    status: int
+    reason: str
+    location: str | None
+    elapsed_ms: int
 
 
 @dataclass(frozen=True)
@@ -307,7 +318,7 @@ def _make_connection(parsed, address, deadline):
     return _PinnedHTTPConnection(parsed.hostname, address, port, deadline)
 
 
-def _request_once(url, method, deadline):
+def _request_once(url, method, deadline, *, body_limit=MAX_RESPONSE_BODY):
     parsed = urlsplit(url)
     target = resolve_public_host(
         parsed.hostname,
@@ -322,8 +333,6 @@ def _request_once(url, method, deadline):
         "Connection": "close",
         "User-Agent": "WhatWebSees/1.0 (+https://whatwebsees.com/)",
     }
-    if method == "GET":
-        headers["Range"] = f"bytes=0-{MAX_RESPONSE_BODY - 1}"
 
     last_error = None
     for address in target.addresses:
@@ -331,14 +340,21 @@ def _request_once(url, method, deadline):
         try:
             connection.request(method, path, headers=headers)
             response = connection.getresponse()
+            body = b""
             if method == "GET":
-                response.read(MAX_RESPONSE_BODY + 1)
+                body = response.read(body_limit + 1)
+                if len(body) > body_limit:
+                    connection.close()
+                    raise NetworkToolError(
+                        "response_too_large",
+                        f"The response exceeded the {body_limit // 1024} KiB inspection limit.",
+                    )
             result_headers = {}
             for name, value in response.getheaders():
                 lower_name = name.lower()
                 if lower_name not in result_headers:
                     result_headers[lower_name] = value[:4096]
-            result = (response.status, response.reason or "", result_headers)
+            result = (response.status, response.reason or "", result_headers, body)
             connection.close()
             return result
         except (OSError, http.client.HTTPException, ssl.SSLError) as error:
@@ -354,27 +370,54 @@ def _request_once(url, method, deadline):
     raise NetworkToolError("connection_error", "A connection to the website could not be completed.") from last_error
 
 
-def safe_http_request(value, *, fallback_get=True):
+def safe_http_request(
+    value,
+    *,
+    fallback_get=True,
+    fetch_body=False,
+    max_body=MAX_RESPONSE_BODY,
+):
     """Perform a bounded request, validating DNS and every redirect hop."""
     current_url = normalize_http_url(value)
     redirects = 0
-    method = "HEAD"
+    if not isinstance(max_body, int) or not 1 <= max_body <= 1024 * 1024:
+        raise ValueError("max_body must be between 1 byte and 1 MiB")
+    method = "GET" if fetch_body else "HEAD"
     started = monotonic()
     deadline = started + HTTP_TOTAL_TIMEOUT
+    chain = []
 
     while True:
-        status, reason, headers = _request_once(current_url, method, deadline)
+        hop_started = monotonic()
+        status, reason, headers, body = _request_once(
+            current_url, method, deadline, body_limit=max_body
+        )
         if method == "HEAD" and fallback_get and status in {405, 501}:
             method = "GET"
-            status, reason, headers = _request_once(current_url, method, deadline)
+            hop_started = monotonic()
+            status, reason, headers, body = _request_once(
+                current_url, method, deadline, body_limit=max_body
+            )
 
         location = headers.get("location")
+        resolved_location = None
+        if status in REDIRECT_STATUSES and location:
+            resolved_location = normalize_http_url(urljoin(current_url, location))
+        chain.append(
+            HTTPHop(
+                url=current_url,
+                status=status,
+                reason=reason,
+                location=resolved_location,
+                elapsed_ms=max(1, round((monotonic() - hop_started) * 1000)),
+            )
+        )
         if status in REDIRECT_STATUSES and location:
             if redirects >= MAX_REDIRECTS:
                 raise NetworkToolError("redirect_limit", "The website exceeded the redirect limit.")
-            current_url = normalize_http_url(urljoin(current_url, location))
+            current_url = resolved_location
             redirects += 1
-            method = "HEAD"
+            method = "GET" if fetch_body else "HEAD"
             continue
 
         return HTTPResult(
@@ -384,6 +427,8 @@ def safe_http_request(value, *, fallback_get=True):
             elapsed_ms=max(1, round((monotonic() - started) * 1000)),
             redirects=redirects,
             headers=headers,
+            body=body,
+            chain=tuple(chain),
         )
 
 
