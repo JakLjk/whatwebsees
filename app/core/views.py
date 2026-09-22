@@ -1229,3 +1229,13 @@ def favicon(request):
     response = HttpResponse(svg, content_type="image/svg+xml; charset=utf-8")
     response["Cache-Control"] = "public, max-age=604800"
     return response
+
+
+@require_GET
+def favicon_png(request):
+    from pathlib import Path
+
+    icon_path = Path(__file__).with_name("assets") / "favicon.png"
+    response = HttpResponse(icon_path.read_bytes(), content_type="image/png")
+    response["Cache-Control"] = "public, max-age=604800"
+    return response

@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import (
     favicon,
+    favicon_png,
     browser_check,
     canvas_fingerprint,
     client_ip,
@@ -99,5 +100,6 @@ urlpatterns = [
     path("location", location, name="location"),
     path("network", network, name="network"),
     path("favicon.svg", favicon, name="favicon"),
+    path("favicon.png", favicon_png, name="favicon-png"),
 
 ]

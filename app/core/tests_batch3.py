@@ -297,3 +297,20 @@ class NginxRateLimitTests(SimpleTestCase):
         ):
             self.assertIn(route, config)
         self.assertNotIn("url-parser|file-hash", config)
+
+class FaviconTests(SimpleTestCase):
+    def test_png_favicon(self):
+        response = self.client.get(reverse("favicon-png"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "image/png")
+        self.assertGreater(len(response.content), 100)
+
+    def test_home_references_png_favicon(self):
+        response = self.client.get(reverse("home"))
+
+        self.assertContains(
+            response,
+            '<link rel="icon" href="/favicon.png" '
+            'type="image/png" sizes="192x192">'
+        )
