@@ -26,25 +26,44 @@
             {% if location.country %}<div><dt>Country</dt><dd>{{ location.country }}</dd></div>{% endif %}
             {% if location.country_code %}<div><dt>Country code</dt><dd>{{ location.country_code }}</dd></div>{% endif %}
             {% if location.latitude and location.longitude %}<div><dt>Approximate coordinates</dt><dd>{{ location.latitude }}, {{ location.longitude }}</dd></div>{% endif %}
-            {% if location.timezone %}<div><dt>Time zone</dt><dd>{{ location.timezone }}</dd></div>{% endif %}
             {% if result.flags.0.1 %}<div class="wide"><dt>ASN / ISP / organization</dt><dd>Not included in the local City Lite database</dd></div>{% endif %}
         </dl>
         {% if not result.flags.0.1 %}<p class="status">Public geolocation does not apply to a non-global address.</p>{% elif not location %}<p class="status">No approximate location was available in the local database.</p>{% endif %}
     </div>
     {% endif %}
 </section>
-<p class="privacy-note"><strong>Location is approximate.</strong> IP geolocation identifies a broad network location, not a precise physical or GPS position. The entered address is not sent to an external geolocation API or persisted.</p>
+<p class="privacy-note"><strong>Location is approximate.</strong> An IP address does not reveal an exact street address, home, person or GPS position. The entered address is checked against a locally maintained DB-IP City Lite dataset; it is not sent to an external geolocation API or persisted. <a href="https://db-ip.com/">IP Geolocation by DB-IP</a>.</p>
 <section class="content-section" aria-labelledby="about-ip-lookup">
     <h2 id="about-ip-lookup">What an IP address location can tell you</h2>
-    <p>An IP address identifies an interface on an IP network. Its syntax and routing classification are deterministic; country, region and city are estimates maintained by a geolocation database and may describe an ISP gateway rather than the user.</p>
+    <p>An IP address identifies a network endpoint. A lookup can associate a public address with an approximate country and, where the dataset has enough evidence, a region, city or representative coordinates. Other kinds of IP datasets can add network context such as an autonomous system number (ASN), provider or organization, but those fields are not part of the City Lite data used by this tool.</p>
+
+    <h3>How to interpret your result</h3>
+    <p>Start with the address classification: only a globally routable address is sent to the local location lookup. Treat country as broad context and any region, city or coordinates as progressively less certain. A blank field means the dataset did not make that claim. If the result conflicts with where the device is, check for a VPN or corporate connection and prefer device location—with explicit permission—when the actual position matters.</p>
+
+    <h3>What the result cannot identify</h3>
+    <p>The result cannot establish an exact street address, a particular home, the person using the connection or a GPS position. Many people can share one public address, and one person can appear under different addresses over time. The lookup describes a database's current estimate for a network range, not live tracking of a device.</p>
+
     <h3>Why IP location may be wrong</h3>
-    <p>Address blocks move, databases update on different schedules, and providers interpret evidence differently. VPN and proxy users appear at the exit server, while mobile carriers may route customers through a distant shared gateway. For these reasons, two geolocation database providers can return different cities for the same address.</p>
+    <p>Large ISPs and mobile carriers often send traffic through centralized network egress points far from the device. VPN and proxy users expose an exit server, and corporate gateways may expose an office or security provider. ISP address blocks are reallocated, while database updates inevitably lag behind some changes. Each of these can place the visible address in another city or region.</p>
+
+    <h3>Why providers can disagree</h3>
+    <p>There is no authoritative city directory for every IP range. Two geolocation database providers can use different evidence, group addresses into different ranges, resolve ambiguous signals differently and publish updates on different schedules. One may return a city while another conservatively returns only a country. Disagreement does not by itself show which result is current.</p>
+
     <h3>IP geolocation is not browser GPS</h3>
-    <p>This lookup does not request browser location permission or read device sensors. Coordinates in a GeoIP database are usually representative points for a city or region, not the location of a device, home or person.</p>
+    <p>This lookup does not request browser location permission or read device sensors. Browser geolocation, when a user grants permission, can combine GPS, nearby Wi-Fi, cellular signals and other device sources. Coordinates in an IP database are instead representative points for a network's estimated city or region.</p>
+
+    <h3>ISP, ASN and organization are different</h3>
+    <p>An <strong>ISP</strong> sells or operates Internet access. An <strong>ASN</strong> is the number for an autonomous system that announces routing information to other networks. An <strong>organization</strong> is a name associated with an address range or ASN; it might be an ISP, cloud host, university or company. These labels can overlap, but they are not interchangeable and none identifies the individual user.</p>
+
+    <h3>IPv4 and IPv6 caveats</h3>
+    <p>Both IPv4 and IPv6 are assigned in network ranges, so neither protocol provides a built-in physical location. IPv4 sharing through carrier-grade NAT can make many subscribers appear behind one gateway. IPv6 offers a much larger address space and may rotate interface addresses for privacy, while providers still map broader routed prefixes rather than locating every address independently. Coverage and precision can therefore differ by protocol and provider.</p>
+
     <h3>Why some addresses have no location</h3>
     <p>Private, loopback, link-local, reserved and unspecified addresses are not globally routed destinations. Public GeoIP databases therefore do not provide meaningful geographic data for them.</p>
-    <h3>Network ownership data</h3>
-    <p>An ASN identifies a routing network, and an ISP or organization name may be associated with it. The local City Lite database used by this form does not include reliable ASN or ISP fields, so the page labels them unavailable instead of guessing. The <a href="/">WhatWebSees homepage</a> can show network details supplied by the site's edge for your current request when they are available.</p>
-    <p>Learn <a href="/learn/how-ip-geolocation-works/">how IP geolocation databases work and why providers disagree</a>, read <a href="/learn/what-is-an-ip-address/">what an IP address can reveal</a>, or compare your browser-visible signals with the <a href="/privacy-check/">Privacy Signals Checker</a>.</p>
+
+    <h3>How WhatWebSees gets the location</h3>
+    <p>The lookup reads a local copy of DB-IP City Lite. Its documented fields include country, subdivision, city and approximate coordinates; this project does not present MaxMind as its data provider. City Lite does not supply this tool's ASN, ISP or organization fields, so the page marks them unavailable instead of inferring them.</p>
+
+    <p>To continue a diagnosis, <a href="/ip-address-checker/">validate and classify the IP address</a>, <a href="/reverse-dns/">check its reverse DNS name</a>, <a href="/dns-lookup/">inspect a domain's DNS records</a>, or <a href="/subnet-calculator/">calculate its network prefix</a>. For more context, read <a href="/learn/how-ip-geolocation-works/">how IP geolocation works</a> and <a href="/learn/what-is-an-ip-address/">what an IP address can reveal</a>.</p>
 </section>
 {% endblock %}

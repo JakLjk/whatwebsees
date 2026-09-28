@@ -7,5 +7,29 @@
 {% if error %}<p class="error-message" role="alert">{{ error }}</p>{% endif %}
 {% if records %}<div class="result-block"><p class="card-label">Records for {{ queried_domain }}</p>{% for record in records %}<h3>{{ record.type }} records</h3><p class="status">TTL: {{ record.ttl }} seconds</p><ul class="record-list">{% for value in record.values %}<li class="mono">{{ value }}</li>{% endfor %}</ul>{% endfor %}</div>{% endif %}
 </section>
-<section class="content-section" aria-labelledby="dns-explained"><h2 id="dns-explained">How to read DNS records</h2><p>The Domain Name System publishes structured records through distributed authoritative servers and recursive resolvers. A and AAAA map names to IPv4 and IPv6; CNAME aliases one name to another; MX selects mail servers; NS identifies authoritative name servers; TXT carries text-based policies or verification data; and SOA describes the zone's authority and timing values.</p><h3>Why results can differ</h3><p>Resolver caches retain answers for their TTL, so recently changed records can appear different until older answers expire. Geographic traffic routing, resolver policy and DNSSEC validation can also affect what a resolver returns.</p><h3>Simple hostname lookup versus DNS lookup</h3><p>Use <a href="/hostname-lookup/">Hostname Lookup</a> when you only need public IP addresses. This page is the broader record-level diagnostic.</p></section>
+<section class="content-section" aria-labelledby="dns-explained">
+<h2 id="dns-explained">Plain-language DNS record guide</h2>
+<table class="headers-table">
+    <thead><tr><th>Record</th><th>What it contains</th><th>Common use</th></tr></thead>
+    <tbody>
+        <tr><th>A</th><td>An IPv4 address.</td><td>Point a hostname to an IPv4 destination.</td></tr>
+        <tr><th>AAAA</th><td>An IPv6 address.</td><td>Point a hostname to an IPv6 destination.</td></tr>
+        <tr><th>CNAME</th><td>Another hostname used as the canonical name.</td><td>Make one hostname an alias of another.</td></tr>
+        <tr><th>MX</th><td>A mail-server hostname and priority.</td><td>Route incoming email for a domain.</td></tr>
+        <tr><th>TXT</th><td>Text strings.</td><td>Publish verification values and policies such as SPF or DMARC.</td></tr>
+        <tr><th>NS</th><td>An authoritative name-server hostname.</td><td>Delegate responsibility for a DNS zone.</td></tr>
+    </tbody>
+</table>
+
+<h3>DNS lookup is not a website availability test</h3>
+<p>A valid DNS answer only shows that records were returned. It does not prove that a web server accepts a connection, presents a valid TLS certificate or returns a successful HTTP response. Use the <a href="/website-status/">Website Status Checker</a> when you need to test the web service itself; use the <a href="/download-time-calculator/">Internet Speed Test</a> when the question is about the browser's connection rather than one domain's records.</p>
+
+<h3>TTL, caching and changes</h3>
+<p>TTL means time to live: the number of seconds a resolver may cache an answer before asking again. When a record changes, resolvers with an older cached answer can keep returning it until that TTL expires. Different users can therefore see the old and new values at the same time; traffic steering and resolver policy can create additional differences even after caches refresh.</p>
+
+<h3>Authoritative servers and recursive resolvers</h3>
+<p>An authoritative server publishes records for a zone. A recursive resolver accepts a client's question, follows the DNS hierarchy when needed, caches the answer and returns it to the client. This tool shows the answer available through its resolver at lookup time rather than querying every authoritative server from every location.</p>
+
+<p>Use <a href="/dnssec-checker/">DNSSEC Checker</a> to inspect signing and delegation records, <a href="/email-dns-checker/">Email DNS Checker</a> for MX, SPF, DKIM and DMARC, <a href="/hostname-lookup/">Hostname Lookup</a> for only public A and AAAA results, or <a href="/reverse-dns/">Reverse DNS Lookup</a> to find PTR names for an address. For registration context, compare the domain's <a href="/rdap-lookup/">RDAP data</a> and <a href="/domain-age/">registry-based age estimate</a>.</p>
+</section>
 {% endblock %}

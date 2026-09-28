@@ -589,6 +589,14 @@
             font-size: 0.82rem;
         }
 
+        .footer-links {
+            display: flex;
+            gap: 0.85rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a { font-weight: 650; }
+
         [hidden] {
             display: none !important;
         }
@@ -700,8 +708,7 @@
                 </div>
                 <p class="map-attribution">
                     <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer external">© OpenStreetMap contributors</a>
-                    · IP geolocation fallback data by
-                    <a href="https://db-ip.com/" target="_blank" rel="noopener noreferrer external">DB-IP</a>
+                    · <a href="https://db-ip.com/" target="_blank" rel="noopener noreferrer external">IP Geolocation by DB-IP</a>
                 </p>
             </div>
         </section>
@@ -842,6 +849,7 @@
 
     <footer class="site-footer page-shell">
         <span>Displayed diagnostic values are not stored by this application. Optional Google Analytics runs only after consent.</span>
+        <span class="footer-links"><a href="/about/">About</a><a href="https://github.com/JakLjk/whatwebsees">GitHub</a><a href="https://www.linkedin.com/in/jakub-lejk/">LinkedIn</a></span>
         <button class="analytics-settings" id="analytics-settings" type="button">Analytics settings</button>
     </footer>
 

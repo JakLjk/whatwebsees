@@ -1,0 +1,13 @@
+{% if sources %}
+<section class="sources-section" aria-labelledby="sources-title">
+    <h2 id="sources-title">Sources &amp; further reading</h2>
+    <ul class="source-list">
+        {% for source in sources %}
+        <li>
+            <a href="{{ source.url }}">{{ source.title }}</a>
+            <span>— {{ source.publisher }}</span>
+        </li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}

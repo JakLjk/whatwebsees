@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    about,
     favicon,
     favicon_png,
     browser_check,
@@ -51,6 +52,7 @@ from .views import (
 
 urlpatterns = [
     path("", home, name="home"),
+    path("about/", about, name="about"),
     path("tools/", tools, name="tools"),
     path("user-agent/", user_agent, name="user-agent"),
     path("browser-check/", browser_check, name="browser-check"),

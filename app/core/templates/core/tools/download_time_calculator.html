@@ -88,10 +88,44 @@
 <section class="content-section" aria-labelledby="download-explained">
     <h2 id="download-explained">How Internet speed and download time relate</h2>
     <p>The calculator converts file bytes to bits, then divides by the selected bits-per-second rate. Network speeds are normally advertised in bits, while file sizes and browser download rates are often shown in bytes. Because eight bits make one byte, 100 Mbps has an ideal ceiling of 12.5 MB/s before overhead.</p>
-    <h3>Why advertised and observed speeds differ</h3>
-    <p>Real throughput depends on protocol overhead, Wi-Fi signal quality, congestion, retransmissions, server capacity, VPN routing and browser or device load. This test uses several parallel transfers for faster connections, so it can differ from a single file download or another test with a different server and duration.</p>
-    <h3>How to interpret the live test</h3>
-    <p>HTTP latency is the request-and-response time to Cloudflare, not ICMP ping. Download and upload are measured in megabits per second (Mbps). Read the <a href="/glossary/">network and web glossary</a> for related terminology.</p>
+
+    <h3>Mbps, MB/s and file-size units</h3>
+    <p>The lowercase <strong>b</strong> in Mbps means bits; the uppercase <strong>B</strong> in MB/s means bytes. Divide Mbps by eight for the ideal MB/s rate. File units can also use different bases: decimal MB and GB use powers of 1,000, while binary MiB and GiB use powers of 1,024. This calculator uses decimal units, so 1 GB is 1,000 MB; a 1 GiB file is about 1.074 GB.</p>
+
+    <h3>Ideal download-time reference</h3>
+    <table class="headers-table chain-table">
+        <caption class="status">Decimal file sizes at a constant rate, before protocol overhead or slowdowns.</caption>
+        <thead><tr><th>File size</th><th>25 Mbps</th><th>50 Mbps</th><th>100 Mbps</th><th>300 Mbps</th><th>1 Gbps</th></tr></thead>
+        <tbody>
+            <tr><th>1 GB</th><td>5 min 20 sec</td><td>2 min 40 sec</td><td>1 min 20 sec</td><td>27 sec</td><td>8 sec</td></tr>
+            <tr><th>10 GB</th><td>53 min 20 sec</td><td>26 min 40 sec</td><td>13 min 20 sec</td><td>4 min 27 sec</td><td>1 min 20 sec</td></tr>
+            <tr><th>50 GB</th><td>4 hr 26 min 40 sec</td><td>2 hr 13 min 20 sec</td><td>1 hr 6 min 40 sec</td><td>22 min 13 sec</td><td>6 min 40 sec</td></tr>
+            <tr><th>100 GB</th><td>8 hr 53 min 20 sec</td><td>4 hr 26 min 40 sec</td><td>2 hr 13 min 20 sec</td><td>44 min 27 sec</td><td>13 min 20 sec</td></tr>
+        </tbody>
+    </table>
+
+    <h3>Why this result can differ from another speed test</h3>
+    <p>A speed test measures a particular path at a particular time. Another service may use a different server or edge location, Internet route, test duration, payload size, number of parallel connections or calculation method. Local conditions matter too: Wi-Fi interference, a VPN, network congestion, background traffic, and browser or device performance can each become the bottleneck.</p>
+
+    <h3>Why very small downloads can underestimate fast connections</h3>
+    <p>A short transfer spends a larger share of its time establishing the connection, waiting for request latency and increasing the transport rate. It can finish before a fast connection has enough sustained data to demonstrate its capacity. This test steps through larger payloads and parallel streams, within its published limits, rather than estimating a high-speed link from one tiny file.</p>
+
+    <h3>HTTP latency is not ICMP ping</h3>
+    <p>The latency shown here times an HTTP request and response to the WhatWebSees Cloudflare service. It includes the web protocol and connection path the browser actually uses. An ICMP ping uses a different protocol, may take another network path or priority, and can be blocked or rate-limited independently, so the two measurements need not match.</p>
+
+    <h3>Download throughput versus upload throughput</h3>
+    <p>Download throughput is the rate at which the browser receives bytes; it affects downloads and streaming. Upload throughput is the rate at which the browser sends bytes; it matters for backups, file sharing and outgoing video calls. Many access plans are asymmetric, so a much lower upload result can be normal for the plan even when the connection is healthy.</p>
+
+    <h3>How to get a more reliable speed-test result</h3>
+    <ul>
+        <li>Pause large downloads, backups and streaming on this device and others sharing the connection.</li>
+        <li>Use Ethernet when the goal is to test ISP capacity rather than Wi-Fi performance.</li>
+        <li>Repeat the test and compare several completed runs instead of relying on one snapshot.</li>
+        <li>Test at different times if you suspect peak-hour congestion.</li>
+        <li>When using Wi-Fi, note signal strength, band, interference and distance from the access point.</li>
+    </ul>
+
+    <p>If a site feels slow despite a reasonable connection result, <a href="/website-status/">check its HTTP status and response time</a>, <a href="/dns-lookup/">inspect its DNS records</a>, or use the <a href="/browser-check/">Browser Checker</a> to review the current browsing environment. The <a href="/glossary/">network and web glossary</a> defines Mbps, latency, DNS and related terms.</p>
     <details class="disclosure">
         <summary>Technical details and transfer limits</summary>
         <div class="disclosure-content">

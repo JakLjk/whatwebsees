@@ -28,13 +28,26 @@
 <p class="privacy-note">This tool runs entirely in your browser. Screen and viewport values are not sent to the backend.</p>
 
 <section class="content-section" aria-labelledby="resolution-title">
-    <h2 id="resolution-title">Understanding screen resolution testing</h2>
-    <h3>What is screen resolution?</h3>
-    <p>Here, screen resolution means the width and height reported by the browser's <code>screen</code> API in CSS pixels. Browser privacy settings, operating-system display scaling and the active monitor can affect the reported result.</p>
+    <h2 id="resolution-title">What does my screen resolution result mean?</h2>
+    <h3>Reported screen size</h3>
+    <p>The main answer is <code>screen.width × screen.height</code>, the full active screen size reported by the browser in CSS pixels. It is not necessarily the panel's advertised hardware-pixel resolution. Browser privacy protections, operating-system display scaling, zoom and the active monitor can affect what is reported.</p>
+
     <h3>Screen resolution vs viewport size</h3>
-    <p>The screen describes the broader display area. Available screen size normally excludes operating-system interface areas such as a taskbar. The viewport is the space currently available to this page inside browser controls and changes when you resize the window, open browser panels or rotate a device.</p>
-    <h3>What device pixel ratio means</h3>
-    <p>A CSS pixel is the layout unit used by web pages; it does not always map one-to-one to a physical display pixel. Device pixel ratio describes the browser's current ratio between CSS pixels and device pixels. The estimated device-pixel dimensions multiply the two browser-reported values, but zoom, scaling, privacy reduction and multi-monitor behavior mean this should not be treated as guaranteed panel hardware resolution.</p>
+    <p>The screen describes the broader display. The browser viewport is only the page's current layout area inside browser controls, so <strong>screen resolution is not the same as browser viewport size</strong>. The viewport changes when you resize the window, open side panels or developer tools, change zoom, show an on-screen keyboard or rotate a mobile device.</p>
+
+    <h3>Available screen area</h3>
+    <p><code>screen.availWidth</code> and <code>screen.availHeight</code> estimate the screen space available to windows. They can exclude operating-system interface areas such as a taskbar or dock, which is why the available area may be smaller than the reported screen size.</p>
+
+    <h3>CSS pixels and device pixel ratio</h3>
+    <p>A CSS pixel is the layout unit used by web pages; it does not always map one-to-one to a physical display pixel. Device pixel ratio (DPR) describes the browser's current ratio between CSS pixels and device pixels. A DPR of 2 commonly means the browser uses a two-by-two block of device pixels for one CSS pixel in each dimension.</p>
+
+    <h3>Estimated physical-pixel dimensions</h3>
+    <p>The estimated device-pixel dimensions multiply the reported CSS screen size by DPR. This is useful context for Retina and other HiDPI displays, which use extra device pixels to render sharper content, but it is still an estimate. Display scaling, browser zoom, privacy reduction, spanning and multi-monitor behavior can prevent it from matching a monitor's specification exactly.</p>
+
+    <h3>Browser zoom and orientation</h3>
+    <p>Page zoom can change the size of a CSS pixel and the reported DPR, while pinch zoom may affect the visible area differently from layout zoom. Orientation reports the browser's view of the current screen orientation and angle; rotating a device can swap width and height and trigger a live update above.</p>
+
+    <p>For related context, compare the <a href="/browser-check/">browser and platform summary</a>, inspect the <a href="/user-agent/">reported User-Agent</a>, review graphics exposure with the <a href="/webgl/">WebGL Checker</a>, or see other browser-visible signals in the <a href="/privacy-check/">Privacy Check</a>.</p>
 </section>
 {% endblock %}
 

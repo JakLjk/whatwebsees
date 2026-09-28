@@ -52,20 +52,39 @@
 
 <section class="content-section" aria-labelledby="status-code-title">
     <h2 id="status-code-title">Common redirect status codes</h2>
-    <table class="headers-table">
-        <thead><tr><th>Status</th><th>Typical meaning</th><th>Request-method behavior</th></tr></thead>
+    <table class="headers-table chain-table">
+        <thead><tr><th>Status</th><th>Meaning</th><th>Permanent or temporary</th><th>What happens to the request method</th><th>Typical use case</th></tr></thead>
         <tbody>
-            <tr><th>301 Moved Permanently</th><td>A lasting move to a new URL.</td><td>Browsers commonly change POST to GET when following it.</td></tr>
-            <tr><th>302 Found</th><td>A temporary destination.</td><td>Browsers commonly change POST to GET when following it.</td></tr>
-            <tr><th>303 See Other</th><td>Retrieve a separate result, often after a form submission.</td><td>The follow-up uses GET (or HEAD), which supports the POST/Redirect/GET pattern.</td></tr>
-            <tr><th>307 Temporary Redirect</th><td>A temporary destination with explicit method preservation.</td><td>The method and request body are preserved.</td></tr>
-            <tr><th>308 Permanent Redirect</th><td>A lasting move with explicit method preservation.</td><td>The method and request body are preserved.</td></tr>
+            <tr><th>301 Moved Permanently</th><td>The resource has a lasting new URL.</td><td>Permanent</td><td>GET and HEAD stay the same; behavior for other methods can vary by client.</td><td>A page or site section that has moved.</td></tr>
+            <tr><th>302 Found</th><td>The resource is temporarily available elsewhere.</td><td>Temporary</td><td>GET and HEAD stay the same; behavior for other methods can vary by client.</td><td>A temporary destination during maintenance or routing.</td></tr>
+            <tr><th>303 See Other</th><td>Retrieve a separate result resource.</td><td>Temporary</td><td>A non-GET/HEAD request is followed with GET, dropping the original body.</td><td>POST/Redirect/GET after a form submission.</td></tr>
+            <tr><th>307 Temporary Redirect</th><td>A temporary move with explicit method preservation.</td><td>Temporary</td><td>The method and request body are preserved.</td><td>Temporarily moving an API or non-GET operation.</td></tr>
+            <tr><th>308 Permanent Redirect</th><td>A lasting move with explicit method preservation.</td><td>Permanent</td><td>The method and request body are preserved.</td><td>Permanently moving an API or non-GET operation.</td></tr>
         </tbody>
     </table>
+
+    <h3>The Location header and each hop</h3>
+    <p>An HTTP redirect response normally supplies a <code>Location</code> header containing the next target. That target can be absolute or relative to the current URL. A redirect chain is the sequence of requests created when one target redirects again; each extra hop adds another response round trip before the final content can load.</p>
+
     <h3>When redirect chains become a problem</h3>
-    <p>One intentional redirect, such as HTTP to HTTPS, is common. Long chains add delay and make maintenance harder, while a loop prevents the destination from loading. The checker stops at a fixed limit and reports each completed hop.</p>
+    <p>One intentional redirect, such as HTTP to HTTPS, is common. Unnecessary hops add latency and create more places for cache or configuration mistakes. A redirect loop occurs when targets eventually point back to a URL already in the chain, so no final resource can load. The checker follows a bounded number of public targets and reports each completed hop.</p>
+
+    <h3>Canonical host and HTTPS examples</h3>
+    <p>A site may redirect <code>http://example.com/page</code> to <code>https://example.com/page</code> so the browser continues over HTTPS. It may also choose one canonical hostname, such as redirecting <code>https://www.example.com/</code> to the apex <code>https://example.com/</code>—or the reverse. Combining both choices into one hop is usually cleaner than sending the client through separate scheme and hostname redirects.</p>
+
+    <h3>When method preservation matters</h3>
+    <p>For an ordinary GET page, method differences are rarely visible. For a POST upload, PUT update or API request, changing the method to GET can discard the request body and change the operation. Use 307 or 308 when the destination must receive the original method and body; 303 deliberately directs the client to retrieve a separate result with GET.</p>
+
+    <h3>Practical result patterns</h3>
+    <ul>
+        <li><code>301 → 200</code>: a straightforward permanent page move.</li>
+        <li><code>301 → 301 → 200</code>: a working chain with a potentially removable hop.</li>
+        <li><code>303 → 200</code> after POST: a common form-submission result flow.</li>
+        <li><code>307 → 200</code>: a temporary move that keeps the original method.</li>
+    </ul>
+
     <h3>Technical safety</h3>
     <p>Every destination is checked again before the server follows it. Credentials, non-standard ports and hostnames that resolve to non-public addresses are refused.</p>
-    <p>Read the fuller guide to <a href="/learn/http-redirects-explained/">HTTP redirects and status codes</a>, or inspect the destination's selected response fields with the <a href="/server-headers/">Server Headers Checker</a>.</p>
+    <p>After tracing a chain, <a href="/website-status/">check the final website status</a>, inspect its <a href="/server-headers/">response headers</a> and <a href="/security-headers/">browser security policies</a>, verify the <a href="/ssl-checker/">TLS certificate</a>, or review the final page with the <a href="/meta-tags-checker/">Meta Tags Checker</a>. The longer <a href="/learn/http-redirects-explained/">HTTP redirects guide</a> covers related edge cases.</p>
 </section>
 {% endblock %}

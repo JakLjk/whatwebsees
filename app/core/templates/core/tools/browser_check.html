@@ -43,6 +43,7 @@
     <p>Websites can inspect the User-Agent, newer Client Hints and feature support exposed by browser APIs. This checker uses a small set of conservative rules and labels uncertain device-class results as indications rather than facts.</p>
     <h3>Why browser detection can be inaccurate</h3>
     <p>User-Agent strings contain compatibility tokens, browsers can share the same rendering engine, and privacy tools may standardize or spoof details. Feature detection is usually better for deciding whether a web feature works; browser names are mainly useful as a human-friendly summary.</p>
+    <p>Inspect the raw tokens with the <a href="/user-agent/">User Agent Checker</a>, compare live layout measurements in the <a href="/screen-resolution/">Screen Resolution Checker</a>, or review <a href="/privacy-check/">browser privacy signals</a>. The <a href="/webgl/">WebGL</a> and <a href="/canvas-fingerprint/">canvas</a> tests explain two additional browser-exposed surfaces. If the browser seems healthy but transfers are slow, compare a bounded run with the <a href="/download-time-calculator/">Internet Speed Test</a>.</p>
 </section>
 {% endblock %}
 

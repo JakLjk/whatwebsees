@@ -344,6 +344,17 @@
 
         .content-section h3 { margin: 1.75rem 0 0.45rem; }
 
+        .sources-section {
+            max-width: 54rem;
+            margin-top: clamp(2.25rem, 6vw, 4rem);
+            padding-top: 1.4rem;
+            border-top: 1px solid var(--border);
+        }
+        .sources-section h2 { margin-bottom: 0.75rem; font-size: 1.15rem; }
+        .source-list { margin: 0; padding-left: 1.2rem; }
+        .source-list li { margin-block: 0.4rem; color: var(--muted); }
+        .source-list a { font-weight: 650; }
+
         .tool-form {
             display: grid;
             grid-template-columns: minmax(0, 1fr) auto;
@@ -524,6 +535,9 @@
             font-size: 0.82rem;
         }
 
+        .footer-links { display: flex; gap: 0.85rem; flex-wrap: wrap; }
+        .footer-links a { font-weight: 650; }
+
         .analytics-settings {
             padding: 0;
             border: 0;
@@ -604,11 +618,13 @@
     <main class="page-shell">
         {% block content %}{% endblock %}
         {% if result_guidance %}<section class="content-section" aria-labelledby="result-guidance-title"><h2 id="result-guidance-title">What this result means</h2><p>{{ result_guidance }}</p></section>{% endif %}
+        {% include "core/tools/_sources.html" %}
         {% include "core/tools/_related.html" %}
     </main>
 
     <footer class="site-footer page-shell">
         <span>Diagnostic values shown by these tools are not persisted by this application.</span>
+        <span class="footer-links"><a href="/about/">About</a><a href="https://github.com/JakLjk/whatwebsees">GitHub</a><a href="https://www.linkedin.com/in/jakub-lejk/">LinkedIn</a></span>
         <button class="analytics-settings" id="analytics-settings" type="button">Analytics settings</button>
     </footer>
 

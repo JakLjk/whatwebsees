@@ -144,7 +144,7 @@ TOOL_PAGE_METADATA = {
     "ip_lookup": {
         "template": "core/tools/ip_lookup.html",
         "title": "IP Address Lookup – Approximate Location | WhatWebSees",
-        "description": "Look up an IPv4 or IPv6 address to see its type and approximate country, region, city and time zone where available.",
+        "description": "Look up an IPv4 or IPv6 address to see its type and approximate country, region, city and coordinates where available.",
         "path": "/ip-lookup/",
     },
     "ip_address_checker": {
@@ -279,6 +279,111 @@ TOOL_PAGE_METADATA = {
         "description": "Estimate a domain's age from its registry-reported RDAP creation date and review expiration and update dates where available.",
         "path": "/domain-age/",
     },
+}
+
+TOOL_SOURCES = {
+    "ip_lookup": (
+        {
+            "title": "DB-IP City Lite database and licensing",
+            "publisher": "DB-IP",
+            "url": "https://db-ip.com/db/download/ip-to-city-lite",
+        },
+        {
+            "title": "IP to City Lite MMDB field documentation",
+            "publisher": "DB-IP",
+            "url": "https://db-ip.com/db/format/ip-to-city-lite/mmdb.html",
+        },
+        {
+            "title": "IP geolocation accuracy FAQ",
+            "publisher": "DB-IP",
+            "url": "https://db-ip.com/faq.php",
+        },
+        {
+            "title": "Geolocation accuracy and limitations",
+            "publisher": "MaxMind",
+            "url": "https://support.maxmind.com/knowledge-base/articles/maxmind-geolocation-accuracy",
+        },
+    ),
+    "download_time_calculator": (
+        {
+            "title": "How Cloudflare's Speed Test works",
+            "publisher": "Cloudflare",
+            "url": "https://blog.cloudflare.com/how-does-cloudflares-speed-test-really-work/",
+        },
+        {
+            "title": "Download, upload and latency speed-test metrics",
+            "publisher": "Cloudflare Docs",
+            "url": "https://developers.cloudflare.com/cloudflare-one/insights/dex/diagnostics/speed-test/",
+        },
+    ),
+    "user_agent": (
+        {
+            "title": "User-Agent header reference",
+            "publisher": "MDN Web Docs",
+            "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/User-Agent",
+        },
+        {
+            "title": "User-Agent reduction",
+            "publisher": "MDN Web Docs",
+            "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/User-agent_reduction",
+        },
+        {
+            "title": "HTTP Client Hints",
+            "publisher": "MDN Web Docs",
+            "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Client_hints",
+        },
+        {
+            "title": "Why feature detection is better than UA sniffing",
+            "publisher": "MDN Web Docs",
+            "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Browser_detection_using_the_user_agent",
+        },
+    ),
+    "redirect_checker": (
+        {
+            "title": "Redirections in HTTP",
+            "publisher": "MDN Web Docs",
+            "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Redirections",
+        },
+        {
+            "title": "HTTP response status codes",
+            "publisher": "MDN Web Docs",
+            "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status",
+        },
+    ),
+    "screen_resolution": (
+        {
+            "title": "Screen.width browser API",
+            "publisher": "MDN Web Docs",
+            "url": "https://developer.mozilla.org/en-US/docs/Web/API/Screen/width",
+        },
+        {
+            "title": "Window.devicePixelRatio browser API",
+            "publisher": "MDN Web Docs",
+            "url": "https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio",
+        },
+        {
+            "title": "Browser viewport concepts",
+            "publisher": "MDN Web Docs",
+            "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/CSSOM_view/Viewport_concepts",
+        },
+        {
+            "title": "Window.innerWidth browser API",
+            "publisher": "MDN Web Docs",
+            "url": "https://developer.mozilla.org/en-US/docs/Web/API/Window/innerWidth",
+        },
+    ),
+    "dns_lookup": (
+        {
+            "title": "Guide to common DNS records",
+            "publisher": "Cloudflare Learning Center",
+            "url": "https://www.cloudflare.com/learning/dns/dns-records/",
+        },
+        {
+            "title": "Recursive and authoritative DNS server roles",
+            "publisher": "Cloudflare Learning Center",
+            "url": "https://www.cloudflare.com/learning/dns/dns-server-types/",
+        },
+    ),
 }
 
 # Short, user-focused summaries for cards. Search metadata stays page-specific
@@ -432,7 +537,7 @@ RESULT_GUIDANCE = {
     "download_time_calculator": "The speed result measures the browser-to-Cloudflare path used by WhatWebSees, while the calculator divides file size by an idealized bit rate. Neither is a guarantee of ISP line speed or future file-server performance.",
 }
 
-PUBLIC_PAGES = (("/",) + tuple(metadata["path"] for metadata in TOOL_PAGE_METADATA.values())
+PUBLIC_PAGES = (("/", "/about/") + tuple(metadata["path"] for metadata in TOOL_PAGE_METADATA.values())
                 + ("/learn/",) + LEARN_PATHS + ("/glossary/",))
 
 
@@ -464,6 +569,41 @@ def sitemap_xml(request):
 @require_safe
 def home(request):
     return render(request, "core/home.html")
+
+
+@require_safe
+def about(request):
+    breadcrumb = {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://whatwebsees.com/",
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "About",
+                "item": "https://whatwebsees.com/about/",
+            },
+        ],
+    }
+    return render(
+        request,
+        "core/about.html",
+        {
+            "title": "About WhatWebSees | Privacy-First Web Diagnostics",
+            "description": (
+                "Learn why WhatWebSees was built, how its public web and network "
+                "diagnostics handle data, and where to review the source code."
+            ),
+            "canonical_url": "https://whatwebsees.com/about/",
+            "breadcrumb_json": json.dumps(breadcrumb),
+        },
+    )
 
 
 def _tool_link(page):
@@ -500,6 +640,7 @@ def render_tool_page(request, page, extra_context=None):
             {"heading": ARTICLES[slug]["heading"], "path": f"/learn/{slug}/"}
             for slug in RELATED_LEARN.get(page, ())
         ],
+        "sources": TOOL_SOURCES.get(page, ()),
         "result_guidance": RESULT_GUIDANCE.get(page),
     }
     if extra_context:
@@ -1014,7 +1155,11 @@ def learn_article(request, slug):
     article_json = {
         "@context": "https://schema.org", "@type": "Article", "headline": metadata["heading"],
         "datePublished": PUBLISHED, "dateModified": PUBLISHED,
-        "author": {"@type": "Organization", "name": "WhatWebSees"},
+        "author": {
+            "@type": "Person",
+            "name": "Jakub Lejk",
+            "url": "https://whatwebsees.com/about/",
+        },
         "publisher": {"@type": "Organization", "name": "WhatWebSees"},
         "mainEntityOfPage": f"https://whatwebsees.com{path}",
     }
@@ -1217,17 +1362,6 @@ def dbip_location(address):
         ):
             result["latitude"] = latitude
             result["longitude"] = longitude
-
-        timezone = geo.get("time_zone")
-        if isinstance(timezone, str) and timezone.strip():
-            result["timezone"] = timezone.strip()
-
-    postal = record.get("postal")
-    if isinstance(postal, dict):
-        postal_code = postal.get("code")
-
-        if isinstance(postal_code, str) and postal_code.strip():
-            result["postal_code"] = postal_code.strip()
 
     return result
 

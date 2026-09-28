@@ -35,6 +35,7 @@
     <p><code>navigator.cookieEnabled</code> is a broad browser indication. It does not prove that every cookie or storage mechanism works in every context, and this tool does not set a test cookie.</p>
     <h3>Why results vary</h3>
     <p>Browsers, extensions, managed policies and privacy modes can alter or hide these values. An unavailable result is not an error and does not necessarily mean a preference is disabled.</p>
+    <p>For adjacent signals, inspect the browser's <a href="/user-agent/">reported User-Agent</a>, then run the local <a href="/canvas-fingerprint/">canvas</a> and <a href="/webgl/">WebGL</a> checks. Those values can contribute to fingerprinting, but none should be treated as a stable identity on its own.</p>
 </section>
 {% endblock %}
 

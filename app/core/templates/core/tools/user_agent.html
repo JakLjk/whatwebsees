@@ -51,14 +51,36 @@
 
 <section class="content-section" aria-labelledby="about-title">
     <h2 id="about-title">Understanding a User Agent check</h2>
-    <h3>What is a User-Agent?</h3>
-    <p>A User-Agent is a browser-provided text string sent with many web requests. It usually names a browser engine, operating-system family and compatibility tokens.</p>
-    <h3>What can a User-Agent reveal?</h3>
-    <p>It can suggest a browser family, platform and whether a browsing context is likely mobile. It should not be treated as reliable identification of an exact device or person.</p>
-    <h3>Why User-Agent detection is imperfect</h3>
-    <p>Browsers often include historical tokens for compatibility, while privacy features, enterprise policy and extensions can reduce or spoof the string. Chromium's User-Agent reduction deliberately freezes or coarsens some operating-system and version details. Browser family and version are therefore reported only as a best-effort interpretation, never as proof.</p>
-    <h3>User-Agent vs Client Hints</h3>
-    <p>Client Hints expose selected structured values, such as brand, platform and mobile status. Support varies, and browsers can limit the values to reduce fingerprinting.</p>
+    <p>A User-Agent is a browser-provided string sent with many web requests and available to scripts as <code>navigator.userAgent</code>. The readable result above is a best-effort interpretation of that raw value and, where supported, structured Client Hints. It is a browser claim rather than verified hardware identity.</p>
+
+    <h3>How to read the major components</h3>
+    <table class="headers-table">
+        <thead><tr><th>Example component</th><th>What it generally represents</th></tr></thead>
+        <tbody>
+            <tr><th><code>Mozilla/5.0</code></th><td>A long-standing compatibility token, not evidence that the browser is Firefox.</td></tr>
+            <tr><th>Parenthesized platform comment</th><td>Reported operating-system family, architecture or mobile hints; details may be frozen or reduced.</td></tr>
+            <tr><th><code>AppleWebKit</code> or <code>Gecko</code></th><td>Rendering-engine lineage or compatibility information.</td></tr>
+            <tr><th><code>Chrome/…</code>, <code>Firefox/…</code>, <code>Version/…</code> or <code>Edg/…</code></th><td>Tokens used to infer browser family and a reported version.</td></tr>
+            <tr><th><code>Safari/…</code>, <code>like Gecko</code> and similar text</th><td>Compatibility tokens that may coexist with another browser's identifying token.</td></tr>
+        </tbody>
+    </table>
+
+    <h3>Why so many strings start with Mozilla/5.0</h3>
+    <p>Early websites sometimes served features only to browsers they recognized as Mozilla-compatible. Other browsers adopted the same prefix to receive working content, and it became a historical compatibility convention. Modern identification depends on the combination and order of tokens, not that prefix alone.</p>
+
+    <h3>Browser, version and platform interpretation</h3>
+    <p>The checker looks for more specific product tokens before generic compatibility tokens: for example, Edge and Opera strings also contain Chrome-like text. A version is the value the browser reports, which may expose only a major release. The operating-system label describes the reported platform family; it does not verify an edition, patch level, installation or physical device.</p>
+
+    <h3>What cannot be reliably inferred</h3>
+    <p>A User-Agent cannot reliably establish a person, exact device model, installed updates, hardware capabilities or whether every named feature is present. Bots, privacy browsers, extensions and developer tools can reduce or spoof it, while compatibility tokens can name products that are not actually running.</p>
+
+    <h3>User-Agent reduction and Client Hints</h3>
+    <p>Supporting browsers reduce the passive detail in the traditional string by freezing or coarsening values such as minor browser versions, operating-system versions and device models. User-Agent Client Hints provide selected structured values such as brands, platform and mobile status. Higher-entropy hints require an explicit request and may be unavailable or declined; they are not a way to bypass privacy choices.</p>
+
+    <h3>For developers: test features, not browser names</h3>
+    <p>When code needs a web capability, feature detection is usually more dependable than UA sniffing: test whether the required API, property or CSS value exists, then provide a fallback. Browser-name branches become stale and can misclassify spoofed, reduced or newly released browsers.</p>
+
+    <p>Compare the interpretation with the broader <a href="/browser-check/">Browser Checker</a>, review preference signals in the <a href="/privacy-check/">Privacy Check</a>, or see what reached the origin in the <a href="/http-headers/">HTTP Headers Checker</a>. The <a href="/canvas-fingerprint/">Canvas Fingerprint Test</a> and <a href="/webgl/">WebGL Checker</a> explain two other browser-exposed surfaces without treating any one value as identity proof.</p>
 </section>
 {% endblock %}
 

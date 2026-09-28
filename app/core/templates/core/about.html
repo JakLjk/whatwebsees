@@ -1,0 +1,34 @@
+{% extends "core/tools/base.html" %}
+
+{% block content %}
+<p class="breadcrumb"><a href="/">Home</a> / About</p>
+<article>
+    <header class="intro">
+        <p class="eyebrow">About the project</p>
+        <h1 id="page-title">About WhatWebSees</h1>
+        <p class="intro-text">WhatWebSees is an independently developed public project that makes web, browser and network diagnostics easier to inspect and understand.</p>
+    </header>
+
+    <section class="content-section" aria-labelledby="why-title">
+        <h2 id="why-title">Why it was built</h2>
+        <p>Websites receive connection details, request headers and browser-reported values that are often invisible to the person browsing. WhatWebSees was built to make those signals visible, then place them beside practical tools for checking DNS, HTTP behavior, TLS certificates, redirects and related network concepts.</p>
+        <p>The project favors a useful result with a plain-language explanation over a score that hides assumptions. When a value is an estimate, a browser claim or a single point-in-time observation, the page should say so.</p>
+
+        <h2>Privacy-first by design</h2>
+        <p>Tools that can work entirely in the browser do so. Screen and viewport checks, file hashing, password-strength checks, URL parsing and several browser diagnostics process their working values locally. Some browser pages request a small, allowlisted set of headers that the browser already sent to WhatWebSees so the page can compare browser and server observations.</p>
+        <p>Network tools need server-side processing because a browser cannot safely or consistently perform arbitrary DNS, TLS and HTTP diagnostics. Values submitted to those tools are processed by the WhatWebSees server for the requested lookup. Server-side URL fetches are restricted to public HTTP or HTTPS destinations and re-check redirects to protect internal addresses. The speed test transfers bounded temporary data between the browser and WhatWebSees infrastructure on Cloudflare; upload bytes are counted and discarded.</p>
+        <p>Diagnostic results are not saved by the application. Normal hosting and security infrastructure may still process request metadata needed to deliver and protect the service. Optional analytics is separate and loads only after consent.</p>
+
+        <h2>Data sources and honest limits</h2>
+        <p>The IP lookup uses a locally maintained copy of the DB-IP City Lite database for approximate geographic fields. The submitted address is not sent to an outside geolocation API. City Lite does not provide this project with ASN, ISP or organization fields, and an IP result is never presented as a home address, a person or GPS location. Pages link to the specifications, vendor documentation or technical references that are most useful for checking factual claims.</p>
+        <p>Browser values can be reduced or spoofed. DNS answers can be cached or geographically steered. HTTP, certificate and speed results describe one route and one moment. WhatWebSees communicates those limits instead of treating every available field as certain.</p>
+
+        <h2>Public source code and project owner</h2>
+        <p>WhatWebSees is developed by Jakub Lejk. You can inspect the implementation, report an issue or follow the project through the public repository.</p>
+        <ul>
+            <li><a href="https://github.com/JakLjk/whatwebsees">Source code on GitHub</a></li>
+            <li><a href="https://www.linkedin.com/in/jakub-lejk/">Jakub Lejk on LinkedIn</a></li>
+        </ul>
+    </section>
+</article>
+{% endblock %}
