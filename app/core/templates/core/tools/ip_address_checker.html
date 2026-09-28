@@ -1,7 +1,7 @@
 {% extends "core/tools/base.html" %}
 {% block content %}
 <p class="breadcrumb"><a href="/tools/">All tools</a> / IP Address Checker</p>
-<section class="intro" aria-labelledby="page-title"><p class="eyebrow">IP &amp; Network</p><h1 id="page-title">IP Address Checker</h1><p class="intro-text">Validate and normalize an IP address locally on this server without contacting the address or performing geolocation.</p></section>
+<section class="intro" aria-labelledby="page-title"><p class="eyebrow">IP &amp; Network</p><h1 id="page-title">IP Address Checker</h1><p class="intro-text">Enter an IPv4 or IPv6 address to check its format, normalized form and whether it belongs to a public, private or special range.</p></section>
 <section class="card result-card" aria-labelledby="checker-title"><h2 id="checker-title">Validate an IP address</h2>
 <form class="tool-form" method="post">{% csrf_token %}<div class="field-group"><label for="ip">IPv4 or IPv6 address</label><input id="ip" name="ip" value="{{ submitted_value }}" placeholder="192.0.2.10 or 2001:db8::10" required autocomplete="off"><p class="form-help">Whitespace is ignored; ports and CIDR prefixes are not accepted.</p></div><button class="button" type="submit">Check address</button></form>
 {% if error %}<p class="error-message" role="alert">{{ error }}</p>{% endif %}

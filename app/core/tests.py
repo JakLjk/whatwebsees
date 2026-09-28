@@ -757,7 +757,7 @@ class NetworkViewTests(SimpleTestCase):
 
 class PublicToolPageTests(SimpleTestCase):
     pages = (
-        ("tools", "Privacy &amp; Browser Tools", "/tools/"),
+        ("tools", "Web, Network &amp; Privacy Tools", "/tools/"),
         ("user-agent", "User Agent Checker", "/user-agent/"),
         ("browser-check", "Browser Checker", "/browser-check/"),
         (

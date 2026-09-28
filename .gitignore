@@ -9,11 +9,18 @@ __pycache__/
 *.pyo
 .venv/
 venv/
+*.egg-info/
+build/
+dist/
 
 # Django
 *.sqlite3
+*.sqlite3-*
+*.sqlite
+*.db
 staticfiles/
 media/
+local_settings.py
 
 # Persistent runtime data
 data/*
@@ -23,13 +30,45 @@ data/*
 
 # Testing / tooling
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
 .coverage
+coverage.xml
 htmlcov/
+node_modules/
+.wrangler/
+.dev.vars
+.dev.vars.*
+.npmrc
+npm-debug.log*
+
+# Local review and audit reports (may contain environment-specific details)
+whatwebsees-*-review.txt
+whatwebsees-*-audit.txt
+
+# Generated speed-test payloads and local Worker state
+cloudflare/speed-test-worker/speed-assets/speed-test/download/
+cloudflare/speed-test-worker/.wrangler/
 
 # IDE / OS
 .vscode/
 .idea/
 .DS_Store
+Thumbs.db
+*.swp
+*~
 
 # Logs
 *.log
+*.log.*
+*.bak
+*.backup
+
+# Private keys, origin certificates and local credential bundles
+*.pem
+*.key
+*.p12
+*.pfx
+origin-cert*

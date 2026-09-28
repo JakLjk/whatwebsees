@@ -1,39 +1,536 @@
 {% extends "core/tools/base.html" %}
+
 {% block content %}
-<p class="breadcrumb"><a href="/tools/">All tools</a> / Download Time Calculator</p>
-<section class="intro" aria-labelledby="page-title"><p class="eyebrow">Security &amp; Utilities</p><h1 id="page-title">Download Time Calculator</h1><p class="intro-text">Estimate ideal transfer time from a file size and advertised connection speed. This is a calculator, not a live speed test.</p></section>
-<section class="card result-card" aria-labelledby="download-title"><h2 id="download-title">Estimate download time</h2><div class="local-tool-grid"><div class="field-group"><label for="file-size">File size</label><input id="file-size" type="number" min="0" step="any" value="1" inputmode="decimal"></div><div class="field-group"><label for="size-unit">File-size unit</label><select id="size-unit"><option>KB</option><option selected>MB</option><option>GB</option><option>TB</option></select></div><div class="field-group"><label for="speed">Connection speed</label><input id="speed" type="number" min="0" step="any" value="100" inputmode="decimal"></div><div class="field-group"><label for="speed-unit">Speed unit</label><select id="speed-unit"><option>Kbps</option><option selected>Mbps</option><option>Gbps</option></select></div></div>
-<div class="result-block" aria-live="polite"><p class="card-label">Ideal estimated time</p><output class="primary-value" id="download-result">0.08 seconds</output><p class="status" id="download-details">1 MB at 100 Mbps, using decimal units.</p></div></section>
-<p class="privacy-note">All calculations happen in this browser. KB, MB, GB and TB use decimal multiples; Kbps, Mbps and Gbps are bits per second.</p>
-<section class="content-section" aria-labelledby="download-explained"><h2 id="download-explained">How the estimate works</h2><p>The calculator converts file bytes to bits, divides by the selected bits-per-second rate and formats the duration. For example, one decimal gigabyte contains eight gigabits before overhead.</p><h3>Why real downloads take longer</h3><p>The ideal estimate does not include protocol overhead, latency, congestion, Wi-Fi interference, retransmissions, server limits or competing traffic. Advertised access speed may also differ from throughput to a particular server.</p><h3>Calculator, not measurement</h3><p>No file is downloaded and no network performance is tested. Use the estimate for planning, then allow a margin for real-world conditions.</p></section>
+<p class="breadcrumb"><a href="/tools/">All tools</a> / Download Speed Test &amp; Time Calculator</p>
+<section class="intro" aria-labelledby="page-title">
+    <p class="eyebrow">Network &amp; calculator</p>
+    <h1 id="page-title">Internet Speed Test &amp; Download Time Calculator</h1>
+    <p class="intro-text">Measure your current download speed, upload speed and HTTP latency, or estimate how long a file could take to download.</p>
+</section>
+
+<section class="card result-card" id="speed-test-panel" aria-labelledby="speed-test-title" aria-busy="false">
+    <p class="card-label">Actual measurement</p>
+    <h2 id="speed-test-title">Browser Internet speed test</h2>
+    <p>Choose <strong>Run speed test</strong> to measure this browser's current connection. The result reflects conditions during the test, so closing bandwidth-heavy apps can make comparisons more useful.</p>
+    <div class="button-row">
+        <button class="button" id="run-speed-test" type="button">Run speed test</button>
+        <button class="button button-secondary" id="cancel-speed-test" type="button" hidden>Cancel test</button>
+    </div>
+    <div aria-live="polite" aria-atomic="true">
+        <p class="card-label status-heading">Status</p>
+        <output class="primary-value" id="speed-test-state">Ready</output>
+        <p class="status" id="speed-test-status">No test data has been transferred yet.</p>
+    </div>
+    <div class="test-progress" id="speed-test-progress-wrap" hidden>
+        <progress id="speed-test-progress" value="0" max="1" aria-label="Current speed test progress"></progress>
+        <p class="status" id="speed-test-progress-text">Preparing the first transfer…</p>
+    </div>
+    <div class="result-block" id="speed-test-result" hidden>
+        <p class="card-label">Speed test result</p>
+        <dl class="data-list speed-test-metrics">
+            <div><dt>HTTP latency</dt><dd id="speed-test-latency">—</dd><p>To Cloudflare; not ICMP ping</p></div>
+            <div><dt>Download</dt><dd id="speed-test-download">—</dd><p id="speed-test-download-mbs">—</p></div>
+            <div><dt>Upload</dt><dd id="speed-test-upload">—</dd><p id="speed-test-upload-mbs">—</p></div>
+        </dl>
+        <dl class="data-list speed-test-details">
+            <div><dt>Test duration</dt><dd id="speed-test-duration">—</dd></div>
+            <div><dt>Bytes downloaded</dt><dd id="speed-test-downloaded-bytes">—</dd></div>
+            <div><dt>Bytes uploaded</dt><dd id="speed-test-uploaded-bytes">—</dd></div>
+            <div><dt>Download streams</dt><dd id="speed-test-download-streams">—</dd></div>
+            <div><dt>Upload requests</dt><dd id="speed-test-upload-requests">—</dd></div>
+            <div><dt>Backend</dt><dd id="speed-test-backend">—</dd></div>
+        </dl>
+        <p class="status" id="speed-test-result-note"></p>
+        <button class="button button-secondary" id="use-measured-speed" type="button">Use this speed in the calculator</button>
+    </div>
+</section>
+
+<p class="privacy-note"><strong>What is measured:</strong> throughput between your browser and Cloudflare infrastructure used by WhatWebSees. Results may differ from other speed tests because server location, routing, Wi-Fi, VPNs, test duration and parallel connections differ. This is not an ISP-certified line-speed measurement. Results stay in this page; upload bytes are discarded by the edge service and no result is submitted or stored.</p>
+
+<section class="card result-card stacked-card" id="download-calculator" aria-labelledby="download-title">
+    <p class="card-label">Planning estimate</p>
+    <h2 id="download-title">Download time calculator</h2>
+    <p>Enter a file size and connection speed to calculate the ideal transfer time. You can use an advertised speed, a measured speed, or any scenario you want to compare.</p>
+    <div class="local-tool-grid">
+        <div class="field-group">
+            <label for="file-size">File size</label>
+            <input id="file-size" type="number" min="0" max="1000000000" step="any" value="1" inputmode="decimal" aria-describedby="calculator-units">
+        </div>
+        <div class="field-group">
+            <label for="size-unit">File-size unit</label>
+            <select id="size-unit" aria-describedby="calculator-units"><option>KB</option><option selected>MB</option><option>GB</option><option>TB</option></select>
+        </div>
+        <div class="field-group">
+            <label for="speed">Connection speed</label>
+            <input id="speed" type="number" min="0.001" max="1000000000" step="any" value="100" inputmode="decimal" aria-describedby="calculator-units">
+        </div>
+        <div class="field-group">
+            <label for="speed-unit">Speed unit</label>
+            <select id="speed-unit" aria-describedby="calculator-units"><option>Kbps</option><option selected>Mbps</option><option>Gbps</option></select>
+        </div>
+    </div>
+    <p class="form-help" id="calculator-units">Decimal units are used: 1 MB = 1,000,000 bytes and 1 Mbps = 1,000,000 bits per second.</p>
+    <p class="error-message" id="calculator-error" role="alert" hidden></p>
+    <div class="result-block" aria-live="polite">
+        <p class="card-label">Ideal estimated time</p>
+        <output class="primary-value" id="download-result">0.08 seconds</output>
+        <p class="status" id="download-details">1 MB at 100 Mbps, using decimal units.</p>
+    </div>
+    <h3>Try a common example</h3>
+    <div class="example-buttons">
+        <button class="button button-secondary calculator-example" type="button" data-size="1" data-size-unit="GB" data-speed="100" data-speed-unit="Mbps">1 GB at 100 Mbps → 1 min 20 sec</button>
+        <button class="button button-secondary calculator-example" type="button" data-size="10" data-size-unit="GB" data-speed="100" data-speed-unit="Mbps">10 GB at 100 Mbps → 13 min 20 sec</button>
+        <button class="button button-secondary calculator-example" type="button" data-size="50" data-size-unit="GB" data-speed="300" data-speed-unit="Mbps">50 GB at 300 Mbps → 22 min 13 sec</button>
+        <button class="button button-secondary calculator-example" type="button" data-size="100" data-size-unit="GB" data-speed="1" data-speed-unit="Gbps">100 GB at 1 Gbps → 13 min 20 sec</button>
+    </div>
+</section>
+
+<section class="content-section" aria-labelledby="download-explained">
+    <h2 id="download-explained">How Internet speed and download time relate</h2>
+    <p>The calculator converts file bytes to bits, then divides by the selected bits-per-second rate. Network speeds are normally advertised in bits, while file sizes and browser download rates are often shown in bytes. Because eight bits make one byte, 100 Mbps has an ideal ceiling of 12.5 MB/s before overhead.</p>
+    <h3>Why advertised and observed speeds differ</h3>
+    <p>Real throughput depends on protocol overhead, Wi-Fi signal quality, congestion, retransmissions, server capacity, VPN routing and browser or device load. This test uses several parallel transfers for faster connections, so it can differ from a single file download or another test with a different server and duration.</p>
+    <h3>How to interpret the live test</h3>
+    <p>HTTP latency is the request-and-response time to Cloudflare, not ICMP ping. Download and upload are measured in megabits per second (Mbps). Read the <a href="/glossary/">network and web glossary</a> for related terminology.</p>
+    <details class="disclosure">
+        <summary>Technical details and transfer limits</summary>
+        <div class="disclosure-content">
+            <p>The browser discards the first latency request as a warm-up and reports the median of four later requests. Download stages fetch incompressible Cloudflare static assets using parallel streams when needed; throughput is based on actual bytes received over the stage's wall-clock body-transfer time. Upload stages send temporary browser-generated bytes to a Worker that counts and discards them.</p>
+            <p>The complete test is capped at 154 MiB downloaded, 54 MiB uploaded and 35 seconds. Each response must identify the expected Cloudflare backend, and incomplete transfers are rejected rather than reported as a speed result.</p>
+        </div>
+    </details>
+</section>
 {% endblock %}
-{% block scripts %}<script>
+
+{% block scripts %}
+<script>
 (() => {
     "use strict";
+
+    const workerBackend = "cloudflare-worker";
+    const staticAssetBackend = "cloudflare-static-asset";
+    const endpoints = {
+        latency: "/speed-test/ping/",
+        download: "/speed-test/download/",
+        upload: "/speed-test/upload/",
+    };
+    const maximumRuntimeMs = 35000;
+    const meaningfulStageMs = 800;
+    const mebibyte = 1024 * 1024;
+    const maximumDownloadBytes = 154 * mebibyte;
+    const maximumUploadBytes = 54 * mebibyte;
+    const downloadWarmup = {asset: "payload-1m.bin", bytes: mebibyte, streams: 1};
+    const downloadStages = [
+        {asset: "payload-1m.bin", bytes: mebibyte, streams: 1},
+        {asset: "payload-4m.bin", bytes: 4 * mebibyte, streams: 2},
+        {asset: "payload-16m.bin", bytes: 16 * mebibyte, streams: 3},
+        {asset: "payload-24m.bin", bytes: 24 * mebibyte, streams: 4},
+    ];
+    const uploadWarmup = {bytes: mebibyte, requests: 1};
+    const uploadStages = [
+        {bytes: mebibyte, requests: 1},
+        {bytes: 4 * mebibyte, requests: 1},
+        {bytes: 8 * mebibyte, requests: 2},
+        {bytes: 16 * mebibyte, requests: 2},
+    ];
+
+    const panel = document.getElementById("speed-test-panel");
+    const runButton = document.getElementById("run-speed-test");
+    const cancelButton = document.getElementById("cancel-speed-test");
+    const stateOutput = document.getElementById("speed-test-state");
+    const statusOutput = document.getElementById("speed-test-status");
+    const progressWrap = document.getElementById("speed-test-progress-wrap");
+    const progress = document.getElementById("speed-test-progress");
+    const progressText = document.getElementById("speed-test-progress-text");
+    const resultBlock = document.getElementById("speed-test-result");
+    const useMeasuredButton = document.getElementById("use-measured-speed");
+    let activeController = null;
+    let cancelReason = null;
+    let requestSequence = 0;
+
+    const setState = (state, message, kind = "") => {
+        stateOutput.textContent = state;
+        statusOutput.textContent = message;
+        statusOutput.className = `status${kind ? ` ${kind}` : ""}`;
+    };
+
+    const formatBytes = (bytes) => {
+        if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2).replace(/\.00$/, "")} MiB`;
+        return `${Math.round(bytes / 1024)} KiB`;
+    };
+
+    const median = (values) => {
+        const ordered = [...values].sort((left, right) => left - right);
+        const middle = Math.floor(ordered.length / 2);
+        return ordered.length % 2
+            ? ordered[middle]
+            : (ordered[middle - 1] + ordered[middle]) / 2;
+    };
+
+    const noCacheHeaders = (accept) => ({
+        Accept: accept,
+        "Cache-Control": "no-cache",
+        "X-WWS-Speedtest-Nonce": `${Date.now()}-${requestSequence += 1}`,
+    });
+
+    class EdgeUnavailableError extends Error {}
+
+    const cancelResponse = (response) => {
+        if (response.body && typeof response.body.cancel === "function") {
+            response.body.cancel().catch(() => {});
+        }
+    };
+
+    const verifyEdgeResponse = (response, expectedBackend) => {
+        if (response.headers.get("X-WWS-Speedtest-Backend") !== expectedBackend) {
+            cancelResponse(response);
+            throw new EdgeUnavailableError("edge_backend_unavailable");
+        }
+        if (!response.ok) {
+            cancelResponse(response);
+            throw new Error(response.status === 429 ? "rate_limited" : "request_failed");
+        }
+    };
+
+    const readResponseStream = async (response, onChunk) => {
+        if (!response.body || typeof response.body.getReader !== "function") {
+            throw new Error("streaming_unsupported");
+        }
+        const reader = response.body.getReader();
+        let receivedBytes = 0;
+        while (true) {
+            const {done, value} = await reader.read();
+            if (done) break;
+            receivedBytes += value.byteLength;
+            onChunk(value.byteLength);
+        }
+        return receivedBytes;
+    };
+
+    const runLatencyTest = async (controller) => {
+        const samples = [];
+        progress.removeAttribute("value");
+        progressText.textContent = "Measuring HTTP request latency to Cloudflare…";
+        for (let index = 0; index < 5; index += 1) {
+            const started = performance.now();
+            const response = await fetch(endpoints.latency, {
+                cache: "no-store",
+                credentials: "same-origin",
+                redirect: "error",
+                headers: noCacheHeaders("*/*"),
+                signal: controller.signal,
+            });
+            const completed = performance.now();
+            verifyEdgeResponse(response, workerBackend);
+            if (index > 0) samples.push(Math.max(0, completed - started));
+            progressText.textContent = `HTTP latency request ${index + 1} of 5 complete.`;
+        }
+        return median(samples);
+    };
+
+    const runDownloadStage = async (stage, controller, label) => {
+        const expectedBytes = stage.bytes * stage.streams;
+        let stageReceivedBytes = 0;
+        let firstHeadersReceived = Number.POSITIVE_INFINITY;
+        progress.value = 0;
+        progress.max = expectedBytes;
+        progressText.textContent = `${label}: 0 of ${formatBytes(expectedBytes)} received across ${stage.streams} stream${stage.streams === 1 ? "" : "s"}.`;
+
+        const transfers = Array.from({length: stage.streams}, async () => {
+            const response = await fetch(
+                `${endpoints.download}${stage.asset}?nonce=${Date.now()}-${requestSequence += 1}`,
+                {
+                    cache: "no-store",
+                    credentials: "same-origin",
+                    redirect: "error",
+                    headers: noCacheHeaders("application/octet-stream"),
+                    signal: controller.signal,
+                },
+            );
+            const headersReceived = performance.now();
+            verifyEdgeResponse(response, staticAssetBackend);
+            firstHeadersReceived = Math.min(firstHeadersReceived, headersReceived);
+            const receivedBytes = await readResponseStream(response, (chunkBytes) => {
+                stageReceivedBytes += chunkBytes;
+                progress.value = Math.min(stageReceivedBytes, expectedBytes);
+                progressText.textContent = `${label}: ${formatBytes(stageReceivedBytes)} of ${formatBytes(expectedBytes)} received across ${stage.streams} stream${stage.streams === 1 ? "" : "s"}.`;
+            });
+            if (receivedBytes !== stage.bytes) throw new Error("incomplete_transfer");
+            return receivedBytes;
+        });
+
+        const received = await Promise.all(transfers);
+        const completed = performance.now();
+        return {
+            bytes: received.reduce((total, bytes) => total + bytes, 0),
+            transferDurationMs: Math.max(1, completed - firstHeadersReceived),
+            streams: stage.streams,
+        };
+    };
+
+    const runDownloadTest = async (controller, testStarted) => {
+        setState("Testing download…", "Starting with a small edge warm-up before adaptive concurrent stages.");
+        const warmup = await runDownloadStage(downloadWarmup, controller, "Download warm-up");
+        let totalBytes = warmup.bytes;
+        let totalStreams = warmup.streams;
+        let measuredStages = 0;
+        let measurement = null;
+
+        for (let index = 0; index < downloadStages.length; index += 1) {
+            const stage = downloadStages[index];
+            measurement = await runDownloadStage(
+                stage,
+                controller,
+                `Download stage ${index + 1}`,
+            );
+            totalBytes += measurement.bytes;
+            totalStreams += measurement.streams;
+            measuredStages += 1;
+            if (measurement.transferDurationMs >= meaningfulStageMs) break;
+
+            const next = downloadStages[index + 1];
+            if (next) {
+                const elapsedMs = performance.now() - testStarted;
+                const estimatedNextMs = measurement.transferDurationMs
+                    * ((next.bytes * next.streams) / measurement.bytes);
+                if (elapsedMs + estimatedNextMs + 6000 > maximumRuntimeMs) break;
+            }
+        }
+
+        if (!measurement || totalBytes > maximumDownloadBytes) {
+            throw new Error("download_limit_error");
+        }
+        return {
+            ...measurement,
+            mbps: (measurement.bytes * 8)
+                / (measurement.transferDurationMs / 1000)
+                / 1000000,
+            totalBytes,
+            totalStreams,
+            measuredStages,
+        };
+    };
+
+    const createUploadPayload = (bytes, seed) => {
+        const payload = new Uint8Array(bytes);
+        const words = new Uint32Array(payload.buffer);
+        let state = (0x9e3779b9 ^ seed) >>> 0;
+        for (let index = 0; index < words.length; index += 1) {
+            state ^= state << 13;
+            state ^= state >>> 17;
+            state ^= state << 5;
+            words[index] = state >>> 0;
+        }
+        return payload;
+    };
+
+    const runUploadStage = async (stage, controller, label) => {
+        const payloads = Array.from(
+            {length: stage.requests},
+            (_, index) => createUploadPayload(stage.bytes, requestSequence + index + 1),
+        );
+        const expectedBytes = stage.bytes * stage.requests;
+        progress.removeAttribute("value");
+        progressText.textContent = `${label}: sending ${formatBytes(expectedBytes)} across ${stage.requests} request${stage.requests === 1 ? "" : "s"}.`;
+        const started = performance.now();
+        const responses = await Promise.all(payloads.map((payload) => fetch(endpoints.upload, {
+            method: "POST",
+            body: payload,
+            cache: "no-store",
+            credentials: "same-origin",
+            redirect: "error",
+            headers: {
+                ...noCacheHeaders("application/json"),
+                "Content-Type": "application/octet-stream",
+            },
+            signal: controller.signal,
+        })));
+        const completed = performance.now();
+
+        let acknowledgedBytes = 0;
+        for (const response of responses) {
+            verifyEdgeResponse(response, workerBackend);
+            const result = await response.json();
+            if (!Number.isSafeInteger(result.received_bytes)) {
+                throw new Error("invalid_upload_response");
+            }
+            acknowledgedBytes += result.received_bytes;
+        }
+        if (acknowledgedBytes !== expectedBytes) throw new Error("incomplete_upload");
+        return {
+            bytes: acknowledgedBytes,
+            transferDurationMs: Math.max(1, completed - started),
+            requests: stage.requests,
+        };
+    };
+
+    const runUploadTest = async (controller) => {
+        setState("Testing upload…", "Temporary binary data is being streamed to Cloudflare and discarded.");
+        const warmup = await runUploadStage(uploadWarmup, controller, "Upload warm-up");
+        let totalBytes = warmup.bytes;
+        let totalRequests = warmup.requests;
+        let measuredStages = 0;
+        let measurement = null;
+
+        for (let index = 0; index < uploadStages.length; index += 1) {
+            measurement = await runUploadStage(
+                uploadStages[index],
+                controller,
+                `Upload stage ${index + 1}`,
+            );
+            totalBytes += measurement.bytes;
+            totalRequests += measurement.requests;
+            measuredStages += 1;
+            if (measurement.transferDurationMs >= meaningfulStageMs) break;
+        }
+
+        if (!measurement || totalBytes > maximumUploadBytes) {
+            throw new Error("upload_limit_error");
+        }
+        return {
+            ...measurement,
+            mbps: (measurement.bytes * 8)
+                / (measurement.transferDurationMs / 1000)
+                / 1000000,
+            totalBytes,
+            totalRequests,
+            measuredStages,
+        };
+    };
+
+    const formatMbps = (mbps) => `${mbps.toFixed(mbps >= 100 ? 1 : 2)} Mbps`;
+
+    const runSpeedTest = async () => {
+        activeController = new AbortController();
+        cancelReason = null;
+        const timeoutId = window.setTimeout(() => {
+            cancelReason = "timeout";
+            activeController?.abort();
+        }, maximumRuntimeMs);
+        const testStarted = performance.now();
+
+        panel.setAttribute("aria-busy", "true");
+        runButton.disabled = true;
+        cancelButton.hidden = false;
+        resultBlock.hidden = true;
+        progressWrap.hidden = false;
+        setState("Testing latency…", "The first HTTP request warms the connection; four later samples determine the result.");
+
+        try {
+            const latencyMs = await runLatencyTest(activeController);
+            const download = await runDownloadTest(activeController, testStarted);
+            const upload = await runUploadTest(activeController);
+            const durationSeconds = (performance.now() - testStarted) / 1000;
+            const precisionLimited = (
+                download.transferDurationMs < meaningfulStageMs
+                || upload.transferDurationMs < meaningfulStageMs
+            );
+
+            document.getElementById("speed-test-latency").textContent = `${Math.round(latencyMs)} ms`;
+            document.getElementById("speed-test-download").textContent = formatMbps(download.mbps);
+            document.getElementById("speed-test-download-mbs").textContent = `${(download.mbps / 8).toFixed(2)} MB/s`;
+            document.getElementById("speed-test-upload").textContent = formatMbps(upload.mbps);
+            document.getElementById("speed-test-upload-mbs").textContent = `${(upload.mbps / 8).toFixed(2)} MB/s`;
+            document.getElementById("speed-test-duration").textContent = `${durationSeconds.toFixed(2)} seconds`;
+            document.getElementById("speed-test-downloaded-bytes").textContent = formatBytes(download.totalBytes);
+            document.getElementById("speed-test-uploaded-bytes").textContent = formatBytes(upload.totalBytes);
+            document.getElementById("speed-test-download-streams").textContent = `${download.totalStreams} across ${download.measuredStages} measured stage${download.measuredStages === 1 ? "" : "s"} + warm-up`;
+            document.getElementById("speed-test-upload-requests").textContent = `${upload.totalRequests} across ${upload.measuredStages} measured stage${upload.measuredStages === 1 ? "" : "s"} + warm-up`;
+            document.getElementById("speed-test-backend").textContent = "Cloudflare Static Assets + Worker";
+            document.getElementById("speed-test-result-note").textContent = precisionLimited
+                ? "The largest bounded stage was still very short, so the displayed precision is limited."
+                : "The result uses the final adaptive download and upload stages; parallel bytes are aggregated over each stage's wall-clock duration.";
+            useMeasuredButton.dataset.mbps = String(download.mbps);
+            resultBlock.hidden = false;
+            setState("Result", "Latency, download and upload measurements completed.", "is-ready");
+        } catch (error) {
+            activeController?.abort();
+            resultBlock.hidden = true;
+            if (error.name === "AbortError" && cancelReason === "user") {
+                setState("Cancelled", "The active speed-test request was stopped. No result was saved.");
+            } else if (error.name === "AbortError" && cancelReason === "timeout") {
+                setState("Could not complete test", "The 35-second safety limit was reached before the test completed.", "is-error");
+            } else if (error instanceof EdgeUnavailableError) {
+                setState("Could not complete test", "Speed-test edge service is unavailable.", "is-error");
+            } else if (error.message === "rate_limited") {
+                setState("Could not complete test", "The edge speed-test request limit was reached. Wait a moment before trying again.", "is-error");
+            } else {
+                setState("Could not complete test", "A bounded transfer failed or returned an incomplete response. Check the connection and try again.", "is-error");
+            }
+        } finally {
+            const returnFocusToRunButton = cancelReason === "user";
+            window.clearTimeout(timeoutId);
+            activeController = null;
+            panel.setAttribute("aria-busy", "false");
+            runButton.disabled = false;
+            cancelButton.hidden = true;
+            progressWrap.hidden = true;
+            if (returnFocusToRunButton) runButton.focus();
+        }
+    };
+
+    runButton.addEventListener("click", runSpeedTest);
+    cancelButton.addEventListener("click", () => {
+        cancelReason = "user";
+        activeController?.abort();
+    });
+
     const sizeFactors = {KB: 1e3, MB: 1e6, GB: 1e9, TB: 1e12};
     const speedFactors = {Kbps: 1e3, Mbps: 1e6, Gbps: 1e9};
     const controls = ["file-size", "size-unit", "speed", "speed-unit"].map((id) => document.getElementById(id));
+    const calculatorError = document.getElementById("calculator-error");
+
     const formatDuration = (seconds) => {
         if (seconds < 60) return `${seconds < 10 ? seconds.toFixed(2) : seconds.toFixed(1)} seconds`;
         if (seconds < 3600) return `${Math.floor(seconds / 60)} min ${Math.round(seconds % 60)} sec`;
         if (seconds < 86400) return `${Math.floor(seconds / 3600)} hr ${Math.round((seconds % 3600) / 60)} min`;
         return `${Math.floor(seconds / 86400)} days ${Math.round((seconds % 86400) / 3600)} hr`;
     };
+
     const calculateDownloadTime = () => {
         const size = Number(controls[0].value);
         const speed = Number(controls[2].value);
         const result = document.getElementById("download-result");
         const details = document.getElementById("download-details");
-        if (!Number.isFinite(size) || !Number.isFinite(speed) || size < 0 || speed <= 0) {
-            result.textContent = "Enter positive values";
-            details.textContent = "Connection speed must be greater than zero.";
+        const invalid = (
+            !Number.isFinite(size) || !Number.isFinite(speed)
+            || size < 0 || size > 1000000000
+            || speed <= 0 || speed > 1000000000
+        );
+
+        controls[0].setAttribute("aria-invalid", String(!Number.isFinite(size) || size < 0 || size > 1000000000));
+        controls[2].setAttribute("aria-invalid", String(!Number.isFinite(speed) || speed <= 0 || speed > 1000000000));
+        calculatorError.hidden = !invalid;
+        if (invalid) {
+            calculatorError.textContent = "Enter values within the displayed field limits; connection speed must be greater than zero.";
+            result.textContent = "Unable to calculate";
+            details.textContent = "Correct the highlighted values.";
             return;
         }
+
         const seconds = (size * sizeFactors[controls[1].value] * 8) / (speed * speedFactors[controls[3].value]);
         result.textContent = formatDuration(seconds);
         details.textContent = `${size} ${controls[1].value} at ${speed} ${controls[3].value}, using decimal units.`;
     };
+
     controls.forEach((control) => control.addEventListener("input", calculateDownloadTime));
+    document.querySelectorAll(".calculator-example").forEach((button) => {
+        button.addEventListener("click", () => {
+            controls[0].value = button.dataset.size;
+            controls[1].value = button.dataset.sizeUnit;
+            controls[2].value = button.dataset.speed;
+            controls[3].value = button.dataset.speedUnit;
+            calculateDownloadTime();
+        });
+    });
+    useMeasuredButton.addEventListener("click", () => {
+        controls[2].value = Number(useMeasuredButton.dataset.mbps).toFixed(2);
+        controls[3].value = "Mbps";
+        calculateDownloadTime();
+        controls[2].focus();
+    });
+
     calculateDownloadTime();
 })();
-</script>{% endblock %}
+</script>
+{% endblock %}

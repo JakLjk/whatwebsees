@@ -1,0 +1,8 @@
+/speed-test/download/*.bin
+  Content-Type: application/octet-stream
+  Content-Encoding: identity
+  Cache-Control: no-store, no-cache, no-transform
+  X-Robots-Tag: noindex, nofollow
+  X-WWS-Speedtest-Backend: cloudflare-static-asset
+  Cross-Origin-Resource-Policy: same-origin
+  X-Content-Type-Options: nosniff

@@ -1,7 +1,7 @@
 {% extends "core/tools/base.html" %}
 {% block content %}
 <p class="breadcrumb"><a href="/tools/">All tools</a> / DNS Lookup</p>
-<section class="intro" aria-labelledby="page-title"><p class="eyebrow">IP &amp; Network</p><h1 id="page-title">DNS Lookup</h1><p class="intro-text">Query common DNS record types for a domain and see returned values with their cache lifetime.</p></section>
+<section class="intro" aria-labelledby="page-title"><p class="eyebrow">IP &amp; Network</p><h1 id="page-title">DNS Lookup</h1><p class="intro-text">Enter a domain name to see the DNS records that direct website traffic, email and other Internet services.</p></section>
 <section class="card result-card" aria-labelledby="dns-title"><h2 id="dns-title">Query DNS records</h2>
 <form class="tool-form" method="post">{% csrf_token %}<div class="local-tool-grid"><div class="field-group"><label for="domain">Domain or hostname</label><input id="domain" name="domain" value="{{ submitted_value }}" placeholder="example.com" required autocomplete="off"></div><div class="field-group"><label for="record_type">Record type</label><select id="record_type" name="record_type">{% for option in record_types %}<option value="{{ option }}" {% if option == record_type %}selected{% endif %}>{% if option == "ALL" %}All common records{% else %}{{ option }}{% endif %}</option>{% endfor %}</select></div></div><button class="button" type="submit">Look up DNS</button></form>
 {% if error %}<p class="error-message" role="alert">{{ error }}</p>{% endif %}

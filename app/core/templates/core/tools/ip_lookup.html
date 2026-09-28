@@ -4,7 +4,7 @@
 <section class="intro" aria-labelledby="page-title">
     <p class="eyebrow">IP &amp; Network</p>
     <h1 id="page-title">IP Address Lookup</h1>
-    <p class="intro-text">Classify any IPv4 or IPv6 address and, for public addresses, check approximate location data from the local DB-IP City Lite database.</p>
+    <p class="intro-text">Enter an IPv4 or IPv6 address to check its type and see an approximate country, region or city when location data is available.</p>
 </section>
 <section class="card result-card" aria-labelledby="lookup-title">
     <h2 id="lookup-title">Look up an IP address</h2>
@@ -20,17 +20,31 @@
         <dl class="data-list">
             <div><dt>Version</dt><dd>IPv{{ result.version }}</dd></div>
             {% for label, enabled in result.flags %}<div><dt>{{ label }}</dt><dd>{{ enabled|yesno:"Yes,No" }}</dd></div>{% endfor %}
+            {% if result.flags.0.1 %}<div><dt>Geolocation data source</dt><dd>Local DB-IP City Lite copy</dd></div>{% endif %}
             {% if location.city %}<div><dt>Approximate city</dt><dd>{{ location.city }}</dd></div>{% endif %}
             {% if location.region %}<div><dt>Region</dt><dd>{{ location.region }}</dd></div>{% endif %}
             {% if location.country %}<div><dt>Country</dt><dd>{{ location.country }}</dd></div>{% endif %}
             {% if location.country_code %}<div><dt>Country code</dt><dd>{{ location.country_code }}</dd></div>{% endif %}
             {% if location.latitude and location.longitude %}<div><dt>Approximate coordinates</dt><dd>{{ location.latitude }}, {{ location.longitude }}</dd></div>{% endif %}
             {% if location.timezone %}<div><dt>Time zone</dt><dd>{{ location.timezone }}</dd></div>{% endif %}
+            {% if result.flags.0.1 %}<div class="wide"><dt>ASN / ISP / organization</dt><dd>Not included in the local City Lite database</dd></div>{% endif %}
         </dl>
         {% if not result.flags.0.1 %}<p class="status">Public geolocation does not apply to a non-global address.</p>{% elif not location %}<p class="status">No approximate location was available in the local database.</p>{% endif %}
     </div>
     {% endif %}
 </section>
 <p class="privacy-note"><strong>Location is approximate.</strong> IP geolocation identifies a broad network location, not a precise physical or GPS position. The entered address is not sent to an external geolocation API or persisted.</p>
-<section class="content-section" aria-labelledby="about-ip-lookup"><h2 id="about-ip-lookup">What an IP lookup can tell you</h2><p>An IP address identifies an interface on an IP network. Its syntax and routing classification are deterministic; a city or country is an estimate maintained in a database and may reflect an ISP gateway rather than the user.</p><h3>Why some addresses have no location</h3><p>Private, loopback, link-local, reserved and unspecified addresses are not globally routed destinations. Public GeoIP databases therefore do not provide meaningful geographic data for them.</p><h3>What this lookup does not claim</h3><p>The local City Lite data does not provide a reliable ISP or ASN result here, so this tool does not invent one. Results can also become outdated as address blocks move between networks.</p></section>
+<section class="content-section" aria-labelledby="about-ip-lookup">
+    <h2 id="about-ip-lookup">What an IP address location can tell you</h2>
+    <p>An IP address identifies an interface on an IP network. Its syntax and routing classification are deterministic; country, region and city are estimates maintained by a geolocation database and may describe an ISP gateway rather than the user.</p>
+    <h3>Why IP location may be wrong</h3>
+    <p>Address blocks move, databases update on different schedules, and providers interpret evidence differently. VPN and proxy users appear at the exit server, while mobile carriers may route customers through a distant shared gateway. For these reasons, two geolocation database providers can return different cities for the same address.</p>
+    <h3>IP geolocation is not browser GPS</h3>
+    <p>This lookup does not request browser location permission or read device sensors. Coordinates in a GeoIP database are usually representative points for a city or region, not the location of a device, home or person.</p>
+    <h3>Why some addresses have no location</h3>
+    <p>Private, loopback, link-local, reserved and unspecified addresses are not globally routed destinations. Public GeoIP databases therefore do not provide meaningful geographic data for them.</p>
+    <h3>Network ownership data</h3>
+    <p>An ASN identifies a routing network, and an ISP or organization name may be associated with it. The local City Lite database used by this form does not include reliable ASN or ISP fields, so the page labels them unavailable instead of guessing. The <a href="/">WhatWebSees homepage</a> can show network details supplied by the site's edge for your current request when they are available.</p>
+    <p>Learn <a href="/learn/how-ip-geolocation-works/">how IP geolocation databases work and why providers disagree</a>, read <a href="/learn/what-is-an-ip-address/">what an IP address can reveal</a>, or compare your browser-visible signals with the <a href="/privacy-check/">Privacy Signals Checker</a>.</p>
+</section>
 {% endblock %}

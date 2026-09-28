@@ -1,0 +1,11 @@
+name = "whatwebsees-speedtest"
+main = "src/index.js"
+compatibility_date = "2026-09-28"
+workers_dev = false
+
+[[routes]]
+pattern = "whatwebsees.com/speed-test/*"
+zone_name = "whatwebsees.com"
+
+[assets]
+directory = "./speed-assets"

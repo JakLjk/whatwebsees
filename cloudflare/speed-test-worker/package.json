@@ -1,0 +1,19 @@
+{
+  "name": "whatwebsees-speedtest-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "assets:generate": "sh scripts/generate-speed-assets.sh",
+    "check": "node --check src/index.js && node --check test/index.test.js && sh -n scripts/generate-speed-assets.sh",
+    "test": "node test/index.test.js",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

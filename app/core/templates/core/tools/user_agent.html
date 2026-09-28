@@ -5,7 +5,7 @@
 <section class="intro" aria-labelledby="page-title">
     <p class="eyebrow">Browser identity</p>
     <h1 id="page-title">User Agent Checker</h1>
-    <p class="intro-text">See the User-Agent and related browser hints available to a website. Detection is intentionally conservative because reported values can be reduced or spoofed.</p>
+    <p class="intro-text">Run a User Agent check to see the raw string, browser family, reported version, operating system and related hints available to a website.</p>
 </section>
 
 <section class="card result-card" aria-labelledby="result-title">
@@ -16,12 +16,13 @@
     <p class="status" id="copy-status" role="status" aria-live="polite"></p>
 
     <dl class="data-list">
-        <div><dt>Detected browser</dt><dd id="detected-browser">Loading…</dd></div>
-        <div><dt>Reported platform</dt><dd id="reported-platform">Loading…</dd></div>
-        <div><dt>Readable platform</dt><dd id="readable-platform">Loading…</dd></div>
+        <div><dt>Browser family</dt><dd id="detected-browser">Loading…</dd></div>
+        <div><dt>Reported browser version</dt><dd id="browser-version">Loading…</dd></div>
+        <div><dt>Operating system</dt><dd id="readable-platform">Loading…</dd></div>
+        <div><dt>Device category</dt><dd id="mobile-status">Loading…</dd></div>
+        <div><dt>Reported architecture</dt><dd id="reported-architecture">Loading…</dd></div>
         <div><dt>Browser language</dt><dd id="browser-language">Loading…</dd></div>
         <div><dt>Preferred languages</dt><dd id="preferred-languages">Loading…</dd></div>
-        <div><dt>Mobile indication</dt><dd id="mobile-status">Loading…</dd></div>
         <div><dt>User-Agent Client Hints API</dt><dd id="ua-data-available">Loading…</dd></div>
     </dl>
 
@@ -31,6 +32,7 @@
             <dl class="data-list">
                 <div class="wide"><dt>navigator.userAgent</dt><dd class="mono" id="raw-user-agent">Loading…</dd></div>
                 <div><dt>navigator.platform</dt><dd id="navigator-platform">Loading…</dd></div>
+                <div><dt>Reported platform</dt><dd id="reported-platform">Loading…</dd></div>
                 <div><dt>navigator.vendor</dt><dd id="navigator-vendor">Loading…</dd></div>
                 <div><dt>navigator.language</dt><dd id="navigator-language">Loading…</dd></div>
                 <div><dt>navigator.languages</dt><dd id="navigator-languages">Loading…</dd></div>
@@ -45,16 +47,16 @@
     </details>
 </section>
 
-<p class="privacy-note">Browser values are read locally. Only the existing safe <code>/headers</code> endpoint is requested; this page does not send locally read diagnostics to Django.</p>
+<p class="privacy-note">Browser values and any higher-entropy Client Hints shown here are processed locally. The safe <code>/headers</code> endpoint shows only selected headers that the browser already sent with its request; this page does not submit the locally assembled result.</p>
 
 <section class="content-section" aria-labelledby="about-title">
-    <h2 id="about-title">Understanding User-Agents</h2>
+    <h2 id="about-title">Understanding a User Agent check</h2>
     <h3>What is a User-Agent?</h3>
     <p>A User-Agent is a browser-provided text string sent with many web requests. It usually names a browser engine, operating-system family and compatibility tokens.</p>
     <h3>What can a User-Agent reveal?</h3>
     <p>It can suggest a browser family, platform and whether a browsing context is likely mobile. It should not be treated as reliable identification of an exact device or person.</p>
     <h3>Why User-Agent detection is imperfect</h3>
-    <p>Browsers often include historical tokens for compatibility, while privacy features and extensions can reduce or change the string. Browser detection is therefore a best-effort interpretation.</p>
+    <p>Browsers often include historical tokens for compatibility, while privacy features, enterprise policy and extensions can reduce or spoof the string. Chromium's User-Agent reduction deliberately freezes or coarsens some operating-system and version details. Browser family and version are therefore reported only as a best-effort interpretation, never as proof.</p>
     <h3>User-Agent vs Client Hints</h3>
     <p>Client Hints expose selected structured values, such as brand, platform and mobile status. Support varies, and browsers can limit the values to reduce fingerprinting.</p>
 </section>
@@ -81,7 +83,62 @@
         tools.setText("mobile-status", tools.mobileStatus(userAgent));
         tools.setText("ua-data-available", navigator.userAgentData ? "Available" : "Unavailable");
 
-        tools.detectBrowser(userAgent).then((browser) => tools.setText("detected-browser", browser));
+        const versionFromUserAgent = (browser) => {
+            const expressions = {
+                Edge: /Edg\/(\d+(?:\.\d+)*)/,
+                Opera: /OPR\/(\d+(?:\.\d+)*)/,
+                Firefox: /(?:Firefox|FxiOS)\/(\d+(?:\.\d+)*)/,
+                Chrome: /(?:Chrome|CriOS)\/(\d+(?:\.\d+)*)/,
+                Safari: /Version\/(\d+(?:\.\d+)*)/,
+                Chromium: /Chromium\/(\d+(?:\.\d+)*)/,
+            };
+            const match = expressions[browser]?.exec(userAgent);
+            if (!match) return tools.unavailable;
+            return /^\d+\.0\.0\.0$/.test(match[1])
+                ? `${match[1].split(".")[0]} (reduced User-Agent)`
+                : match[1];
+        };
+
+        const brandNameFor = (browser) => ({
+            Edge: "Microsoft Edge",
+            Opera: "Opera",
+            Chrome: "Google Chrome",
+            Chromium: "Chromium",
+        }[browser]);
+
+        const loadBrowserDetails = async () => {
+            const browser = await tools.detectBrowser(userAgent);
+            let version = versionFromUserAgent(browser);
+            let architecture = tools.unavailable;
+
+            try {
+                if (
+                    navigator.userAgentData
+                    && typeof navigator.userAgentData.getHighEntropyValues === "function"
+                ) {
+                    const details = await navigator.userAgentData.getHighEntropyValues([
+                        "architecture", "bitness", "fullVersionList",
+                    ]);
+                    const expectedBrand = brandNameFor(browser);
+                    const brand = expectedBrand && Array.isArray(details.fullVersionList)
+                        ? details.fullVersionList.find((item) => item.brand === expectedBrand)
+                        : null;
+                    if (brand && brand.version) version = brand.version;
+                    if (details.architecture) {
+                        architecture = details.bitness
+                            ? `${details.architecture} (${details.bitness}-bit)`
+                            : details.architecture;
+                    }
+                }
+            } catch {
+                // High-entropy hints are optional and may be denied or reduced.
+            }
+
+            tools.setText("detected-browser", browser);
+            tools.setText("browser-version", version);
+            tools.setText("reported-architecture", architecture);
+        };
+        loadBrowserDetails();
 
         try {
             if (navigator.userAgentData) {

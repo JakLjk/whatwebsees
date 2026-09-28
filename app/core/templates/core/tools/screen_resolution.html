@@ -5,7 +5,7 @@
 <section class="intro" aria-labelledby="page-title">
     <p class="eyebrow">Display information</p>
     <h1 id="page-title">Screen Resolution Checker</h1>
-    <p class="intro-text">Compare your browser-reported screen dimensions with the live page viewport and display scaling information.</p>
+    <p class="intro-text">Test the screen size, available area, live browser viewport, pixel ratio, color depth and orientation reported to this page.</p>
 </section>
 
 <section class="card result-card" aria-labelledby="result-title">
@@ -16,6 +16,7 @@
         <div><dt>Available screen area</dt><dd id="available-screen">Loading…</dd></div>
         <div><dt>Browser viewport</dt><dd id="viewport-size" aria-live="polite">Loading…</dd></div>
         <div><dt>Device pixel ratio</dt><dd id="device-pixel-ratio">Loading…</dd></div>
+        <div><dt>Estimated device-pixel dimensions</dt><dd id="device-pixel-dimensions">Loading…</dd></div>
         <div><dt>Color depth</dt><dd id="color-depth">Loading…</dd></div>
         <div><dt>Pixel depth</dt><dd id="pixel-depth">Loading…</dd></div>
         <div><dt>Orientation type</dt><dd id="orientation-type">Loading…</dd></div>
@@ -27,13 +28,13 @@
 <p class="privacy-note">This tool runs entirely in your browser. Screen and viewport values are not sent to the backend.</p>
 
 <section class="content-section" aria-labelledby="resolution-title">
-    <h2 id="resolution-title">Understanding display dimensions</h2>
+    <h2 id="resolution-title">Understanding screen resolution testing</h2>
     <h3>What is screen resolution?</h3>
-    <p>Here, screen resolution means the width and height reported by the browser's <code>screen</code> API in CSS pixels. Browser privacy settings and display scaling can affect the reported result.</p>
+    <p>Here, screen resolution means the width and height reported by the browser's <code>screen</code> API in CSS pixels. Browser privacy settings, operating-system display scaling and the active monitor can affect the reported result.</p>
     <h3>Screen resolution vs viewport size</h3>
-    <p>The screen describes the broader display area. The viewport is the space currently available to this web page inside browser controls and changes when you resize the window or rotate a device.</p>
+    <p>The screen describes the broader display area. Available screen size normally excludes operating-system interface areas such as a taskbar. The viewport is the space currently available to this page inside browser controls and changes when you resize the window, open browser panels or rotate a device.</p>
     <h3>What device pixel ratio means</h3>
-    <p>Device pixel ratio describes the relationship between CSS pixels and device pixels. A value above 1 is common on high-density displays, but it does not by itself identify a specific screen.</p>
+    <p>A CSS pixel is the layout unit used by web pages; it does not always map one-to-one to a physical display pixel. Device pixel ratio describes the browser's current ratio between CSS pixels and device pixels. The estimated device-pixel dimensions multiply the two browser-reported values, but zoom, scaling, privacy reduction and multi-monitor behavior mean this should not be treated as guaranteed panel hardware resolution.</p>
 </section>
 {% endblock %}
 
@@ -44,12 +45,17 @@
         const tools = window.WhatWebSeesTools;
 
         const updateDimensions = () => {
+            const pixelRatio = tools.safelyRead(() => window.devicePixelRatio);
             tools.setText("screen-resolution", tools.safelyRead(() => tools.formatDimensions(screen.width, screen.height)));
             tools.setText("available-screen", tools.safelyRead(() => tools.formatDimensions(screen.availWidth, screen.availHeight)));
             tools.setText("viewport-size", tools.safelyRead(() => tools.formatDimensions(window.innerWidth, window.innerHeight)));
-            tools.setText("device-pixel-ratio", tools.safelyRead(() => window.devicePixelRatio));
-            tools.setText("color-depth", tools.safelyRead(() => screen.colorDepth));
-            tools.setText("pixel-depth", tools.safelyRead(() => screen.pixelDepth));
+            tools.setText("device-pixel-ratio", pixelRatio);
+            tools.setText("device-pixel-dimensions", tools.safelyRead(() => tools.formatDimensions(
+                Math.round(screen.width * window.devicePixelRatio),
+                Math.round(screen.height * window.devicePixelRatio),
+            )));
+            tools.setText("color-depth", tools.safelyRead(() => `${screen.colorDepth} bits`));
+            tools.setText("pixel-depth", tools.safelyRead(() => `${screen.pixelDepth} bits`));
             tools.setText("orientation-type", tools.safelyRead(() => screen.orientation.type));
             tools.setText("orientation-angle", tools.safelyRead(() => `${screen.orientation.angle}°`));
             tools.setText("touch-points", tools.safelyRead(() => navigator.maxTouchPoints));
@@ -67,6 +73,11 @@
 
         updateDimensions();
         window.addEventListener("resize", scheduleUpdate, {passive: true});
+        try {
+            screen.orientation?.addEventListener("change", scheduleUpdate);
+        } catch {
+            // Orientation events are optional; resize still keeps the viewport current.
+        }
     })();
 </script>
 {% endblock %}

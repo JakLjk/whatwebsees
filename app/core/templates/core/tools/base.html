@@ -50,10 +50,21 @@
             line-height: 1.6;
         }
 
-        a { color: var(--accent); }
+        a {
+            color: var(--accent);
+            text-underline-offset: 0.16em;
+        }
+
+        a:hover { color: var(--accent-dark); }
+
+        a:focus-visible {
+            outline: 3px solid rgba(36, 87, 214, 0.25);
+            outline-offset: 3px;
+            border-radius: 0.2rem;
+        }
 
         .page-shell {
-            width: min(100% - 2rem, 70rem);
+            width: min(100% - 2rem, 72rem);
             margin-inline: auto;
         }
 
@@ -136,7 +147,7 @@
         .tools-menu-group a { font-size: 0.82rem; font-weight: 600; }
         .tools-menu-group .all-tools-link { margin-top: 0.35rem; color: var(--accent); font-weight: 750; }
 
-        main { padding-block: clamp(1.75rem, 5vw, 4.5rem) 4rem; }
+        main { padding-block: clamp(1.75rem, 5vw, 4rem) 4rem; }
 
         .breadcrumb {
             margin: 0 0 1rem;
@@ -148,7 +159,7 @@
 
         .intro {
             max-width: 48rem;
-            margin-bottom: clamp(1.8rem, 5vw, 3rem);
+            margin-bottom: clamp(1.6rem, 4vw, 2.6rem);
         }
 
         .eyebrow {
@@ -168,7 +179,7 @@
 
         h1 {
             margin-bottom: 0.85rem;
-            font-size: clamp(2.2rem, 6vw, 4.25rem);
+            font-size: clamp(2.1rem, 5.5vw, 3.65rem);
         }
 
         h2 { font-size: clamp(1.35rem, 3vw, 1.9rem); }
@@ -186,6 +197,8 @@
             background: var(--surface);
             box-shadow: var(--shadow);
         }
+
+        .card p:last-child { margin-bottom: 0; }
 
         .result-card { padding: clamp(1.35rem, 4vw, 2.25rem); }
 
@@ -242,12 +255,29 @@
         }
 
         .button:hover { background: var(--accent-dark); }
+        .button:active { transform: translateY(1px); }
         .button:disabled { cursor: not-allowed; opacity: 0.6; }
 
         .button-secondary {
             background: #fff;
             color: var(--accent);
         }
+
+        .button-secondary:hover {
+            background: var(--accent-soft);
+            color: var(--accent-dark);
+        }
+
+        .button-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .status-heading { margin-top: 1.25rem; }
+        .stacked-card { margin-top: 2rem; }
 
         .button:focus-visible,
         .tool-link:focus-visible,
@@ -272,6 +302,12 @@
             border-radius: 0.85rem;
             background: var(--surface-muted);
         }
+
+        .data-list p,
+        .data-list dd,
+        .headers-table td,
+        code,
+        output { overflow-wrap: anywhere; }
 
         .data-list .wide { grid-column: 1 / -1; }
 
@@ -329,8 +365,43 @@
         }
         .field-group input:focus,
         .field-group select:focus { outline: 3px solid rgba(36, 87, 214, 0.2); border-color: var(--accent); }
+        .field-group input:hover,
+        .field-group select:hover { border-color: #8da0b8; }
         .tool-form .button { align-self: end; }
         .form-help { margin: 0.4rem 0 0; color: var(--muted); font-size: 0.82rem; }
+        .test-progress { margin-top: 1rem; }
+        .test-progress progress {
+            display: block;
+            width: 100%;
+            height: 0.75rem;
+            margin-bottom: 0.35rem;
+            accent-color: var(--accent);
+        }
+        .speed-test-metrics > div {
+            border: 1px solid var(--border);
+            background: var(--surface);
+        }
+        .speed-test-metrics dd {
+            color: var(--accent-dark);
+            font-size: clamp(1.45rem, 4vw, 2rem);
+            line-height: 1.15;
+        }
+        .speed-test-metrics p {
+            margin: 0.3rem 0 0;
+            color: var(--muted);
+            font-size: 0.78rem;
+        }
+        .speed-test-details { margin-top: 0.75rem; }
+        .example-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+            gap: 0.65rem;
+            margin-top: 1rem;
+        }
+        .example-buttons .button {
+            justify-content: flex-start;
+            text-align: left;
+        }
         .error-message {
             margin: 1rem 0 0;
             padding: 0.85rem 1rem;
@@ -380,6 +451,13 @@
             font-weight: 750;
         }
 
+        .disclosure summary:hover { background: var(--surface-muted); }
+
+        .disclosure summary:focus-visible {
+            outline: 3px solid rgba(36, 87, 214, 0.2);
+            outline-offset: -3px;
+        }
+
         .disclosure-content {
             padding: 0 1.2rem 1.2rem;
             border-top: 1px solid var(--border);
@@ -401,6 +479,7 @@
         }
 
         .headers-table th { width: 35%; color: var(--muted); }
+        .headers-table.chain-table th { width: auto; }
 
         .tool-grid {
             display: grid;
@@ -415,6 +494,13 @@
             min-height: 13rem;
             flex-direction: column;
             padding: 1.35rem;
+            transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+        }
+
+        .tool-card:hover {
+            border-color: #b8c7da;
+            box-shadow: 0 14px 36px rgba(29, 47, 75, 0.12);
+            transform: translateY(-2px);
         }
 
         .tool-card h2,
@@ -488,10 +574,20 @@
             .tools-menu-panel { grid-template-columns: 1fr; width: min(22rem, calc(100vw - 2rem)); }
             .data-list { grid-template-columns: 1fr; }
             .tool-form { grid-template-columns: 1fr; }
+            .tool-form .button,
+            .button-row .button { width: 100%; }
+            .button-row { align-items: stretch; }
+            .tool-card { min-height: 0; }
             .headers-table, .headers-table tbody, .headers-table tr,
             .headers-table th, .headers-table td { display: block; width: 100%; }
             .headers-table th { padding-bottom: 0.15rem; border-bottom: 0; }
             .headers-table td { padding-top: 0.15rem; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .tool-card { transition: none; }
+            .tool-card:hover { transform: none; }
+            .button:active { transform: none; }
         }
     </style>
     <link rel="icon" href="/favicon.png" type="image/png" sizes="192x192">

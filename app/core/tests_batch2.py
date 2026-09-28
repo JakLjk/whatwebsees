@@ -30,7 +30,7 @@ class BatchTwoPublicPageTests(SimpleTestCase):
         ("subnet-calculator", "Subnet / CIDR Calculator", "/subnet-calculator/"),
         ("password-strength", "Password Strength Checker", "/password-strength/"),
         ("punycode-converter", "Punycode / IDN Converter", "/punycode-converter/"),
-        ("download-time-calculator", "Download Time Calculator", "/download-time-calculator/"),
+        ("download-time-calculator", "Internet Speed Test &amp; Download Time Calculator", "/download-time-calculator/"),
     )
 
     def test_each_page_has_complete_indexable_metadata(self):
@@ -283,7 +283,13 @@ class BatchTwoToolBehaviorTests(SimpleTestCase):
         self.assertContains(response, "calculateDownloadTime")
         self.assertContains(response, "sizeFactors")
         self.assertContains(response, "speedFactors")
-        self.assertNotContains(response, "fetch(")
+        self.assertContains(
+            response,
+            '`${endpoints.download}${stage.asset}?nonce=${Date.now()}',
+        )
+        self.assertContains(response, 'staticAssetBackend = "cloudflare-static-asset"')
+        self.assertContains(response, "/speed-test/download/")
+        self.assertContains(response, "/speed-test/upload/")
 
     def test_no_new_private_endpoints_were_added_to_sitemap(self):
         response = self.client.get(reverse("sitemap"))

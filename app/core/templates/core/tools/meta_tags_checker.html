@@ -1,1 +1,47 @@
-{% extends "core/tools/base.html" %}{% block content %}<p class="breadcrumb"><a href="/tools/">All tools</a> / Meta Tag Checker</p><section class="intro"><p class="eyebrow">Website diagnostics</p><h1 id="page-title">Meta Tag Checker</h1><p class="intro-text">Read selected metadata from the bounded, server-delivered HTML of a public page without running its JavaScript or loading subresources.</p></section><section class="card result-card"><h2>Inspect page metadata</h2><form class="tool-form" method="post">{% csrf_token %}<div class="field-group"><label for="url">Public web page URL</label><input id="url" name="url" value="{{ submitted_value }}" placeholder="https://example.com/page" required></div><button class="button">Check meta tags</button></form>{% if error %}<p class="error-message">{{ error }}</p>{% endif %}{% if result %}<div class="result-block"><p>HTTP {{ result.status }} {{ result.reason }} · <span class="mono">{{ result.url }}</span></p>{% if metadata %}<dl class="data-list"><div class="wide"><dt>Title</dt><dd>{{ metadata.title|default:"Not observed" }}</dd></div><div class="wide"><dt>Meta description</dt><dd>{{ metadata.description|default:"Not observed" }}</dd></div><div class="wide"><dt>Canonical</dt><dd class="mono">{{ metadata.canonical|default:"Not observed" }}</dd></div><div><dt>Meta robots</dt><dd>{{ metadata.robots|default:"Not observed" }}</dd></div><div><dt>Open Graph title</dt><dd>{{ metadata.og_title|default:"Not observed" }}</dd></div><div class="wide"><dt>Open Graph description</dt><dd>{{ metadata.og_description|default:"Not observed" }}</dd></div><div class="wide"><dt>Open Graph URL</dt><dd class="mono">{{ metadata.og_url|default:"Not observed" }}</dd></div><div><dt>Twitter card</dt><dd>{{ metadata.twitter_card|default:"Not observed" }}</dd></div><div><dt>Twitter title</dt><dd>{{ metadata.twitter_title|default:"Not observed" }}</dd></div><div class="wide"><dt>Twitter description</dt><dd>{{ metadata.twitter_description|default:"Not observed" }}</dd></div></dl>{% endif %}<h3>What this result means</h3><p>These fields came from the initial HTML response. Their presence does not guarantee that a platform uses them, and absence does not prove the rendered page lacks metadata: client-side JavaScript may change the document after load.</p></div>{% endif %}</section><section class="content-section"><h2>No browser rendering</h2><p>The checker does not execute scripts, request images, styles or frames, or evaluate a page’s visual content. It reports the first matching values from a bounded HTML response, which makes it useful for checking what non-rendering clients receive.</p></section>{% endblock %}
+{% extends "core/tools/base.html" %}
+{% block content %}
+<p class="breadcrumb"><a href="/tools/">All tools</a> / Meta Tag Checker</p>
+<section class="intro" aria-labelledby="page-title">
+    <p class="eyebrow">Website diagnostics</p>
+    <h1 id="page-title">Meta Tag Checker</h1>
+    <p class="intro-text">Enter a public page URL to review its title, description, canonical address and social-sharing metadata.</p>
+</section>
+
+<section class="card result-card" aria-labelledby="meta-title">
+    <h2 id="meta-title">Inspect page metadata</h2>
+    <form class="tool-form" method="post">
+        {% csrf_token %}
+        <div class="field-group"><label for="url">Public web page URL</label><input id="url" name="url" value="{{ submitted_value }}" placeholder="https://example.com/page" required></div>
+        <button class="button" type="submit">Check meta tags</button>
+    </form>
+    {% if error %}<p class="error-message" role="alert">{{ error }}</p>{% endif %}
+    {% if result %}
+    <div class="result-block">
+        <p>HTTP {{ result.status }} {{ result.reason }} · <span class="mono">{{ result.url }}</span></p>
+        {% if metadata %}
+        <dl class="data-list">
+            <div class="wide"><dt>Title</dt><dd>{{ metadata.title|default:"Not observed" }}</dd></div>
+            <div class="wide"><dt>Meta description</dt><dd>{{ metadata.description|default:"Not observed" }}</dd></div>
+            <div class="wide"><dt>Canonical</dt><dd class="mono">{{ metadata.canonical|default:"Not observed" }}</dd></div>
+            <div><dt>Meta robots</dt><dd>{{ metadata.robots|default:"Not observed" }}</dd></div>
+            <div><dt>Open Graph title</dt><dd>{{ metadata.og_title|default:"Not observed" }}</dd></div>
+            <div class="wide"><dt>Open Graph description</dt><dd>{{ metadata.og_description|default:"Not observed" }}</dd></div>
+            <div class="wide"><dt>Open Graph URL</dt><dd class="mono">{{ metadata.og_url|default:"Not observed" }}</dd></div>
+            <div><dt>Twitter card</dt><dd>{{ metadata.twitter_card|default:"Not observed" }}</dd></div>
+            <div><dt>Twitter title</dt><dd>{{ metadata.twitter_title|default:"Not observed" }}</dd></div>
+            <div class="wide"><dt>Twitter description</dt><dd>{{ metadata.twitter_description|default:"Not observed" }}</dd></div>
+        </dl>
+        {% endif %}
+        <h3>What this result means</h3>
+        <p>These fields came from the page's initial HTML response. Their presence does not guarantee that a search engine or social platform uses them. JavaScript can also change metadata after a browser loads the page.</p>
+    </div>
+    {% endif %}
+</section>
+
+<section class="content-section" aria-labelledby="metadata-explained-title">
+    <h2 id="metadata-explained-title">How the main metadata fields are used</h2>
+    <p>The title and description summarize a page, while a canonical link identifies its preferred address. A robots directive can request indexing behavior. Open Graph and Twitter fields provide suggested titles and descriptions when a link is shared.</p>
+    <h3>Why another service may show something different</h3>
+    <p>Search engines and social platforms can rewrite text, use cached metadata or ignore fields that do not match the page. This checker reads the first matching values from the initial HTML and does not run scripts, load images or judge the page's visual content.</p>
+</section>
+{% endblock %}

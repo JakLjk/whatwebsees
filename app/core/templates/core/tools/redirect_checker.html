@@ -1,1 +1,71 @@
-{% extends "core/tools/base.html" %}{% block content %}<p class="breadcrumb"><a href="/tools/">All tools</a> / Redirect Checker</p><section class="intro"><p class="eyebrow">Website diagnostics</p><h1 id="page-title">Redirect Checker</h1><p class="intro-text">Follow a bounded HTTP redirect chain and see each validated hop, its status, destination and elapsed time.</p></section><section class="card result-card"><h2>Trace redirects</h2><form class="tool-form" method="post">{% csrf_token %}<div class="field-group"><label for="url">Public website URL or domain</label><input id="url" name="url" value="{{ submitted_value }}" placeholder="example.com" required></div><button class="button">Trace redirects</button></form>{% if error %}<p class="error-message">{{ error }}</p>{% endif %}{% if result %}<div class="result-block"><table class="headers-table"><thead><tr><th>Hop</th><th>URL and response</th><th>Location</th></tr></thead><tbody>{% for hop in result.chain %}<tr><th>{{ forloop.counter }}</th><td><span class="mono">{{ hop.url }}</span><br>{{ hop.status }} {{ hop.reason }} · {{ hop.elapsed_ms }} ms</td><td class="mono">{{ hop.location|default:"—" }}</td></tr>{% endfor %}</tbody></table><dl class="data-list"><div class="wide"><dt>Final URL</dt><dd class="mono">{{ result.url }}</dd></div><div><dt>Redirect count</dt><dd>{{ result.redirects }}</dd></div><div><dt>Final destination uses HTTPS</dt><dd>{{ is_https|yesno:"Yes,No" }}</dd></div><div><dt>Total elapsed time</dt><dd>{{ result.elapsed_ms }} ms</dd></div></dl><h3>What this result means</h3><p>The final status is the response reached after {{ result.redirects }} redirect{{ result.redirects|pluralize }}. Timings are diagnostic server-side measurements, not a browser speed score. A clean chain can still lead to a page with application or content problems.</p></div>{% endif %}</section><section class="content-section"><h2>How the chain is checked</h2><p>Each Location value is resolved against the previous URL, normalized, DNS-resolved and rejected if any address is not public. The fixed redirect limit prevents loops and unusually long chains. Read <a href="/learn/http-redirects-explained/">how HTTP redirects and status codes work</a>.</p></section>{% endblock %}
+{% extends "core/tools/base.html" %}
+
+{% block content %}
+<p class="breadcrumb"><a href="/tools/">All tools</a> / Redirect Checker</p>
+<section class="intro" aria-labelledby="page-title">
+    <p class="eyebrow">Website diagnostics</p>
+    <h1 id="page-title">Redirect Checker</h1>
+    <p class="intro-text">Enter a public URL to follow each redirect, see where it leads and identify long chains, loops or unexpected destinations.</p>
+</section>
+
+<section class="card result-card" aria-labelledby="redirect-form-title">
+    <h2 id="redirect-form-title">Trace redirects</h2>
+    <form class="tool-form" method="post">
+        {% csrf_token %}
+        <div class="field-group">
+            <label for="url">Public website URL or domain</label>
+            <input id="url" name="url" value="{{ submitted_value }}" placeholder="example.com" required inputmode="url" autocomplete="url">
+            <p class="form-help">Only public HTTP and HTTPS destinations on standard ports are supported.</p>
+        </div>
+        <button class="button" type="submit">Trace redirects</button>
+    </form>
+    {% if error %}<p class="error-message" role="alert">{{ error }}</p>{% endif %}
+    {% if result %}
+    <div class="result-block">
+        <p class="card-label">Complete redirect chain</p>
+        <table class="headers-table chain-table">
+            <thead><tr><th>Hop</th><th>Requested URL</th><th>Status</th><th>Location target</th><th>Duration</th></tr></thead>
+            <tbody>
+                {% for hop in result.chain %}
+                <tr>
+                    <th>{{ forloop.counter }}</th>
+                    <td class="mono">{{ hop.url }}</td>
+                    <td><strong>{{ hop.status }}</strong> {{ hop.reason|default:"No status text" }}</td>
+                    <td class="mono">{{ hop.location|default:"— Final response" }}</td>
+                    <td>{{ hop.elapsed_ms }} ms</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <dl class="data-list">
+            <div class="wide"><dt>Final URL</dt><dd class="mono">{{ result.url }}</dd></div>
+            <div><dt>Final status</dt><dd>{{ result.status }} {{ result.reason }}</dd></div>
+            <div><dt>Redirect count</dt><dd>{{ result.redirects }}</dd></div>
+            <div><dt>Final destination uses HTTPS</dt><dd>{{ is_https|yesno:"Yes,No" }}</dd></div>
+            <div><dt>Total elapsed time</dt><dd>{{ result.elapsed_ms }} ms</dd></div>
+        </dl>
+        <h3>What this result means</h3>
+        <p>The checker reached the final response after {{ result.redirects }} redirect{{ result.redirects|pluralize }}. Timings measure the WhatWebSees server's network path, not browser page-load performance. A clean chain does not verify the final page's content or security.</p>
+    </div>
+    {% endif %}
+</section>
+
+<section class="content-section" aria-labelledby="status-code-title">
+    <h2 id="status-code-title">Common redirect status codes</h2>
+    <table class="headers-table">
+        <thead><tr><th>Status</th><th>Typical meaning</th><th>Request-method behavior</th></tr></thead>
+        <tbody>
+            <tr><th>301 Moved Permanently</th><td>A lasting move to a new URL.</td><td>Browsers commonly change POST to GET when following it.</td></tr>
+            <tr><th>302 Found</th><td>A temporary destination.</td><td>Browsers commonly change POST to GET when following it.</td></tr>
+            <tr><th>303 See Other</th><td>Retrieve a separate result, often after a form submission.</td><td>The follow-up uses GET (or HEAD), which supports the POST/Redirect/GET pattern.</td></tr>
+            <tr><th>307 Temporary Redirect</th><td>A temporary destination with explicit method preservation.</td><td>The method and request body are preserved.</td></tr>
+            <tr><th>308 Permanent Redirect</th><td>A lasting move with explicit method preservation.</td><td>The method and request body are preserved.</td></tr>
+        </tbody>
+    </table>
+    <h3>When redirect chains become a problem</h3>
+    <p>One intentional redirect, such as HTTP to HTTPS, is common. Long chains add delay and make maintenance harder, while a loop prevents the destination from loading. The checker stops at a fixed limit and reports each completed hop.</p>
+    <h3>Technical safety</h3>
+    <p>Every destination is checked again before the server follows it. Credentials, non-standard ports and hostnames that resolve to non-public addresses are refused.</p>
+    <p>Read the fuller guide to <a href="/learn/http-redirects-explained/">HTTP redirects and status codes</a>, or inspect the destination's selected response fields with the <a href="/server-headers/">Server Headers Checker</a>.</p>
+</section>
+{% endblock %}

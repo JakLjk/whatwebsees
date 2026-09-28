@@ -71,16 +71,16 @@ GEOIP_DATABASE_PATH = Path("/data/geoip/dbip-city-lite.mmdb")
 TOOL_PAGE_METADATA = {
     "tools": {
         "template": "core/tools/index.html",
-        "title": "Privacy & Browser Tools | WhatWebSees",
+        "title": "Free Web, Network & Privacy Tools | WhatWebSees",
         "description": (
-            "Explore privacy-conscious IP, DNS, website, browser, security and "
-            "calculation tools with useful explanations and no diagnostic history."
+            "Use practical IP, DNS, website, browser, privacy and security tools, "
+            "with clear results and explanations of what they mean."
         ),
         "path": "/tools/",
     },
     "user_agent": {
         "template": "core/tools/user_agent.html",
-        "title": "User Agent Checker | WhatWebSees",
+        "title": "User Agent Checker – Browser & Device Details | WhatWebSees",
         "description": (
             "View your browser's User-Agent, reported platform and available "
             "Client Hints with a private, browser-based checker."
@@ -89,7 +89,7 @@ TOOL_PAGE_METADATA = {
     },
     "browser_check": {
         "template": "core/tools/browser_check.html",
-        "title": "Browser Checker | WhatWebSees",
+        "title": "Browser Checker – Browser & Device Information | WhatWebSees",
         "description": (
             "Check your browser, platform, language, time zone and other "
             "browser-reported details without storing diagnostic values."
@@ -98,7 +98,7 @@ TOOL_PAGE_METADATA = {
     },
     "screen_resolution": {
         "template": "core/tools/screen_resolution.html",
-        "title": "Screen Resolution Checker | WhatWebSees",
+        "title": "Screen Resolution Test – Viewport & Pixel Ratio | WhatWebSees",
         "description": (
             "Check screen resolution, browser viewport, device pixel ratio, "
             "color depth and orientation locally in your browser."
@@ -107,16 +107,16 @@ TOOL_PAGE_METADATA = {
     },
     "http_headers": {
         "template": "core/tools/http_headers.html",
-        "title": "HTTP Headers Checker | WhatWebSees",
+        "title": "HTTP Request Headers Checker | WhatWebSees",
         "description": (
-            "See a privacy-conscious selection of HTTP request headers that "
-            "reached this website through Cloudflare and its reverse proxy."
+            "See selected HTTP request headers your browser sent to WhatWebSees "
+            "and learn what those values can reveal to a website."
         ),
         "path": "/http-headers/",
     },
     "privacy_check": {
         "template": "core/tools/privacy_check.html",
-        "title": "Browser Privacy Signals Checker | WhatWebSees",
+        "title": "Browser Privacy Check – GPC, DNT & Cookies | WhatWebSees",
         "description": (
             "Check browser-reported privacy preferences including Do Not Track, "
             "Global Privacy Control and cookie availability."
@@ -143,142 +143,177 @@ TOOL_PAGE_METADATA = {
     },
     "ip_lookup": {
         "template": "core/tools/ip_lookup.html",
-        "title": "IP Address Lookup & Geolocation | WhatWebSees",
-        "description": "Look up and classify an IPv4 or IPv6 address with approximate location data from a local privacy-conscious GeoIP database.",
+        "title": "IP Address Lookup – Approximate Location | WhatWebSees",
+        "description": "Look up an IPv4 or IPv6 address to see its type and approximate country, region, city and time zone where available.",
         "path": "/ip-lookup/",
     },
     "ip_address_checker": {
         "template": "core/tools/ip_address_checker.html",
-        "title": "IP Address Checker & Validator | WhatWebSees",
+        "title": "IP Address Checker – Validate IPv4 & IPv6 | WhatWebSees",
         "description": "Validate, normalize and explain an IPv4 or IPv6 address, including public, private, loopback and reserved classifications.",
         "path": "/ip-address-checker/",
     },
     "dns_lookup": {
         "template": "core/tools/dns_lookup.html",
-        "title": "DNS Lookup for A, MX, TXT & More | WhatWebSees",
+        "title": "DNS Lookup – Check DNS Records | WhatWebSees",
         "description": "Query common DNS records for a domain, including A, AAAA, CNAME, MX, NS, TXT and SOA records with TTL values.",
         "path": "/dns-lookup/",
     },
     "reverse_dns": {
         "template": "core/tools/reverse_dns.html",
-        "title": "Reverse DNS & PTR Lookup | WhatWebSees",
+        "title": "Reverse DNS Lookup – Check PTR Records | WhatWebSees",
         "description": "Look up PTR hostnames for a public IPv4 or IPv6 address and understand what reverse DNS records mean.",
         "path": "/reverse-dns/",
     },
     "hostname_lookup": {
         "template": "core/tools/hostname_lookup.html",
-        "title": "Hostname to IP Lookup | WhatWebSees",
-        "description": "Resolve a public hostname to its deduplicated IPv4 and IPv6 addresses with a simple privacy-conscious lookup.",
+        "title": "Hostname Lookup – Find IPv4 & IPv6 Addresses | WhatWebSees",
+        "description": "Enter a public hostname to find the IPv4 and IPv6 addresses currently returned by DNS.",
         "path": "/hostname-lookup/",
     },
     "ssl_checker": {
         "template": "core/tools/ssl_checker.html",
-        "title": "SSL Certificate Checker | WhatWebSees",
-        "description": "Validate a public website's TLS certificate on port 443 and inspect its issuer, names, dates, protocol and cipher.",
+        "title": "SSL Certificate Checker – Expiry, Issuer & Hostname | WhatWebSees",
+        "description": "Check a website's TLS certificate, including hostname coverage, issuer, validity dates, days remaining, protocol and cipher.",
         "path": "/ssl-checker/",
     },
     "website_status": {
         "template": "core/tools/website_status.html",
-        "title": "Website Status & Response Time Checker | WhatWebSees",
-        "description": "Check a public website's HTTP status, response time, redirects, final URL and content type using bounded safe requests.",
+        "title": "Website Status Checker – HTTP Status & Response Time | WhatWebSees",
+        "description": "Check a public website's HTTP status, response time, redirects, final URL and content type.",
         "path": "/website-status/",
     },
     "server_headers": {
         "template": "core/tools/server_headers.html",
-        "title": "Server Response Headers Checker | WhatWebSees",
-        "description": "Inspect a safe selection of HTTP response and security headers returned by a public website without exposing cookies.",
+        "title": "Server Headers Checker – Inspect HTTP Responses | WhatWebSees",
+        "description": "Inspect selected HTTP response and security headers returned by a public website and learn what they mean.",
         "path": "/server-headers/",
     },
     "subnet_calculator": {
         "template": "core/tools/subnet_calculator.html",
-        "title": "Subnet & CIDR Calculator | WhatWebSees",
+        "title": "Subnet Calculator – IPv4, IPv6 & CIDR | WhatWebSees",
         "description": "Calculate IPv4 or IPv6 CIDR network boundaries, masks, address counts and correct /31 and /32 host semantics.",
         "path": "/subnet-calculator/",
     },
     "password_strength": {
         "template": "core/tools/password_strength.html",
-        "title": "Private Password Strength Checker | WhatWebSees",
+        "title": "Password Strength Checker – Private Browser Test | WhatWebSees",
         "description": "Check password length and useful strength signals entirely in your browser without transmitting or storing the password.",
         "path": "/password-strength/",
     },
     "punycode_converter": {
         "template": "core/tools/punycode_converter.html",
-        "title": "Punycode & IDN Domain Converter | WhatWebSees",
+        "title": "Punycode Converter – Unicode & IDN Domains | WhatWebSees",
         "description": "Convert Unicode internationalized domain names to ASCII Punycode and decode Punycode domains without a network lookup.",
         "path": "/punycode-converter/",
     },
     "download_time_calculator": {
         "template": "core/tools/download_time_calculator.html",
-        "title": "Download Time Calculator | WhatWebSees",
-        "description": "Estimate ideal file download time from file size and connection speed with clear decimal unit conversions.",
+        "title": "Internet Speed Test & Download Time Calculator | WhatWebSees",
+        "description": "Measure current download speed, upload speed and HTTP latency, then estimate file download time at any connection speed.",
         "path": "/download-time-calculator/",
     },
     "dnssec_checker": {
         "template": "core/tools/dnssec_checker.html",
-        "title": "DNSSEC Checker: Inspect DNSKEY & DS Records | WhatWebSees",
-        "description": "Inspect DNSKEY and DS records for a domain and understand whether DNSSEC-related records and a parent delegation are observable.",
+        "title": "DNSSEC Checker – DNSKEY & DS Records | WhatWebSees",
+        "description": "Check whether a domain publishes DNSSEC key records and whether its parent zone publishes a matching delegation record.",
         "path": "/dnssec-checker/",
     },
     "email_dns_checker": {
         "template": "core/tools/email_dns_checker.html",
-        "title": "Email DNS Checker for MX, SPF, DKIM & DMARC | WhatWebSees",
+        "title": "Email DNS Checker – MX, SPF, DKIM & DMARC | WhatWebSees",
         "description": "Inspect a domain's mail routing and published MX, SPF, DMARC and optional DKIM selector records without contacting a mail server.",
         "path": "/email-dns-checker/",
     },
     "redirect_checker": {
         "template": "core/tools/redirect_checker.html",
-        "title": "HTTP Redirect Checker & Chain Inspector | WhatWebSees",
-        "description": "Follow a public HTTP or HTTPS redirect chain safely and inspect every URL, status, Location target, timing and final destination.",
+        "title": "Redirect Checker – Trace HTTP Redirects | WhatWebSees",
+        "description": "Trace a public website's redirect chain and see every URL, HTTP status, destination and response time along the way.",
         "path": "/redirect-checker/",
     },
     "security_headers": {
         "template": "core/tools/security_headers.html",
-        "title": "HTTP Security Headers Checker | WhatWebSees",
+        "title": "Security Headers Checker – CSP, HSTS & More | WhatWebSees",
         "description": "Inspect CSP, HSTS, Referrer-Policy, Permissions-Policy and cross-origin response headers without assigning a misleading grade.",
         "path": "/security-headers/",
     },
     "robots_txt_checker": {
         "template": "core/tools/robots_txt_checker.html",
-        "title": "Robots.txt Checker & Directive Inspector | WhatWebSees",
-        "description": "Safely retrieve a site's bounded robots.txt file and inspect its user-agent groups and Sitemap directives.",
+        "title": "Robots.txt Checker – Inspect Crawler Rules | WhatWebSees",
+        "description": "Fetch a website's robots.txt file and review its crawler groups, Sitemap directives and raw text.",
         "path": "/robots-txt-checker/",
     },
     "sitemap_checker": {
         "template": "core/tools/sitemap_checker.html",
-        "title": "XML Sitemap Checker for URL Sets & Indexes | WhatWebSees",
-        "description": "Safely inspect one bounded XML sitemap, identify urlset or sitemapindex documents, and review entry counts, URLs and lastmod values.",
+        "title": "XML Sitemap Checker – Inspect Sitemap URLs | WhatWebSees",
+        "description": "Inspect an XML sitemap or sitemap index and review its type, entry count, sample URLs and last-modified values.",
         "path": "/sitemap-checker/",
     },
     "meta_tags_checker": {
         "template": "core/tools/meta_tags_checker.html",
-        "title": "Meta Tag Checker for SEO & Social Metadata | WhatWebSees",
+        "title": "Meta Tag Checker – SEO & Social Metadata | WhatWebSees",
         "description": "Inspect server-delivered title, description, canonical, robots, Open Graph and Twitter metadata from a public web page.",
         "path": "/meta-tags-checker/",
     },
     "url_parser": {
         "template": "core/tools/url_parser.html",
-        "title": "Private URL Parser & Analyzer | WhatWebSees",
+        "title": "URL Parser – Break Down URL Components | WhatWebSees",
         "description": "Parse a URL into its scheme, hostname, port, path, query, fragment and parameters entirely in your browser without requesting it.",
         "path": "/url-parser/",
     },
     "file_hash": {
         "template": "core/tools/file_hash.html",
-        "title": "Private File Hash Calculator: SHA-256, SHA-384, SHA-512 | WhatWebSees",
+        "title": "File Hash Calculator – SHA-256, SHA-384 & SHA-512 | WhatWebSees",
         "description": "Calculate SHA-256, SHA-384 and SHA-512 hashes locally with Web Crypto; your file, filename and hashes never leave the browser.",
         "path": "/file-hash/",
     },
     "rdap_lookup": {
         "template": "core/tools/rdap_lookup.html",
-        "title": "Domain RDAP Lookup: Registration & Registry Data | WhatWebSees",
-        "description": "Look up public domain registration dates, status, registrar, nameservers and source through the IANA-discovered HTTPS RDAP service.",
+        "title": "Domain Lookup – Registration & RDAP Details | WhatWebSees",
+        "description": "Look up public domain registration dates, status, registrar and nameservers using the registry's RDAP data.",
         "path": "/rdap-lookup/",
     },
     "domain_age": {
         "template": "core/tools/domain_age.html",
-        "title": "Domain Age Checker Using Registry RDAP Data | WhatWebSees",
+        "title": "Domain Age Checker – Registration Dates | WhatWebSees",
         "description": "Estimate a domain's age from its registry-reported RDAP creation date and review expiration and update dates where available.",
         "path": "/domain-age/",
     },
+}
+
+# Short, user-focused summaries for cards. Search metadata stays page-specific
+# and can be more descriptive without making the tools index feel technical.
+TOOL_SUMMARIES = {
+    "user_agent": "See the browser, operating system and device hints this browser shares with websites.",
+    "browser_check": "Get a readable summary of browser, platform, language and time-zone details.",
+    "screen_resolution": "Compare screen size, browser viewport, pixel ratio, color depth and orientation.",
+    "http_headers": "See selected request headers this browser sent to WhatWebSees.",
+    "privacy_check": "Review Global Privacy Control, Do Not Track, cookie support and related browser signals.",
+    "webgl": "Check WebGL support and the graphics information your browser makes available.",
+    "canvas_fingerprint": "Run a local canvas test and compare its browser-generated hash.",
+    "ip_lookup": "Check an IP address type and its approximate location where data is available.",
+    "ip_address_checker": "Validate an IPv4 or IPv6 address and understand its address category.",
+    "dns_lookup": "Find A, AAAA, CNAME, MX, NS, TXT and SOA records for a domain.",
+    "reverse_dns": "Find the PTR hostname published for a public IP address.",
+    "hostname_lookup": "See the IPv4 and IPv6 addresses currently returned for a hostname.",
+    "ssl_checker": "Check certificate hostname coverage, issuer, expiration and connection details.",
+    "website_status": "Check a website's HTTP status, response time, redirects and final address.",
+    "server_headers": "Review selected response headers returned by a public website.",
+    "subnet_calculator": "Calculate IPv4 or IPv6 network boundaries, masks and address counts.",
+    "password_strength": "Review password length and common strength signals without sending it anywhere.",
+    "punycode_converter": "Convert internationalized domain names between Unicode and Punycode.",
+    "download_time_calculator": "Measure current Internet speed or estimate how long a file download may take.",
+    "dnssec_checker": "Check for DNSSEC key and delegation records on a domain.",
+    "email_dns_checker": "Review mail routing and SPF, DKIM and DMARC records for a domain.",
+    "redirect_checker": "Trace each step between a starting URL and its final destination.",
+    "security_headers": "Check whether a website returns important browser security policies.",
+    "robots_txt_checker": "Read a site's robots.txt file and its crawler and Sitemap directives.",
+    "sitemap_checker": "Inspect an XML sitemap's type, size and sample entries.",
+    "meta_tags_checker": "Review title, description, canonical and social-sharing metadata.",
+    "url_parser": "Break a URL into its hostname, path, query, fragment and other components.",
+    "file_hash": "Calculate SHA-256, SHA-384 and SHA-512 locally for a file.",
+    "rdap_lookup": "Review public domain registration dates, status, registrar and nameservers.",
+    "domain_age": "Estimate how long ago a domain's registry creation event occurred.",
 }
 
 TOOL_NAMES = {
@@ -300,7 +335,7 @@ TOOL_NAMES = {
     "subnet_calculator": "Subnet / CIDR Calculator",
     "password_strength": "Password Strength Checker",
     "punycode_converter": "Punycode Converter",
-    "download_time_calculator": "Download Time Calculator",
+    "download_time_calculator": "Download Speed & Time",
     "dnssec_checker": "DNSSEC Checker",
     "email_dns_checker": "Email DNS Checker",
     "redirect_checker": "Redirect Checker",
@@ -329,21 +364,21 @@ RELATED_TOOLS = {
     "privacy_check": ("password_strength", "browser_check", "user_agent"),
     "webgl": ("browser_check", "screen_resolution", "canvas_fingerprint"),
     "canvas_fingerprint": ("webgl", "privacy_check", "browser_check"),
-    "ip_lookup": ("ip_address_checker", "dns_lookup", "reverse_dns", "hostname_lookup"),
+    "ip_lookup": ("ip_address_checker", "dns_lookup", "reverse_dns", "subnet_calculator"),
     "ip_address_checker": ("ip_lookup", "subnet_calculator", "reverse_dns"),
-    "dns_lookup": ("hostname_lookup", "reverse_dns", "ssl_checker", "ip_lookup"),
+    "dns_lookup": ("dnssec_checker", "email_dns_checker", "hostname_lookup", "reverse_dns"),
     "reverse_dns": ("ip_lookup", "dns_lookup", "hostname_lookup"),
     "hostname_lookup": ("dns_lookup", "reverse_dns", "ssl_checker"),
-    "ssl_checker": ("website_status", "server_headers", "dns_lookup"),
+    "ssl_checker": ("website_status", "security_headers", "server_headers"),
     "website_status": ("ssl_checker", "server_headers", "dns_lookup"),
     "server_headers": ("website_status", "ssl_checker", "http_headers"),
     "subnet_calculator": ("ip_address_checker", "ip_lookup", "hostname_lookup"),
     "password_strength": ("privacy_check", "browser_check", "punycode_converter"),
     "punycode_converter": ("dns_lookup", "hostname_lookup", "ssl_checker"),
-    "download_time_calculator": ("website_status", "browser_check", "screen_resolution"),
+    "download_time_calculator": ("website_status", "dns_lookup", "browser_check"),
     "dnssec_checker": ("dns_lookup", "email_dns_checker", "hostname_lookup"),
     "email_dns_checker": ("dns_lookup", "dnssec_checker", "rdap_lookup"),
-    "redirect_checker": ("website_status", "security_headers", "ssl_checker"),
+    "redirect_checker": ("website_status", "server_headers", "security_headers"),
     "security_headers": ("server_headers", "ssl_checker", "http_headers"),
     "robots_txt_checker": ("sitemap_checker", "meta_tags_checker", "website_status"),
     "sitemap_checker": ("robots_txt_checker", "meta_tags_checker", "website_status"),
@@ -394,7 +429,7 @@ RESULT_GUIDANCE = {
     "subnet_calculator": "The boundaries are mathematical results for the prefix. Traditional IPv4 usable-host rules have /31 and /32 exceptions, while IPv6 has no broadcast address and assignment policy determines actual use.",
     "password_strength": "This local heuristic highlights length and simple patterns. It cannot know whether a password is reused, exposed elsewhere or targeted, and its label is not a guarantee against guessing.",
     "punycode_converter": "The two values are alternate representations of the same IDN label under the platform codec. Conversion does not check registration, ownership, DNS existence or look-alike safety.",
-    "download_time_calculator": "The estimate divides file size by an idealized bit rate. Protocol overhead, congestion, Wi-Fi conditions, server limits and changing throughput normally make real downloads slower or variable.",
+    "download_time_calculator": "The speed result measures the browser-to-Cloudflare path used by WhatWebSees, while the calculator divides file size by an idealized bit rate. Neither is a guarantee of ISP line speed or future file-server performance.",
 }
 
 PUBLIC_PAGES = (("/",) + tuple(metadata["path"] for metadata in TOOL_PAGE_METADATA.values())
@@ -435,7 +470,7 @@ def _tool_link(page):
     return {
         "name": TOOL_NAMES[page],
         "path": TOOL_PAGE_METADATA[page]["path"],
-        "description": TOOL_PAGE_METADATA[page]["description"],
+        "description": TOOL_SUMMARIES.get(page, TOOL_PAGE_METADATA[page]["description"]),
     }
 
 
@@ -762,6 +797,20 @@ def punycode_converter(request):
 @require_safe
 def download_time_calculator(request):
     return render_tool_page(request, "download_time_calculator")
+
+
+@require_GET
+def speed_test_download(request):
+    """Fail closed if the Cloudflare Worker route does not intercept this URL."""
+    response = JsonResponse(
+        {"error": "edge_speed_test_unavailable"},
+        status=503,
+    )
+    response["Cache-Control"] = "no-store"
+    response["X-Robots-Tag"] = "noindex, nofollow"
+    response["X-WWS-Speedtest-Backend"] = "django-fallback"
+    response["X-Content-Type-Options"] = "nosniff"
+    return response
 
 
 @require_http_methods(["GET", "POST"])
