@@ -1,4 +1,18 @@
 from django.urls import path
+from django.views.generic.base import RedirectView
+
+from .api_views import (
+    api_dns,
+    api_health,
+    api_http_check,
+    api_ip,
+    api_not_found,
+    api_punycode,
+    api_redirects,
+    api_security_headers,
+    api_subnet,
+    api_tls,
+)
 
 from .views import (
     about,
@@ -9,6 +23,7 @@ from .views import (
     client_ip,
     dns_lookup,
     dnssec_checker,
+    developers,
     domain_age,
     download_time_calculator,
     email_dns_checker,
@@ -53,6 +68,28 @@ from .views import (
 urlpatterns = [
     path("", home, name="home"),
     path("about/", about, name="about"),
+    path("developers/", developers, name="developers"),
+    path(
+        "developers/api/",
+        RedirectView.as_view(url="/developers/", permanent=True),
+        name="developers-api",
+    ),
+    path("api/v1/health", api_health, name="api-v1-health"),
+    path("api/v1/http-check", api_http_check, name="api-v1-http-check"),
+    path("api/v1/dns", api_dns, name="api-v1-dns"),
+    path("api/v1/redirects", api_redirects, name="api-v1-redirects"),
+    path("api/v1/tls", api_tls, name="api-v1-tls"),
+    path(
+        "api/v1/security-headers",
+        api_security_headers,
+        name="api-v1-security-headers",
+    ),
+    path("api/v1/ip", api_ip, name="api-v1-ip"),
+    path("api/v1/subnet", api_subnet, name="api-v1-subnet"),
+    path("api/v1/punycode", api_punycode, name="api-v1-punycode"),
+    path("api/v1", api_not_found, {"unmatched_path": ""}),
+    path("api/v1/", api_not_found, {"unmatched_path": ""}),
+    path("api/v1/<path:unmatched_path>", api_not_found, name="api-v1-not-found"),
     path("tools/", tools, name="tools"),
     path("user-agent/", user_agent, name="user-agent"),
     path("browser-check/", browser_check, name="browser-check"),

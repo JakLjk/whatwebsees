@@ -22,6 +22,32 @@ The site favors useful, transparent results over certainty it cannot provide. IP
 
 The tool index is available at [whatwebsees.com/tools/](https://whatwebsees.com/tools/) and the educational section at [whatwebsees.com/learn/](https://whatwebsees.com/learn/).
 
+## Developer API
+
+The public-beta API exposes a focused set of versioned, machine-readable diagnostics:
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/v1/health` | Minimal API availability and version |
+| `POST` | `/api/v1/http-check` | HTTP status, response time, final URL and safe headers |
+| `POST` | `/api/v1/dns` | A, AAAA, CNAME, MX, TXT or NS records |
+| `POST` | `/api/v1/redirects` | Bounded, revalidated redirect chain |
+| `POST` | `/api/v1/tls` | HTTPS certificate validity on port 443 |
+| `POST` | `/api/v1/security-headers` | Structured supported-header presence |
+| `POST` | `/api/v1/ip` | Public-IP lookup using the local DB-IP City Lite dataset |
+| `POST` | `/api/v1/subnet` | Local IPv4/IPv6 CIDR calculation |
+| `POST` | `/api/v1/punycode` | Local Unicode/ASCII IDN conversion |
+
+For example:
+
+```sh
+curl -sS https://whatwebsees.com/api/v1/http-check \
+  -H 'Content-Type: application/json' \
+  --data '{"url":"https://example.com"}'
+```
+
+No authentication is required during the public beta. Calls are rate limited, intended for light diagnostic use and have no SLA. The complete request/response reference, error format, safety model, limits and client-side edge speed measurement examples are at [whatwebsees.com/developers/](https://whatwebsees.com/developers/).
+
 ## What runs where
 
 Browser-side tools keep sensitive or naturally local values in the page wherever practical. Screen data, browser summaries, password analysis, file hashing, URL parsing, canvas output and download-time calculation do not need to send their assembled results to Django.

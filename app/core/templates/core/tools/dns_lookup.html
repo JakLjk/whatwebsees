@@ -22,7 +22,7 @@
 </table>
 
 <h3>DNS lookup is not a website availability test</h3>
-<p>A valid DNS answer only shows that records were returned. It does not prove that a web server accepts a connection, presents a valid TLS certificate or returns a successful HTTP response. Use the <a href="/website-status/">Website Status Checker</a> when you need to test the web service itself; use the <a href="/download-time-calculator/">Internet Speed Test</a> when the question is about the browser's connection rather than one domain's records.</p>
+<p>A valid DNS answer only shows that records were returned. It does not prove that a web server accepts a connection, presents a valid TLS certificate or returns a successful HTTP response. Use the <a href="/website-status/">Website Status Checker</a> when you need to test the web service itself; use the <a href="/download-time-calculator/">Internet Speed Test</a> when the question is about the browser's connection rather than one domain's records. Automation can request the six supported record types through the <a href="/developers/#dns">Developer DNS API</a>.</p>
 
 <h3>TTL, caching and changes</h3>
 <p>TTL means time to live: the number of seconds a resolver may cache an answer before asking again. When a record changes, resolvers with an older cached answer can keep returning it until that TTL expires. Different users can therefore see the old and new values at the same time; traffic steering and resolver policy can create additional differences even after caches refresh.</p>

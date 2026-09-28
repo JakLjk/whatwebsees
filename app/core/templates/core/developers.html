@@ -1,0 +1,228 @@
+{% extends "core/tools/base.html" %}
+
+{% block content %}
+<p class="breadcrumb"><a href="/">Home</a> / Developer API</p>
+<article class="developer-docs">
+    <header class="intro">
+        <p class="eyebrow">Public beta</p>
+        <h1 id="page-title">Developer API</h1>
+        <p class="intro-text">WhatWebSees provides lightweight HTTP APIs for website, DNS, TLS and network diagnostics. Use them from curl, shell scripts, CI, automation tools and server-side applications.</p>
+    </header>
+
+    <section class="content-section" aria-labelledby="quick-start-title">
+        <h2 id="quick-start-title">Quick start</h2>
+        <p>No authentication is required during the public beta. Send JSON to a versioned endpoint and inspect the stable <code>ok</code>/<code>data</code> envelope:</p>
+        <pre class="raw-output"><code>curl -sS https://whatwebsees.com/api/v1/http-check \
+  -H 'Content-Type: application/json' \
+  --data '{"url":"https://example.com"}'</code></pre>
+        <pre class="raw-output"><code>{
+  "ok": true,
+  "data": {
+    "url": "https://example.com/",
+    "status_code": 200,
+    "http_response_time_ms": 123,
+    "final_url": "https://example.com/",
+    "redirect_count": 0,
+    "headers": {"Content-Type": "text/html"}
+  }
+}</code></pre>
+
+        <h3>Python</h3>
+        <pre class="raw-output"><code>import json
+from urllib.request import Request, urlopen
+
+body = json.dumps({"domain": "example.com", "type": "A"}).encode()
+request = Request("https://whatwebsees.com/api/v1/dns", body,
+                  {"Content-Type": "application/json"}, method="POST")
+with urlopen(request, timeout=15) as response:
+    print(json.load(response))</code></pre>
+
+        <h3>Node.js server runtime</h3>
+        <pre class="raw-output"><code>const response = await fetch("https://whatwebsees.com/api/v1/tls", {
+  method: "POST",
+  headers: {"Content-Type": "application/json"},
+  body: JSON.stringify({hostname: "example.com"}),
+});
+console.log(await response.json());</code></pre>
+        <p>The API does not enable cross-origin browser access. These examples target command-line and server runtimes, not JavaScript running on unrelated websites.</p>
+    </section>
+
+    <section class="content-section" aria-labelledby="endpoints-title">
+        <h2 id="endpoints-title">Available endpoints</h2>
+        <div class="table-scroll">
+            <table class="headers-table">
+                <thead><tr><th>Method</th><th>Endpoint</th><th>Purpose</th><th>Interactive tool</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>GET</strong></td><td><code>/api/v1/health</code></td><td>Minimal API health</td><td>—</td></tr>
+                    <tr><td><strong>POST</strong></td><td><a href="#http-check"><code>/api/v1/http-check</code></a></td><td>HTTP status, response time and safe headers</td><td><a href="/website-status/">Website Status</a></td></tr>
+                    <tr><td><strong>POST</strong></td><td><a href="#dns"><code>/api/v1/dns</code></a></td><td>Selected public DNS records</td><td><a href="/dns-lookup/">DNS Lookup</a></td></tr>
+                    <tr><td><strong>POST</strong></td><td><a href="#redirects"><code>/api/v1/redirects</code></a></td><td>Validated redirect chain</td><td><a href="/redirect-checker/">Redirect Checker</a></td></tr>
+                    <tr><td><strong>POST</strong></td><td><a href="#tls"><code>/api/v1/tls</code></a></td><td>HTTPS certificate validity</td><td><a href="/ssl-checker/">SSL Checker</a></td></tr>
+                    <tr><td><strong>POST</strong></td><td><a href="#security-headers"><code>/api/v1/security-headers</code></a></td><td>Supported response-header presence</td><td><a href="/security-headers/">Security Headers</a></td></tr>
+                    <tr><td><strong>POST</strong></td><td><a href="#ip"><code>/api/v1/ip</code></a></td><td>Local DB-IP City Lite lookup</td><td><a href="/ip-lookup/">IP Lookup</a></td></tr>
+                    <tr><td><strong>POST</strong></td><td><a href="#subnet"><code>/api/v1/subnet</code></a></td><td>Local CIDR calculation</td><td><a href="/subnet-calculator/">Subnet Calculator</a></td></tr>
+                    <tr><td><strong>POST</strong></td><td><a href="#punycode"><code>/api/v1/punycode</code></a></td><td>Local IDN conversion</td><td><a href="/punycode-converter/">Punycode Converter</a></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="content-section" aria-labelledby="reference-title">
+        <h2 id="reference-title">API reference</h2>
+        <p>The responses below illustrate the documented shape. Live DNS answers, timing, headers, certificate dates and location fields vary by target and time.</p>
+
+        <details class="api-endpoint" open>
+            <summary id="health"><span class="method-badge method-get">GET</span> <code>/api/v1/health</code> — Health</summary>
+            <p>Returns only public API availability and version. It does not reveal process, database, server or container details.</p>
+            <p><strong>Request:</strong> no body.</p>
+            <pre class="raw-output"><code>curl -sS https://whatwebsees.com/api/v1/health</code></pre>
+            <pre class="raw-output"><code>{"ok":true,"data":{"status":"ok","api_version":"v1"}}</code></pre>
+        </details>
+
+        <details class="api-endpoint" id="http-check">
+            <summary><span class="method-badge">POST</span> <code>/api/v1/http-check</code> — HTTP Check</summary>
+            <p>Checks a public HTTP or HTTPS URL through the same SSRF-safe connection layer as <a href="/website-status/">Website Status</a>. Timing is server-side HTTP response time, not ICMP ping or full page-load time. Only an explicit safe response-header allowlist is returned.</p>
+            <pre class="raw-output"><code>{"url":"https://example.com"}</code></pre>
+            <pre class="raw-output"><code>curl -sS https://whatwebsees.com/api/v1/http-check -H 'Content-Type: application/json' --data '{"url":"https://example.com"}'</code></pre>
+            <pre class="raw-output"><code>{"ok":true,"data":{"url":"https://example.com/","status_code":200,"http_response_time_ms":123,"final_url":"https://example.com/","redirect_count":0,"headers":{"Content-Type":"text/html"}}}</code></pre>
+        </details>
+
+        <details class="api-endpoint" id="dns">
+            <summary><span class="method-badge">POST</span> <code>/api/v1/dns</code> — DNS Lookup</summary>
+            <p>Queries one of <code>A</code>, <code>AAAA</code>, <code>CNAME</code>, <code>MX</code>, <code>TXT</code> or <code>NS</code>. Results are typed objects rather than presentation HTML.</p>
+            <pre class="raw-output"><code>{"domain":"example.com","type":"A"}</code></pre>
+            <pre class="raw-output"><code>curl -sS https://whatwebsees.com/api/v1/dns -H 'Content-Type: application/json' --data '{"domain":"example.com","type":"A"}'</code></pre>
+            <pre class="raw-output"><code>{"ok":true,"data":{"domain":"example.com","type":"A","ttl":300,"records":[{"address":"93.184.216.34"}]}}</code></pre>
+        </details>
+
+        <details class="api-endpoint" id="redirects">
+            <summary><span class="method-badge">POST</span> <code>/api/v1/redirects</code> — Redirect Checker</summary>
+            <p>Returns the bounded redirect path. Every destination is resolved and validated again before a connection is made.</p>
+            <pre class="raw-output"><code>{"url":"http://example.com"}</code></pre>
+            <pre class="raw-output"><code>curl -sS https://whatwebsees.com/api/v1/redirects -H 'Content-Type: application/json' --data '{"url":"http://example.com"}'</code></pre>
+            <pre class="raw-output"><code>{"ok":true,"data":{"initial_url":"http://example.com/","final_url":"https://example.com/","redirect_count":1,"hops":[{"url":"http://example.com/","status_code":301,"location":"https://example.com/","http_response_time_ms":42},{"url":"https://example.com/","status_code":200,"location":null,"http_response_time_ms":65}]}}</code></pre>
+        </details>
+
+        <details class="api-endpoint" id="tls">
+            <summary><span class="method-badge">POST</span> <code>/api/v1/tls</code> — TLS Certificate</summary>
+            <p>Validates a public hostname over HTTPS on port 443. Arbitrary ports are not accepted in v1.</p>
+            <pre class="raw-output"><code>{"hostname":"example.com"}</code></pre>
+            <pre class="raw-output"><code>curl -sS https://whatwebsees.com/api/v1/tls -H 'Content-Type: application/json' --data '{"hostname":"example.com"}'</code></pre>
+            <pre class="raw-output"><code>{"ok":true,"data":{"hostname":"example.com","certificate_valid":true,"hostname_match":true,"valid_from":"2026-01-01T00:00:00+00:00","valid_until":"2026-04-01T23:59:59+00:00","days_remaining":30,"issuer":"Example CA"}}</code></pre>
+        </details>
+
+        <details class="api-endpoint" id="security-headers">
+            <summary><span class="method-badge">POST</span> <code>/api/v1/security-headers</code> — Security Headers</summary>
+            <p>Reports whether supported browser security headers were observed. A missing header is not, by itself, confirmation of a vulnerability. Cookies are never returned.</p>
+            <pre class="raw-output"><code>{"url":"https://example.com"}</code></pre>
+            <pre class="raw-output"><code>curl -sS https://whatwebsees.com/api/v1/security-headers -H 'Content-Type: application/json' --data '{"url":"https://example.com"}'</code></pre>
+            <pre class="raw-output"><code>{"ok":true,"data":{"url":"https://example.com/","final_url":"https://example.com/","status_code":200,"headers":{"Strict-Transport-Security":{"present":true,"value":"max-age=31536000"},"Content-Security-Policy":{"present":false,"value":null},"X-Content-Type-Options":{"present":true,"value":"nosniff"},"Referrer-Policy":{"present":false,"value":null},"Permissions-Policy":{"present":false,"value":null},"Cross-Origin-Opener-Policy":{"present":false,"value":null},"Cross-Origin-Embedder-Policy":{"present":false,"value":null},"Cross-Origin-Resource-Policy":{"present":false,"value":null}},"note":"A missing header is an observation, not confirmation of a vulnerability."}}</code></pre>
+        </details>
+
+        <details class="api-endpoint" id="ip">
+            <summary><span class="method-badge">POST</span> <code>/api/v1/ip</code> — IP Lookup</summary>
+            <p>Accepts only globally routable addresses and reads WhatWebSees’ local DB-IP City Lite database. Geographic fields are approximate and returned only when present; the dataset does not supply this API with ISP, ASN, organization, postal-code or time-zone fields.</p>
+            <pre class="raw-output"><code>{"ip":"8.8.8.8"}</code></pre>
+            <pre class="raw-output"><code>curl -sS https://whatwebsees.com/api/v1/ip -H 'Content-Type: application/json' --data '{"ip":"8.8.8.8"}'</code></pre>
+            <pre class="raw-output"><code>{"ok":true,"data":{"ip":"8.8.8.8","ip_version":4,"country_code":"US","country":"United States","data_source":"DB-IP City Lite"}}</code></pre>
+            <p><a href="https://db-ip.com/db/download/ip-to-city-lite">IP geolocation by DB-IP</a>. Location is a database estimate, not a street address, person or GPS position.</p>
+        </details>
+
+        <details class="api-endpoint" id="subnet">
+            <summary><span class="method-badge">POST</span> <code>/api/v1/subnet</code> — Subnet Calculator</summary>
+            <p>Calculates boundaries locally. Even very large IPv6 networks are represented by their bounds and address count; hosts are never enumerated.</p>
+            <pre class="raw-output"><code>{"cidr":"192.0.2.0/24"}</code></pre>
+            <pre class="raw-output"><code>curl -sS https://whatwebsees.com/api/v1/subnet -H 'Content-Type: application/json' --data '{"cidr":"192.0.2.0/24"}'</code></pre>
+            <pre class="raw-output"><code>{"ok":true,"data":{"input_address":"192.0.2.0","network":"192.0.2.0","prefix":24,"netmask":"255.255.255.0","total":256,"first":"192.0.2.0","last":"192.0.2.255","version":4,"broadcast":"192.0.2.255","usable":254,"first_usable":"192.0.2.1","last_usable":"192.0.2.254","host_note":"Traditional IPv4 host count excludes the network and broadcast addresses."}}</code></pre>
+        </details>
+
+        <details class="api-endpoint" id="punycode">
+            <summary><span class="method-badge">POST</span> <code>/api/v1/punycode</code> — Punycode</summary>
+            <p>Converts a domain locally between Unicode and ASCII IDNA forms. It does not query DNS or confirm registration.</p>
+            <pre class="raw-output"><code>{"value":"münchen.example"}</code></pre>
+            <pre class="raw-output"><code>curl -sS https://whatwebsees.com/api/v1/punycode -H 'Content-Type: application/json' --data '{"value":"münchen.example"}'</code></pre>
+            <pre class="raw-output"><code>{"ok":true,"data":{"unicode":"münchen.example","ascii":"xn--mnchen-3ya.example"}}</code></pre>
+        </details>
+    </section>
+
+    <section class="content-section" aria-labelledby="speed-title">
+        <h2 id="speed-title">HTTP latency and speed measurement</h2>
+        <p>Internet speed must be measured by the client that transfers the bytes. The JSON API does not pretend to determine a remote caller’s connection speed.</p>
+
+        <h3>HTTP latency to the WhatWebSees Cloudflare edge</h3>
+        <pre class="raw-output"><code>curl -o /dev/null -sS \
+  -w 'HTTP latency: %{time_total}s\n' \
+  https://whatwebsees.com/speed-test/ping/</code></pre>
+        <p>This is HTTP request latency measured by curl, including the relevant connection work. It is not ICMP ping.</p>
+
+        <h3>Download throughput</h3>
+        <p>Choose a bounded payload that is large enough for the connection:</p>
+        <ul>
+            <li><a href="https://whatwebsees.com/speed-test/download/payload-1m.bin"><code>payload-1m.bin</code></a></li>
+            <li><a href="https://whatwebsees.com/speed-test/download/payload-4m.bin"><code>payload-4m.bin</code></a></li>
+            <li><a href="https://whatwebsees.com/speed-test/download/payload-16m.bin"><code>payload-16m.bin</code></a></li>
+            <li><a href="https://whatwebsees.com/speed-test/download/payload-24m.bin"><code>payload-24m.bin</code></a></li>
+        </ul>
+        <pre class="raw-output"><code>curl -o /dev/null -sS \
+  -w 'bytes=%{size_download} seconds=%{time_total} bytes_per_second=%{speed_download}\n' \
+  https://whatwebsees.com/speed-test/download/payload-16m.bin</code></pre>
+        <p>This measures throughput between the machine executing the request and the WhatWebSees Cloudflare edge. It does not measure a third-party server and is not an ISP-certified line-speed result.</p>
+
+        <h3>Upload throughput</h3>
+        <pre class="raw-output"><code>head -c 1048576 /dev/urandom | curl -o /dev/null -sS \
+  -H 'Content-Type: application/octet-stream' --data-binary @- \
+  -w 'bytes=%{size_upload} seconds=%{time_total} bytes_per_second=%{speed_upload}\n' \
+  https://whatwebsees.com/speed-test/upload/</code></pre>
+        <p>The Worker counts and discards the request body. Its existing 16 MiB maximum remains in force. The endpoint is not made cross-origin embeddable, and callers should repeat measurements rather than treating one short transfer as definitive.</p>
+    </section>
+
+    <section class="content-section" aria-labelledby="behavior-title">
+        <h2 id="behavior-title">Common responses and errors</h2>
+        <p>Successful calls return <code>{"ok":true,"data":{...}}</code>. Failures return a stable error object:</p>
+        <pre class="raw-output"><code>{
+  "ok": false,
+  "error": {
+    "code": "invalid_url",
+    "message": "Human-readable explanation."
+  }
+}</code></pre>
+        <p>Clients should branch on the machine-readable <code>code</code>, while treating the message as explanatory text. Common categories include malformed or non-object JSON, unknown or missing fields, invalid targets, non-public targets, unsupported record types, timeouts and upstream connection failures. Wrong methods return HTTP 405 with an <code>Allow</code> header.</p>
+
+        <h3>Error codes</h3>
+        <div class="table-scroll">
+            <table class="headers-table">
+                <thead><tr><th>Code</th><th>Meaning</th></tr></thead>
+                <tbody>
+                    <tr><td><code>invalid_json</code> / <code>invalid_json_object</code></td><td>The body is malformed, not UTF-8 JSON or not an object.</td></tr>
+                    <tr><td><code>missing_field</code> / <code>unknown_field</code></td><td>The object does not contain exactly the documented fields.</td></tr>
+                    <tr><td><code>unsupported_media_type</code> / <code>request_too_large</code></td><td>The request is not JSON or exceeds the 4 KiB body limit.</td></tr>
+                    <tr><td><code>invalid_url</code> / <code>invalid_host</code> / <code>invalid_ip</code></td><td>The submitted target is syntactically invalid for that endpoint.</td></tr>
+                    <tr><td><code>invalid_cidr</code> / <code>invalid_punycode</code> / <code>invalid_record_type</code></td><td>A local calculation or DNS type is invalid.</td></tr>
+                    <tr><td><code>non_public_target</code></td><td>The address or any resolved address is unsuitable for a public-Internet diagnostic.</td></tr>
+                    <tr><td><code>nxdomain</code> / <code>no_answer</code></td><td>DNS reports no domain or no matching record.</td></tr>
+                    <tr><td><code>redirect_limit</code></td><td>The bounded HTTP redirect limit was exceeded.</td></tr>
+                    <tr><td><code>timeout</code> / <code>connection_error</code> / <code>tls_validation</code></td><td>The bounded upstream operation did not complete successfully.</td></tr>
+                    <tr><td><code>rate_limited</code></td><td>The normalized client IP exceeded the applicable nginx limit.</td></tr>
+                    <tr><td><code>internal_error</code></td><td>An unexpected failure was hidden behind a generic safe message.</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>Rate limits</h2>
+        <p>Network and outbound endpoints are limited to 30 requests per minute per normalized client IP with a small burst. Local subnet and Punycode calculations allow 120 requests per minute with a bounded burst. Health has a separate modest limit. A limit response uses HTTP 429. Public-beta limits can change as operating data becomes available; the service is not unlimited and does not publish guessed “remaining” values.</p>
+
+        <h2>Authentication</h2>
+        <p>No authentication is required during the public beta. There are no accounts or API keys in v1, and no service-level agreement. The API is intended for light diagnostic use.</p>
+
+        <h2>Security model</h2>
+        <p>Outbound URL checks accept public HTTP or HTTPS targets on standard ports only. Credentials are rejected. Each hostname is resolved once, all returned addresses must be globally routable, the connection is pinned to a validated numeric address while retaining the original Host and TLS identity, and every redirect repeats the complete validation. Redirects, bodies and network time are bounded.</p>
+        <p>Requests must be small JSON objects with exactly the documented fields. Responses expose an explicit header allowlist and never return <code>Set-Cookie</code>, authorization values, internal proxy headers, stack traces, filesystem paths or infrastructure details.</p>
+
+        <h2>Privacy</h2>
+        <p>Subnet and Punycode calls are local computations. IP lookup uses a local DB-IP dataset rather than sending the address to a third-party geolocation service. Network diagnostics necessarily send the requested target to WhatWebSees and contact that public target from the service. API responses are non-cacheable and carry <code>X-Robots-Tag: noindex, nofollow</code>. Normal delivery and security infrastructure can still process request metadata.</p>
+
+        <h2>Source code</h2>
+        <p>Review the implementation or report an issue in the <a href="https://github.com/JakLjk/whatwebsees">WhatWebSees source code on GitHub</a>.</p>
+    </section>
+</article>
+{% endblock %}

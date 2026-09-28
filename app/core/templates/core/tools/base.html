@@ -448,6 +448,29 @@
             overflow-wrap: anywhere;
         }
 
+        .developer-docs { max-width: 62rem; }
+        .developer-docs .content-section { max-width: none; }
+        .api-endpoint {
+            margin: 0 0 1rem;
+            padding: 1rem 1.1rem;
+            border: 1px solid var(--border);
+            border-radius: 0.9rem;
+            background: var(--surface);
+        }
+        .api-endpoint summary { cursor: pointer; font-weight: 750; }
+        .api-endpoint > p { color: var(--muted); }
+        .method-badge {
+            display: inline-block;
+            margin-right: 0.35rem;
+            padding: 0.12rem 0.45rem;
+            border-radius: 0.4rem;
+            background: var(--accent-soft);
+            color: var(--accent-dark);
+            font-size: 0.72rem;
+            letter-spacing: 0.05em;
+        }
+        .method-get { background: #e8f6ee; color: var(--success); }
+
         .disclosure {
             overflow: hidden;
             margin-top: 1rem;
@@ -624,7 +647,7 @@
 
     <footer class="site-footer page-shell">
         <span>Diagnostic values shown by these tools are not persisted by this application.</span>
-        <span class="footer-links"><a href="/about/">About</a><a href="https://github.com/JakLjk/whatwebsees">GitHub</a><a href="https://www.linkedin.com/in/jakub-lejk/">LinkedIn</a></span>
+        <span class="footer-links"><a href="/about/">About</a><a href="/developers/">Developer API</a><a href="https://github.com/JakLjk/whatwebsees">GitHub</a><a href="https://www.linkedin.com/in/jakub-lejk/">LinkedIn</a></span>
         <button class="analytics-settings" id="analytics-settings" type="button">Analytics settings</button>
     </footer>
 

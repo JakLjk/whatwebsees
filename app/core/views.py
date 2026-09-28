@@ -1,5 +1,5 @@
 from functools import lru_cache
-from ipaddress import ip_address, ip_interface, ip_network
+from ipaddress import ip_address
 import json
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -27,6 +27,7 @@ from .batch3_utils import (
 )
 from .content_catalog import ARTICLES, LEARN_PATHS, PUBLISHED
 from .dns_utils import DNS_RECORD_TYPES, lookup_records, reverse_lookup
+from .diagnostic_utils import calculate_subnet, convert_punycode
 from .network_utils import (
     NetworkToolError,
     check_tls_certificate,
@@ -537,7 +538,7 @@ RESULT_GUIDANCE = {
     "download_time_calculator": "The speed result measures the browser-to-Cloudflare path used by WhatWebSees, while the calculator divides file size by an idealized bit rate. Neither is a guarantee of ISP line speed or future file-server performance.",
 }
 
-PUBLIC_PAGES = (("/", "/about/") + tuple(metadata["path"] for metadata in TOOL_PAGE_METADATA.values())
+PUBLIC_PAGES = (("/", "/about/", "/developers/") + tuple(metadata["path"] for metadata in TOOL_PAGE_METADATA.values())
                 + ("/learn/",) + LEARN_PATHS + ("/glossary/",))
 
 
@@ -601,6 +602,42 @@ def about(request):
                 "diagnostics handle data, and where to review the source code."
             ),
             "canonical_url": "https://whatwebsees.com/about/",
+            "breadcrumb_json": json.dumps(breadcrumb),
+        },
+    )
+
+
+@require_safe
+def developers(request):
+    breadcrumb = {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://whatwebsees.com/",
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Developer API",
+                "item": "https://whatwebsees.com/developers/",
+            },
+        ],
+    }
+    return render(
+        request,
+        "core/developers.html",
+        {
+            "title": "Developer API – HTTP, DNS, TLS & Network Diagnostics | WhatWebSees",
+            "description": (
+                "Use free, rate-limited APIs for HTTP status and response time, "
+                "DNS records, redirects, TLS certificates, security headers and "
+                "network diagnostics."
+            ),
+            "canonical_url": "https://whatwebsees.com/developers/",
             "breadcrumb_json": json.dumps(breadcrumb),
         },
     )
@@ -867,31 +904,9 @@ def subnet_calculator(request):
     context = {"submitted_value": value}
     if request.method == "POST":
         try:
-            interface = ip_interface(value)
-            network = ip_network(value, strict=False)
-            result = {
-                "input_address": str(interface.ip),
-                "network": str(network.network_address),
-                "prefix": network.prefixlen,
-                "netmask": str(network.netmask),
-                "total": network.num_addresses,
-                "first": str(network.network_address),
-                "last": str(network.broadcast_address),
-                "version": network.version,
-            }
-            if network.version == 4:
-                result["broadcast"] = str(network.broadcast_address)
-                if network.prefixlen == 32:
-                    result.update({"usable": 1, "first_usable": str(network.network_address), "last_usable": str(network.network_address), "host_note": "A /32 represents one host address."})
-                elif network.prefixlen == 31:
-                    result.update({"usable": 2, "first_usable": str(network.network_address), "last_usable": str(network.broadcast_address), "host_note": "Both addresses can be used on an RFC 3021 point-to-point link."})
-                else:
-                    result.update({"usable": network.num_addresses - 2, "first_usable": str(network.network_address + 1), "last_usable": str(network.broadcast_address - 1), "host_note": "Traditional IPv4 host count excludes the network and broadcast addresses."})
-            else:
-                result["host_note"] = "IPv6 has no broadcast address; address assignment depends on subnet policy."
-            context["result"] = result
-        except ValueError:
-            context["error"] = "Enter an IPv4 or IPv6 address with a CIDR prefix, such as 192.168.1.50/24."
+            context["result"] = calculate_subnet(value)
+        except NetworkToolError as error:
+            context["error"] = error.message
     return render_tool_page(request, "subnet_calculator", context)
 
 
@@ -906,32 +921,9 @@ def punycode_converter(request):
     context = {"submitted_value": value}
     if request.method == "POST":
         try:
-            candidate = value.strip().rstrip(".")
-            if (
-                not candidate
-                or any(ord(character) < 33 for character in candidate)
-                or any(character in candidate for character in "/\\@:#?%[]")
-            ):
-                raise UnicodeError
-            ascii_domain = candidate.encode("idna").decode("ascii").lower()
-            labels = ascii_domain.split(".")
-            if len(labels) < 2 or any(
-                not label
-                or len(label) > 63
-                or label.startswith("-")
-                or label.endswith("-")
-                or not all(character.isalnum() or character == "-" for character in label)
-                for label in labels
-            ):
-                raise UnicodeError
-            unicode_domain = ascii_domain.encode("ascii").decode("idna")
-            context["result"] = {"ascii": ascii_domain, "unicode": unicode_domain}
-        except (NetworkToolError, UnicodeError) as error:
-            context["error"] = getattr(
-                error,
-                "message",
-                "The domain could not be converted with the platform IDNA implementation.",
-            )
+            context["result"] = convert_punycode(value)
+        except NetworkToolError as error:
+            context["error"] = error.message
     return render_tool_page(request, "punycode_converter", context)
 
 
