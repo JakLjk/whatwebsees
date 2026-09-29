@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 import dns.rdatatype
@@ -299,6 +300,17 @@ class NginxRateLimitTests(SimpleTestCase):
         self.assertNotIn("url-parser|file-hash", config)
 
 class FaviconTests(SimpleTestCase):
+    asset_directory = Path(__file__).with_name("assets")
+
+    @staticmethod
+    def png_dimensions(content):
+        if not content.startswith(b"\x89PNG\r\n\x1a\n"):
+            raise AssertionError("Asset is not a PNG file")
+        return (
+            int.from_bytes(content[16:20], "big"),
+            int.from_bytes(content[20:24], "big"),
+        )
+
     def test_png_favicon(self):
         response = self.client.get(reverse("favicon-png"))
 
@@ -306,11 +318,128 @@ class FaviconTests(SimpleTestCase):
         self.assertEqual(response["Content-Type"], "image/png")
         self.assertGreater(len(response.content), 100)
 
-    def test_home_references_png_favicon(self):
-        response = self.client.get(reverse("home"))
+    def test_primary_favicon_is_a_square_raster_of_at_least_48_pixels(self):
+        primary_path = self.asset_directory / "favicon-48.png"
 
-        self.assertContains(
-            response,
-            '<link rel="icon" href="/favicon.png" '
-            'type="image/png" sizes="192x192">'
+        self.assertTrue(primary_path.is_file())
+        width, height = self.png_dimensions(primary_path.read_bytes())
+        self.assertEqual((width, height), (48, 48))
+        self.assertGreaterEqual(width, 48)
+
+    def test_approved_source_is_a_square_rgba_png(self):
+        source_path = self.asset_directory / "icon-source.png"
+        content = source_path.read_bytes()
+
+        self.assertEqual(self.png_dimensions(content), (1254, 1254))
+        self.assertEqual(content[24], 8)
+        self.assertEqual(content[25], 6)
+        self.assertFalse((self.asset_directory / "brand-mark.svg").exists())
+
+    def test_approved_source_route_serves_the_navbar_image(self):
+        response = self.client.get(reverse("icon-source"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "image/png")
+        self.assertEqual(self.png_dimensions(response.content), (1254, 1254))
+        self.assertNotIn("X-Robots-Tag", response.headers)
+
+    def test_raster_brand_assets_have_expected_dimensions(self):
+        expected_dimensions = {
+            "favicon-48.png": (48, 48),
+            "favicon-96.png": (96, 96),
+            "favicon.png": (192, 192),
+            "apple-touch-icon.png": (180, 180),
+            "icon-192.png": (192, 192),
+            "icon-512.png": (512, 512),
+        }
+
+        for filename, expected in expected_dimensions.items():
+            with self.subTest(filename=filename):
+                content = (self.asset_directory / filename).read_bytes()
+                self.assertEqual(self.png_dimensions(content), expected)
+
+    def test_root_ico_route_serves_an_icon_without_noindex(self):
+        response = self.client.get(reverse("favicon-ico"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "image/x-icon")
+        self.assertEqual(response.content[:4], b"\x00\x00\x01\x00")
+        count = int.from_bytes(response.content[4:6], "little")
+        sizes = {
+            (
+                response.content[6 + index * 16] or 256,
+                response.content[7 + index * 16] or 256,
+            )
+            for index in range(count)
+        }
+        self.assertEqual(sizes, {(16, 16), (32, 32), (48, 48)})
+        self.assertNotIn("X-Robots-Tag", response.headers)
+
+    def test_primary_png_route_is_public_and_has_the_expected_dimensions(self):
+        response = self.client.get(reverse("favicon-48"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "image/png")
+        self.assertEqual(self.png_dimensions(response.content), (48, 48))
+        self.assertNotIn("X-Robots-Tag", response.headers)
+
+    def test_document_shells_share_favicon_and_brand_markup(self):
+        pages = (
+            reverse("home"),
+            reverse("website-status"),
+            reverse(
+                "learn-article", kwargs={"slug": "what-is-an-ip-address"}
+            ),
+            reverse("about"),
+            reverse("developers"),
         )
+
+        for page in pages:
+            with self.subTest(page=page):
+                response = self.client.get(page)
+                html = response.content.decode()
+
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(
+                    html.count(
+                        '<link rel="icon" type="image/png" sizes="48x48" '
+                        'href="/favicon-48.png">'
+                    ),
+                    1,
+                )
+                self.assertNotIn("/favicon-48.png?", html)
+                self.assertEqual(html.count('src="/icon-source.png"'), 1)
+                self.assertIn(
+                    '<link rel="icon" type="image/x-icon" href="/favicon.ico">',
+                    html,
+                )
+                self.assertIn(
+                    '<link rel="apple-touch-icon" sizes="180x180" '
+                    'href="/apple-touch-icon.png">',
+                    html,
+                )
+                self.assertIn(
+                    '<link rel="manifest" href="/site.webmanifest">', html
+                )
+                self.assertEqual(html.count("<h1"), 1)
+
+    def test_manifest_references_real_large_icons(self):
+        response = self.client.get(reverse("site-webmanifest"))
+        manifest = json.loads(response.content)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/manifest+json")
+        self.assertEqual(manifest["name"], "WhatWebSees")
+        self.assertEqual(manifest["short_name"], "WhatWebSees")
+        self.assertEqual(
+            {(icon["src"], icon["sizes"]) for icon in manifest["icons"]},
+            {("/icon-192.png", "192x192"), ("/icon-512.png", "512x512")},
+        )
+
+    def test_robots_allows_favicon_crawling(self):
+        response = self.client.get(reverse("robots"))
+        robots = response.content.decode()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Allow: /", robots)
+        self.assertNotIn("Disallow: /favicon", robots)

@@ -28,6 +28,7 @@
         const accept = document.getElementById("analytics-accept");
         const reject = document.getElementById("analytics-reject");
         const settings = document.getElementById("analytics-settings");
+        let returnFocusToSettings = false;
 
         const readConsent = () => {
             try {
@@ -89,27 +90,57 @@
             window.webPrivacyAnalyticsLoaded = true;
         };
 
+        const showConsent = (focusActions = false) => {
+            banner.hidden = false;
+            settings.setAttribute("aria-expanded", "true");
+            returnFocusToSettings = focusActions;
+            if (focusActions) {
+                try {
+                    reject.focus({preventScroll: true});
+                } catch {
+                    reject.focus();
+                }
+            }
+        };
+
+        const hideConsent = () => {
+            banner.hidden = true;
+            settings.setAttribute("aria-expanded", "false");
+            if (returnFocusToSettings) settings.focus();
+            returnFocusToSettings = false;
+        };
+
         accept.addEventListener("click", () => {
             saveConsent("granted");
             loadGoogleAnalytics();
-            banner.hidden = true;
+            hideConsent();
         });
 
         reject.addEventListener("click", () => {
             saveConsent("denied");
             window[disableKey] = true;
             updateConsent("denied");
-            banner.hidden = true;
+            hideConsent();
         });
 
-        settings.addEventListener("click", () => { banner.hidden = false; });
+        settings.addEventListener("click", () => { showConsent(true); });
+        banner.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") {
+                event.preventDefault();
+                hideConsent();
+            }
+        });
 
         const consent = readConsent();
         if (consent === "granted") {
             loadGoogleAnalytics();
         } else {
             window[disableKey] = true;
-            banner.hidden = consent === "denied";
+            if (consent === "denied") {
+                hideConsent();
+            } else {
+                showConsent();
+            }
         }
     })();
 </script>

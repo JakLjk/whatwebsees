@@ -88,13 +88,10 @@
         }
 
         .brand-mark {
-            display: grid;
-            width: 2rem;
-            height: 2rem;
-            place-items: center;
-            border-radius: 0.65rem;
-            background: var(--accent);
-            color: #fff;
+            display: block;
+            width: 2.5rem;
+            height: 2.5rem;
+            flex: 0 0 auto;
         }
 
         .site-nav {
@@ -450,7 +447,19 @@
 
         .developer-docs { max-width: 62rem; }
         .developer-docs .content-section { max-width: none; }
+        .developer-docs .raw-output {
+            max-width: 100%;
+            white-space: pre;
+            overflow-wrap: normal;
+            word-break: normal;
+        }
+        .developer-docs .raw-output code {
+            white-space: inherit;
+            overflow-wrap: normal;
+            word-break: normal;
+        }
         .api-endpoint {
+            min-width: 0;
             margin: 0 0 1rem;
             padding: 1rem 1.1rem;
             border: 1px solid var(--border);
@@ -458,6 +467,10 @@
             background: var(--surface);
         }
         .api-endpoint summary { cursor: pointer; font-weight: 750; }
+        .api-endpoint summary code {
+            overflow-wrap: normal;
+            word-break: normal;
+        }
         .api-endpoint > p { color: var(--muted); }
         .method-badge {
             display: inline-block;
@@ -515,6 +528,46 @@
         .headers-table th { width: 35%; color: var(--muted); }
         .headers-table.chain-table th { width: auto; }
 
+        .api-table-scroll {
+            max-width: 100%;
+            overflow-x: auto;
+            overscroll-behavior-inline: contain;
+            -webkit-overflow-scrolling: touch;
+        }
+        .api-table-scroll:focus-visible {
+            outline: 3px solid rgba(36, 87, 214, 0.25);
+            outline-offset: 3px;
+            border-radius: 0.35rem;
+        }
+        .api-endpoints-table {
+            width: 100%;
+            min-width: 54rem;
+            table-layout: fixed;
+        }
+        .api-endpoints-table .api-method-column { width: 5.625rem; }
+        .api-endpoints-table .api-path-column { width: 17.5rem; }
+        .api-endpoints-table .api-purpose-column { width: auto; }
+        .api-endpoints-table .api-tool-column { width: 11.25rem; }
+        .api-endpoints-table th,
+        .api-endpoints-table td {
+            width: auto;
+            overflow-wrap: normal;
+            word-break: normal;
+        }
+        .api-endpoints-table th:first-child,
+        .api-endpoints-table td:first-child,
+        .api-endpoints-table th:nth-child(2),
+        .api-endpoints-table td:nth-child(2),
+        .api-endpoints-table td:nth-child(2) code {
+            white-space: nowrap;
+        }
+        .api-endpoints-table th:last-child,
+        .api-endpoints-table td:last-child,
+        .api-endpoints-table td:last-child a {
+            overflow-wrap: normal;
+            word-break: normal;
+        }
+
         .tool-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
@@ -562,7 +615,8 @@
         .footer-links a { font-weight: 650; }
 
         .analytics-settings {
-            padding: 0;
+            min-height: 2.75rem;
+            padding: 0.55rem 0;
             border: 0;
             background: transparent;
             color: var(--accent);
@@ -606,8 +660,9 @@
         [hidden] { display: none !important; }
 
         @media (max-width: 42rem) {
-            .site-header { align-items: flex-start; }
-            .site-nav { align-items: center; }
+            .site-header { align-items: flex-start; flex-wrap: wrap; }
+            .site-nav { width: 100%; align-items: center; flex-wrap: wrap; gap: 0.65rem 1rem; }
+            .site-nav .tools-menu { margin-left: auto; }
             .tools-menu-panel { grid-template-columns: 1fr; width: min(22rem, calc(100vw - 2rem)); }
             .data-list { grid-template-columns: 1fr; }
             .tool-form { grid-template-columns: 1fr; }
@@ -619,6 +674,13 @@
             .headers-table th, .headers-table td { display: block; width: 100%; }
             .headers-table th { padding-bottom: 0.15rem; border-bottom: 0; }
             .headers-table td { padding-top: 0.15rem; }
+            .api-endpoints-table { display: table; width: 100%; }
+            .api-endpoints-table thead { display: table-header-group; }
+            .api-endpoints-table tbody { display: table-row-group; }
+            .api-endpoints-table tr { display: table-row; }
+            .api-endpoints-table th,
+            .api-endpoints-table td { display: table-cell; width: auto; padding: 0.8rem; }
+            .api-endpoints-table th { border-bottom: 1px solid var(--border); }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -627,14 +689,11 @@
             .button:active { transform: none; }
         }
     </style>
-    <link rel="icon" href="/favicon.png" type="image/png" sizes="192x192">
+    {% include "core/_favicons.html" %}
 </head>
 <body>
     <header class="site-header page-shell">
-        <a class="brand" href="/" aria-label="WhatWebSees home">
-            <span class="brand-mark" aria-hidden="true">W</span>
-            WhatWebSees
-        </a>
+        {% include "core/_brand_link.html" %}
         {% include "core/tools/_navigation.html" %}
     </header>
 
@@ -648,7 +707,7 @@
     <footer class="site-footer page-shell">
         <span>Diagnostic values shown by these tools are not persisted by this application.</span>
         <span class="footer-links"><a href="/about/">About</a><a href="/developers/">Developer API</a><a href="https://github.com/JakLjk/whatwebsees">GitHub</a><a href="https://www.linkedin.com/in/jakub-lejk/">LinkedIn</a></span>
-        <button class="analytics-settings" id="analytics-settings" type="button">Analytics settings</button>
+        <button class="analytics-settings" id="analytics-settings" type="button" aria-controls="analytics-consent" aria-expanded="false" aria-haspopup="dialog">Analytics settings</button>
     </footer>
 
     {% include "core/tools/_consent.html" %}

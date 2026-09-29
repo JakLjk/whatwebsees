@@ -49,9 +49,15 @@ console.log(await response.json());</code></pre>
 
     <section class="content-section" aria-labelledby="endpoints-title">
         <h2 id="endpoints-title">Available endpoints</h2>
-        <div class="table-scroll">
-            <table class="headers-table">
-                <thead><tr><th>Method</th><th>Endpoint</th><th>Purpose</th><th>Interactive tool</th></tr></thead>
+        <div class="api-table-scroll" role="region" aria-labelledby="endpoints-title" tabindex="0">
+            <table class="headers-table api-endpoints-table">
+                <colgroup>
+                    <col class="api-method-column">
+                    <col class="api-path-column">
+                    <col class="api-purpose-column">
+                    <col class="api-tool-column">
+                </colgroup>
+                <thead><tr><th scope="col">Method</th><th scope="col">Endpoint</th><th scope="col">Purpose</th><th scope="col">Web tool</th></tr></thead>
                 <tbody>
                     <tr><td><strong>GET</strong></td><td><code>/api/v1/health</code></td><td>Minimal API health</td><td>—</td></tr>
                     <tr><td><strong>POST</strong></td><td><a href="#http-check"><code>/api/v1/http-check</code></a></td><td>HTTP status, response time and safe headers</td><td><a href="/website-status/">Website Status</a></td></tr>
@@ -191,7 +197,7 @@ console.log(await response.json());</code></pre>
         <h3>Error codes</h3>
         <div class="table-scroll">
             <table class="headers-table">
-                <thead><tr><th>Code</th><th>Meaning</th></tr></thead>
+                <thead><tr><th scope="col">Code</th><th scope="col">Meaning</th></tr></thead>
                 <tbody>
                     <tr><td><code>invalid_json</code> / <code>invalid_json_object</code></td><td>The body is malformed, not UTF-8 JSON or not an object.</td></tr>
                     <tr><td><code>missing_field</code> / <code>unknown_field</code></td><td>The object does not contain exactly the documented fields.</td></tr>

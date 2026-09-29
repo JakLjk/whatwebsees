@@ -120,14 +120,10 @@
         .tools-menu-group .all-tools-link { margin-top: 0.35rem; color: var(--accent); font-weight: 750; }
 
         .brand-mark {
-            display: grid;
-            width: 2rem;
-            height: 2rem;
-            place-items: center;
-            border-radius: 0.65rem;
-            background: var(--accent);
-            color: #ffffff;
-            font-size: 1rem;
+            display: block;
+            width: 2.5rem;
+            height: 2.5rem;
+            flex: 0 0 auto;
         }
 
         main {
@@ -608,7 +604,9 @@
         }
 
         @media (max-width: 46rem) {
-            .site-header { align-items: flex-start; }
+            .site-header { align-items: flex-start; flex-wrap: wrap; }
+            .site-nav { width: 100%; flex-wrap: wrap; gap: 0.65rem 1rem; }
+            .site-nav .tools-menu { margin-left: auto; }
             .tools-menu-panel { grid-template-columns: 1fr; width: min(22rem, calc(100vw - 2rem)); }
             .primary-results {
                 grid-template-columns: 1fr;
@@ -646,14 +644,11 @@
             }
         }
     </style>
-    <link rel="icon" href="/favicon.png" type="image/png" sizes="192x192">
+    {% include "core/_favicons.html" %}
 </head>
 <body>
     <header class="site-header page-shell">
-        <a class="brand" href="/" aria-label="WhatWebSees home">
-            <span class="brand-mark" aria-hidden="true">W</span>
-            WhatWebSees
-        </a>
+        {% include "core/_brand_link.html" %}
         {% include "core/tools/_navigation.html" %}
     </header>
 

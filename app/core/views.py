@@ -68,6 +68,7 @@ CLOUDFLARE_LOCATION_HEADERS = (
 )
 
 GEOIP_DATABASE_PATH = Path("/data/geoip/dbip-city-lite.mmdb")
+BRAND_ASSET_DIRECTORY = Path(__file__).with_name("assets")
 
 TOOL_PAGE_METADATA = {
     "tools": {
@@ -1393,24 +1394,57 @@ def location(request):
     return private_json_response({"location": location_data})
 
 
-@require_GET
-def favicon(request):
-    svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-<rect width="64" height="64" rx="15" fill="#2f5edb"/>
-<text x="32" y="43" text-anchor="middle"
-      font-family="Arial,Helvetica,sans-serif"
-      font-size="38" font-weight="700" fill="white">W</text>
-</svg>"""
-    response = HttpResponse(svg, content_type="image/svg+xml; charset=utf-8")
+def _brand_asset_response(filename, content_type):
+    response = HttpResponse(
+        (BRAND_ASSET_DIRECTORY / filename).read_bytes(),
+        content_type=content_type,
+    )
     response["Cache-Control"] = "public, max-age=604800"
     return response
 
 
-@require_GET
+@require_safe
+def icon_source(request):
+    return _brand_asset_response("icon-source.png", "image/png")
+
+
+@require_safe
 def favicon_png(request):
-    from pathlib import Path
+    return _brand_asset_response("favicon.png", "image/png")
 
-    icon_path = Path(__file__).with_name("assets") / "favicon.png"
-    response = HttpResponse(icon_path.read_bytes(), content_type="image/png")
-    response["Cache-Control"] = "public, max-age=604800"
-    return response
+
+@require_safe
+def favicon_48(request):
+    return _brand_asset_response("favicon-48.png", "image/png")
+
+
+@require_safe
+def favicon_96(request):
+    return _brand_asset_response("favicon-96.png", "image/png")
+
+
+@require_safe
+def favicon_ico(request):
+    return _brand_asset_response("favicon.ico", "image/x-icon")
+
+
+@require_safe
+def apple_touch_icon(request):
+    return _brand_asset_response("apple-touch-icon.png", "image/png")
+
+
+@require_safe
+def icon_192(request):
+    return _brand_asset_response("icon-192.png", "image/png")
+
+
+@require_safe
+def icon_512(request):
+    return _brand_asset_response("icon-512.png", "image/png")
+
+
+@require_safe
+def site_webmanifest(request):
+    return _brand_asset_response(
+        "site.webmanifest", "application/manifest+json"
+    )

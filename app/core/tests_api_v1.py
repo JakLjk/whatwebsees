@@ -479,6 +479,85 @@ class DeveloperDocumentationTests(SimpleTestCase):
                 response = self.client.get(reverse(route_name))
                 self.assertContains(response, "/developers/")
 
+    def test_endpoint_table_has_scoped_responsive_structure(self):
+        response = self.client.get(reverse("developers"))
+        html = response.content.decode()
+        self.assertContains(response, 'class="api-table-scroll"')
+        self.assertContains(
+            response, 'class="headers-table api-endpoints-table"'
+        )
+        self.assertContains(response, 'class="api-method-column"')
+        self.assertContains(response, 'class="api-path-column"')
+        self.assertContains(response, 'class="api-purpose-column"')
+        self.assertContains(response, 'class="api-tool-column"')
+        self.assertContains(response, '<th scope="col">Web tool</th>')
+        self.assertIn(".api-table-scroll", html)
+        self.assertIn("overflow-x: auto", html)
+        self.assertIn(".api-endpoints-table", html)
+        self.assertIn("table-layout: fixed", html)
+        self.assertIn("white-space: nowrap", html)
+        self.assertIn(".developer-docs .raw-output", html)
+        self.assertIn("white-space: pre", html)
+
+    def test_developer_internal_endpoint_anchors_have_unique_targets(self):
+        response = self.client.get(reverse("developers"))
+        html = response.content.decode()
+        for target in (
+            "http-check",
+            "dns",
+            "redirects",
+            "tls",
+            "security-headers",
+            "ip",
+            "subnet",
+            "punycode",
+        ):
+            with self.subTest(target=target):
+                self.assertIn(f'href="#{target}"', html)
+                self.assertEqual(html.count(f'id="{target}"'), 1)
+
+    def test_shared_consent_settings_markup_and_script_are_complete(self):
+        shared_pages = (
+            reverse("website-status"),
+            reverse("learn-article", kwargs={"slug": "what-is-an-ip-address"}),
+            reverse("about"),
+            reverse("developers"),
+        )
+        relevant_ids = (
+            "analytics-settings",
+            "analytics-consent",
+            "analytics-accept",
+            "analytics-reject",
+        )
+        for path in shared_pages:
+            with self.subTest(path=path):
+                html = self.client.get(path).content.decode()
+                for element_id in relevant_ids:
+                    self.assertEqual(html.count(f'id="{element_id}"'), 1)
+                self.assertIn('aria-controls="analytics-consent"', html)
+                self.assertIn('aria-expanded="false"', html)
+                self.assertIn('aria-haspopup="dialog"', html)
+                self.assertIn("showConsent(true)", html)
+                self.assertIn('event.key === "Escape"', html)
+                self.assertIn('settings.setAttribute("aria-expanded", "true")', html)
+                self.assertIn("reject.focus", html)
+
+                show_start = html.index("const showConsent")
+                hide_start = html.index("const hideConsent")
+                show_source = html[show_start:hide_start]
+                self.assertNotIn("loadGoogleAnalytics", show_source)
+                self.assertNotIn("saveConsent", show_source)
+
+    def test_home_retains_single_independent_consent_control(self):
+        html = self.client.get(reverse("home")).content.decode()
+        for element_id in (
+            "analytics-settings",
+            "analytics-consent",
+            "analytics-accept",
+            "analytics-reject",
+        ):
+            self.assertEqual(html.count(f'id="{element_id}"'), 1)
+
 
 class NginxAPIRateLimitTests(SimpleTestCase):
     @classmethod
